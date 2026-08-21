@@ -61,7 +61,7 @@ const Sidebar = () => {
         { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
         { name: 'Issued Permits', path: '/admin/permits', icon: Shield },
         { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare },
-        { name: 'Assessment History', path: '/assessment', icon: BrainCircuit },
+        { name: 'AI Classification', path: '/assessment', icon: BrainCircuit },
         { name: 'Tax & Fee Rules', path: '/tax-estimate', icon: Receipt },
         { name: 'Knowledge Base', path: '/knowledge', icon: Library },
         { name: 'AI Assistant', path: '/assistant', icon: MessageSquare },

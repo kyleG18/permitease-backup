@@ -11,7 +11,8 @@ const {
     requestCorrection,
     approveApplication,
     rejectApplication,
-    getApplicationHistory
+    getApplicationHistory,
+    getPreparationSummaryPDF
 } = require('../controllers/applicationController');
 const { calculateApplicationFees } = require('../controllers/feeController');
 
@@ -21,6 +22,7 @@ router.post('/', protect, requireRole(['business_owner']), createDraft);
 // NOTE: fee route must come before /:id to avoid Express matching 'fees' as an id param
 router.get('/:id/fees', protect, calculateApplicationFees);
 router.get('/:id/history', protect, getApplicationHistory);
+router.get('/:id/preparation-summary', protect, getPreparationSummaryPDF);
 router.get('/:id', protect, getApplicationById);
 router.post('/:id/submit', protect, requireRole(['business_owner']), submitApplication);
 

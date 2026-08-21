@@ -113,23 +113,6 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-          {/* Compliance + Readiness Scores */}
-          <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TrendingUp size={18} color="var(--primary-green)" /> Compliance & Readiness</h3>
-              <Link to="/compliance" style={{ fontSize: '0.825rem', color: 'var(--primary-green)', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: '500' }}>
-                Details <ChevronRight size={14} />
-              </Link>
-            </div>
-            <ScoreBar score={compScore} label="Overall Compliance" color={compColor} />
-            <ScoreBar score={readScore} label="Permit Readiness" color={readColor} />
-            {stats?.missing_requirements > 0 && (
-              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#FEF9C3', borderRadius: 'var(--radius-sm)', fontSize: '0.825rem', color: '#78350F', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <AlertCircle size={15} color="#CA8A04" />
-                <strong>{stats.missing_requirements}</strong> missing requirement(s). <Link to="/compliance" style={{ color: '#92400E', fontWeight: '600', textDecoration: 'underline' }}>Upload now →</Link>
-              </div>
-            )}
-          </div>
 
           {/* Permit Readiness Checklist */}
           {readiness && (
@@ -252,9 +235,9 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
             <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem' }}>Quick Actions</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {[
-                { to: '/compliance', icon: ClipboardCheck, label: 'View Compliance Checklist', primary: true },
+                { to: '/readiness', icon: ClipboardCheck, label: 'View Permit Readiness', primary: true },
                 { to: '/tax-estimate', icon: Receipt, label: 'View Fee Estimate', primary: false },
-                { to: '/assessment', icon: Zap, label: 'Run AI Assessment', primary: false },
+                { to: '/assistant', icon: Zap, label: 'Run AI Assistant', primary: false },
                 { to: '/permits', icon: FileText, label: 'My Permits', primary: false },
               ].map(({ to, icon: Icon, label, primary }) => (
                 <Link key={to} to={to} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: '600', backgroundColor: primary ? 'var(--primary-green)' : 'var(--light-green)', color: primary ? 'white' : 'var(--primary-green)', textDecoration: 'none', transition: 'opacity 0.15s' }}>

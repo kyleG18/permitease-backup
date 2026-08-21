@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { BusinessContext } from '../context/BusinessContext';
-import { Building2, MapPin, Calculator, CheckCircle2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Building2, MapPin, Calculator, CheckCircle2, ArrowRight, ArrowLeft, Globe } from 'lucide-react';
 
 const Onboarding = () => {
   const { user } = useContext(AuthContext);
@@ -13,6 +13,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lang, setLang] = useState('en');
   
   const [formData, setFormData] = useState({
     business_name: '',
@@ -25,6 +26,67 @@ const Onboarding = () => {
     floor_area: '',
     employees: ''
   });
+
+  const t = {
+    en: {
+      welcome: 'Welcome to PermitEase',
+      subtitle: "Let's get your business ready for permit processing.",
+      info: 'Information', loc: 'Location', fin: 'Financials', rev: 'Review',
+      s1title: 'Business Information',
+      s1desc: 'Tell us the basic identity of your business.',
+      bName: 'Business Name *',
+      bType: 'Type of Business / Industry *',
+      bCat: 'Specific Category (e.g. Sari-Sari Store, Restaurant) *',
+      bAppType: 'Application Type *',
+      s2title: 'Business Location',
+      s2desc: 'Your business location helps PermitEase determine which specific local clearances apply to your business.',
+      bAddress: 'Complete Business Address *',
+      s3title: 'Financial & Operational Details',
+      s3desc: 'This information is used strictly to calculate your estimated local taxes and regulatory fees.',
+      cap: 'Capitalization (₱)',
+      capDesc: 'The amount invested in starting or operating the business.',
+      gross: 'Gross Sales (₱)',
+      grossDesc: "Your business's total sales for the applicable period. Leave empty if new.",
+      floor: 'Floor Area (sqm)',
+      emp: 'No. of Employees',
+      s4title: 'Review Your Information',
+      s4desc: 'Please verify that your business details are correct before proceeding.',
+      back: 'Back',
+      cont: 'Continue',
+      save: 'Save & Continue',
+      saving: 'Saving...'
+    },
+    tl: {
+      welcome: 'Maligayang pagdating sa PermitEase',
+      subtitle: 'Ihanda natin ang iyong negosyo para sa pagproseso ng permit.',
+      info: 'Impormasyon', loc: 'Lokasyon', fin: 'Pinansyal', rev: 'Pagsusuri',
+      s1title: 'Impormasyon ng Negosyo',
+      s1desc: 'Ibigay sa amin ang pangunahing pagkakakilanlan ng iyong negosyo.',
+      bName: 'Pangalan ng Negosyo *',
+      bType: 'Uri ng Negosyo / Industriya *',
+      bCat: 'Tiyak na Kategorya (hal. Sari-Sari Store, Restaurant) *',
+      bAppType: 'Uri ng Aplikasyon *',
+      s2title: 'Lokasyon ng Negosyo',
+      s2desc: 'Tinutulungan ng iyong lokasyon ang PermitEase na matukoy kung aling mga lokal na clearance ang naaangkop.',
+      bAddress: 'Kumpletong Address ng Negosyo *',
+      s3title: 'Detalye ng Pinansyal at Operasyon',
+      s3desc: 'Ang impormasyong ito ay ginagamit lamang para makalkula ang iyong tinatayang lokal na buwis at bayarin.',
+      cap: 'Kapitalisasyon (₱)',
+      capDesc: 'Ang halagang ipinuhunan sa pagsisimula o pagpapatakbo ng negosyo.',
+      gross: 'Gross Sales (₱)',
+      grossDesc: 'Kabuuang benta ng iyong negosyo para sa naaangkop na panahon. Iwanang walang laman kung bago.',
+      floor: 'Floor Area (sqm)',
+      emp: 'Bilang ng Empleyado',
+      s4title: 'Suriin ang Iyong Impormasyon',
+      s4desc: 'Pakitiyak na tama ang mga detalye ng iyong negosyo bago magpatuloy.',
+      back: 'Bumalik',
+      cont: 'Magpatuloy',
+      save: 'I-save at Magpatuloy',
+      saving: 'Sini-save...'
+    }
+  };
+
+  const text = t[lang];
 
   // If already onboarded, send to dashboard
   useEffect(() => {
@@ -42,12 +104,12 @@ const Onboarding = () => {
     // Validation
     if (step === 1) {
       if (!formData.business_name || !formData.business_type || !formData.industry_category) {
-        setError('Please fill out all required fields.');
+        setError(lang === 'tl' ? 'Pakisagutan ang lahat ng kinakailangang field.' : 'Please fill out all required fields.');
         return;
       }
     } else if (step === 2) {
       if (!formData.address) {
-        setError('Business address is required.');
+        setError(lang === 'tl' ? 'Kinakailangan ang address ng negosyo.' : 'Business address is required.');
         return;
       }
     }
@@ -72,7 +134,7 @@ const Onboarding = () => {
       // Navigate to Permit Readiness with the new business ID
       navigate(`/readiness?businessId=${response.data.id}&type=${formData.business_status === 'Renewal' ? 'RENEWAL' : 'NEW'}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create business profile.');
+      setError(err.response?.data?.message || (lang === 'tl' ? 'Nabigong gumawa ng profile ng negosyo.' : 'Failed to create business profile.'));
       setLoading(false);
     }
   };
@@ -82,17 +144,27 @@ const Onboarding = () => {
   }
 
   const steps = [
-    { num: 1, title: 'Information', icon: Building2 },
-    { num: 2, title: 'Location', icon: MapPin },
-    { num: 3, title: 'Financials', icon: Calculator },
-    { num: 4, title: 'Review', icon: CheckCircle2 }
+    { num: 1, title: text.info, icon: Building2 },
+    { num: 2, title: text.loc, icon: MapPin },
+    { num: 3, title: text.fin, icon: Calculator },
+    { num: 4, title: text.rev, icon: CheckCircle2 }
   ];
 
   return (
     <div style={{ maxWidth: '700px', margin: '2rem auto', padding: '0 1rem' }} className="animate-fade-in">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <button 
+          onClick={() => setLang(lang === 'en' ? 'tl' : 'en')}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-dark)' }}
+        >
+          <Globe size={16} color="var(--primary-green)" />
+          {lang === 'en' ? 'Tagalog' : 'English'}
+        </button>
+      </div>
+
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.5rem' }}>Welcome to PermitEase</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Let's get your business ready for permit processing.</p>
+        <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.5rem' }}>{text.welcome}</h1>
+        <p style={{ color: 'var(--text-muted)' }}>{text.subtitle}</p>
       </div>
 
       <div className="card" style={{ padding: '2rem' }}>
@@ -129,75 +201,75 @@ const Onboarding = () => {
         <div style={{ minHeight: '300px' }}>
           {step === 1 && (
             <div className="animate-fade-in">
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Business Information</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Tell us the basic identity of your business.</p>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>{text.s1title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{text.s1desc}</p>
               
               <div className="form-group mb-4">
                 <input className="form-control" name="business_name" value={formData.business_name} onChange={handleChange} placeholder=" " />
-                <label className="form-label">Business Name *</label>
+                <label className="form-label">{text.bName}</label>
               </div>
               
               <div className="form-group mb-4">
                 <select className="form-control" style={{ paddingTop: '0.75rem' }} name="business_type" value={formData.business_type} onChange={handleChange}>
-                  <option value="">Select Type</option>
+                  <option value="">{lang === 'en' ? 'Select Type' : 'Pumili ng Uri'}</option>
                   <option>Food</option><option>Retail</option><option>Services</option>
                   <option>Manufacturing</option><option>Agriculture</option><option>Others</option>
                 </select>
-                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Type of Business / Industry *</label>
+                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>{text.bType}</label>
               </div>
               
               <div className="form-group mb-4">
                 <input className="form-control" name="industry_category" value={formData.industry_category} onChange={handleChange} placeholder=" " />
-                <label className="form-label">Specific Category (e.g. Sari-Sari Store, Restaurant) *</label>
+                <label className="form-label">{text.bCat}</label>
               </div>
 
               <div className="form-group mb-4">
                 <select className="form-control" style={{ paddingTop: '0.75rem' }} name="business_status" value={formData.business_status} onChange={handleChange}>
-                  <option value="New Application">New Business</option>
-                  <option value="Renewal">Existing Business (Renewal)</option>
+                  <option value="New Application">{lang === 'en' ? 'New Business' : 'Bagong Negosyo'}</option>
+                  <option value="Renewal">{lang === 'en' ? 'Existing Business (Renewal)' : 'Umiiral na Negosyo (Renewal)'}</option>
                 </select>
-                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Application Type *</label>
+                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>{text.bAppType}</label>
               </div>
             </div>
           )}
 
           {step === 2 && (
             <div className="animate-fade-in">
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Business Location</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Your business location helps PermitEase determine which specific local clearances apply to your business.</p>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>{text.s2title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{text.s2desc}</p>
               
               <div className="form-group mb-4">
                 <input className="form-control" name="address" value={formData.address} onChange={handleChange} placeholder=" " />
-                <label className="form-label">Complete Business Address *</label>
+                <label className="form-label">{text.bAddress}</label>
               </div>
             </div>
           )}
 
           {step === 3 && (
             <div className="animate-fade-in">
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Financial & Operational Details</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>This information is used strictly to calculate your estimated local taxes and regulatory fees.</p>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>{text.s3title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{text.s3desc}</p>
               
               <div className="form-group mb-4">
                 <input type="number" className="form-control" name="capitalization" value={formData.capitalization} onChange={handleChange} placeholder=" " />
-                <label className="form-label">Capitalization (₱)</label>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>The amount invested in starting or operating the business.</p>
+                <label className="form-label">{text.cap}</label>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{text.capDesc}</p>
               </div>
               
               <div className="form-group mb-4">
                 <input type="number" className="form-control" name="gross_sales" value={formData.gross_sales} onChange={handleChange} placeholder=" " />
-                <label className="form-label">Gross Sales (₱)</label>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Your business's total sales for the applicable period. Leave empty if new.</p>
+                <label className="form-label">{text.gross}</label>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{text.grossDesc}</p>
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <input type="number" className="form-control" name="floor_area" value={formData.floor_area} onChange={handleChange} placeholder=" " />
-                  <label className="form-label">Floor Area (sqm)</label>
+                  <label className="form-label">{text.floor}</label>
                 </div>
                 <div className="form-group">
                   <input type="number" className="form-control" name="employees" value={formData.employees} onChange={handleChange} placeholder=" " />
-                  <label className="form-label">No. of Employees</label>
+                  <label className="form-label">{text.emp}</label>
                 </div>
               </div>
             </div>
@@ -205,8 +277,8 @@ const Onboarding = () => {
 
           {step === 4 && (
             <div className="animate-fade-in">
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Review Your Information</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Please verify that your business details are correct before proceeding.</p>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>{text.s4title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{text.s4desc}</p>
               
               <div style={{ backgroundColor: 'var(--light-green)', padding: '1.5rem', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.875rem' }}>
@@ -248,16 +320,16 @@ const Onboarding = () => {
             className="btn btn-outline"
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: step === 1 ? 0 : 1, pointerEvents: step === 1 ? 'none' : 'auto' }}
           >
-            <ArrowLeft size={16} /> Back
+            <ArrowLeft size={16} /> {text.back}
           </button>
           
           {step < 4 ? (
             <button onClick={nextStep} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Continue <ArrowRight size={16} />
+              {text.cont} <ArrowRight size={16} />
             </button>
           ) : (
             <button onClick={handleSubmit} disabled={loading} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {loading ? 'Saving...' : 'Save & Continue'} <CheckCircle2 size={16} />
+              {loading ? text.saving : text.save} <CheckCircle2 size={16} />
             </button>
           )}
         </div>

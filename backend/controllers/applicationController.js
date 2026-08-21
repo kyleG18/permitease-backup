@@ -684,6 +684,108 @@ const getApplicationHistory = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/applications/:id/preparation-summary
+ */
+const getPreparationSummaryPDF = async (req, res) => {
+    try {
+        const [appRows] = await db.query(
+            `SELECT a.*, b.business_name, b.business_type
+             FROM applications a JOIN businesses b ON a.business_id = b.id
+             WHERE a.id = ?`,
+            [req.params.id]
+        );
+        if (appRows.length === 0) return res.status(404).json({ message: 'Application not found.' });
+
+        const app = appRows[0];
+        const isOwner = app.user_id === req.user.id;
+        const isAdmin = ['lgu_admin', 'system_admin'].includes(req.user.role);
+        if (!isOwner && !isAdmin) return res.status(403).json({ message: 'Access denied.' });
+
+        const [requirements] = await db.query(
+            `SELECT pr.permit_name, br.status AS req_status
+             FROM business_requirements br
+             JOIN permit_requirements pr ON br.requirement_id = pr.id
+             WHERE br.business_id = ?`,
+            [app.business_id]
+        );
+
+        const [documents] = await db.query(
+            `SELECT document_name, upload_date FROM documents WHERE business_id = ? ORDER BY upload_date DESC`,
+            [app.business_id]
+        );
+
+        const PDFDocument = require('pdfkit');
+        const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Preparation_Summary_${app.application_number || 'Draft'}.pdf`);
+        doc.pipe(res);
+
+        // Header
+        doc.font('Helvetica-Bold').fontSize(16).text('PERMITEASE', { align: 'center' });
+        doc.fontSize(12).text('PHYSICAL DOCUMENT PREPARATION SUMMARY', { align: 'center' });
+        doc.moveDown();
+
+        doc.font('Helvetica').fontSize(10)
+           .text('IMPORTANT:', { continued: true }).font('Helvetica-Bold')
+           .text(' This checklist is a user preparation aid.');
+        doc.font('Helvetica')
+           .text('It does not represent official LGU instructions, approval, or submission requirements.');
+        doc.moveDown(2);
+
+        // App Info
+        doc.font('Helvetica-Bold').text('Application Details');
+        doc.font('Helvetica')
+           .text(`Business Name: ${app.business_name}`)
+           .text(`Application Type: ${app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal'}`)
+           .text(`Application Number: ${app.application_number || 'Draft'}`)
+           .text(`Date Generated: ${new Date().toLocaleDateString('en-PH')}`);
+        doc.moveDown(2);
+
+        // Requirements
+        doc.font('Helvetica-Bold').text('Application Requirements Checklist');
+        doc.moveDown(0.5);
+        if (requirements.length === 0) {
+            doc.font('Helvetica').text('No requirements generated yet.');
+        } else {
+            requirements.forEach(req => {
+                doc.font('Helvetica').text(`[   ] ${req.permit_name}`);
+                doc.fillColor('gray').text(`      Digital Status: ${req.req_status}`, { indent: 20 });
+                doc.fillColor('black').moveDown(0.5);
+            });
+        }
+        doc.moveDown();
+
+        // Uploaded Documents
+        doc.font('Helvetica-Bold').text('Uploaded Documents');
+        doc.moveDown(0.5);
+        if (documents.length === 0) {
+            doc.font('Helvetica').text('No documents uploaded yet.');
+        } else {
+            documents.forEach(docItem => {
+                const uploadDate = new Date(docItem.upload_date).toLocaleDateString('en-PH');
+                doc.font('Helvetica').text(`• ${docItem.document_name} (Uploaded: ${uploadDate})`);
+            });
+        }
+        doc.moveDown(2);
+
+        // Notes section
+        doc.font('Helvetica-Bold').text('Preparation Notes:');
+        doc.moveDown(1);
+        doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
+        doc.moveDown(2);
+        doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
+        doc.moveDown(2);
+        doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
+
+        doc.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Unable to generate preparation summary.' });
+    }
+};
+
 module.exports = {
     getMyApplications,
     getApplicationById,
@@ -694,5 +796,6 @@ module.exports = {
     requestCorrection,
     approveApplication,
     rejectApplication,
-    getApplicationHistory
+    getApplicationHistory,
+    getPreparationSummaryPDF
 };

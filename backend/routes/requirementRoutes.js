@@ -4,7 +4,7 @@ const { getRequirements, getRequirement, createRequirement, updateRequirement, d
 const { protect, requireRole } = require('../middleware/authMiddleware');
 
 router.route('/')
-    .get(getRequirements)
+    .get(protect, getRequirements)
     .post(protect, requireRole(['lgu_admin', 'system_admin']), createRequirement);
 
 router.route('/:id')

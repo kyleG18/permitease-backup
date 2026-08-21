@@ -1,8 +1,8 @@
 const Groq = require('groq-sdk');
 require('dotenv').config();
 
-// The user can override this in .env. Fallback to a supported model.
-const DEFAULT_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3.6-27b';
+// The user can override this in .env. Fallback to the current production model.
+const DEFAULT_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 /**
  * Initialize Groq client securely. Returns null if API key is missing.

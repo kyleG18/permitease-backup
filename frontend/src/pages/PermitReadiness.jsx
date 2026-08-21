@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ShieldCheck, CheckCircle2, XCircle, AlertCircle, ArrowRight, Building2, UploadCloud, Edit } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, AlertCircle, ArrowRight, UploadCloud, Edit, FileText, X } from 'lucide-react';
 
 const API = 'http://localhost:5000/api';
 
@@ -20,7 +20,6 @@ export default function PermitReadiness() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Parse URL parameters
   const queryParams = new URLSearchParams(location.search);
   const initialBizId = queryParams.get('businessId') || '';
   const initialType = queryParams.get('type') || 'NEW';
@@ -34,9 +33,33 @@ export default function PermitReadiness() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
+  // Document Upload Modal State
+  const [uploadModal, setUploadModal] = useState({ isOpen: false, reqName: '', reqId: null });
+  const [file, setFile] = useState(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
   const headers = { Authorization: `Bearer ${token}` };
 
-  // Load Businesses
+  const loadReadiness = () => {
+    if (!selectedBizId || !applicationType) return;
+    setLoading(true);
+    setError('');
+    fetch(`${API}/readiness/${selectedBizId}?application_type=${applicationType}`, { headers })
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.message || 'Error fetching readiness');
+        return data;
+      })
+      .then(data => setReadiness(data))
+      .catch(err => {
+        console.error(err);
+        setError('Unable to calculate permit readiness.');
+        setReadiness(null);
+      })
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
     fetch(`${API}/businesses`, { headers })
       .then(r => r.json())
@@ -50,26 +73,41 @@ export default function PermitReadiness() {
       .catch(() => setError('Unable to load businesses.'));
   }, []);
 
-  // Check Readiness
   useEffect(() => {
-    if (selectedBizId && applicationType) {
-      setLoading(true);
-      setError('');
-      fetch(`${API}/readiness/${selectedBizId}?application_type=${applicationType}`, { headers })
-        .then(async (r) => {
-          const data = await r.json();
-          if (!r.ok) throw new Error(data.message || 'Error fetching readiness');
-          return data;
-        })
-        .then(data => setReadiness(data))
-        .catch(err => {
-          console.error(err);
-          setError('Unable to calculate permit readiness.');
-          setReadiness(null);
-        })
-        .finally(() => setLoading(false));
-    }
+    loadReadiness();
   }, [selectedBizId, applicationType]);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) { setUploadError('Please select a file'); return; }
+    setUploadingDoc(true);
+    setUploadError('');
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      uploadData.append('business_id', selectedBizId);
+      uploadData.append('document_name', uploadModal.reqName);
+      if (uploadModal.reqId) {
+        uploadData.append('requirement_id', uploadModal.reqId);
+      }
+      
+      const res = await fetch(`${API}/documents/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }, // FormData sets its own content-type boundary
+        body: uploadData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Upload failed');
+      
+      setUploadModal({ isOpen: false, reqName: '', reqId: null });
+      setFile(null);
+      loadReadiness(); // Refresh readiness after successful upload
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
 
   const handleContinue = async () => {
     if (!selectedBizId) return;
@@ -102,19 +140,17 @@ export default function PermitReadiness() {
           <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
             You need to create a business profile before assessing readiness.
           </p>
-          <button onClick={() => navigate('/profile')} style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.75rem 2rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
-            Create Business Profile
+          <button onClick={() => navigate('/onboarding')} style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.75rem 2rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
+            Set Up My Business
           </button>
         </div>
       </div>
     );
   }
 
-  const score = readiness?.readiness_score ?? 0;
   const isReady = readiness?.overall_state === 'READY';
-  const isAlmostReady = readiness?.overall_state === 'READY_WITH_ACTIONS';
-  const stateLabel = isReady ? 'READY TO SUBMIT' : isAlmostReady ? 'ALMOST READY' : 'NOT READY TO SUBMIT';
-  const stateColor = isReady ? '#16A34A' : isAlmostReady ? '#D97706' : '#DC2626';
+  const stateLabel = isReady ? 'READY TO APPLY' : 'NOT READY YET';
+  const stateColor = isReady ? '#16A34A' : '#DC2626';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -146,112 +182,176 @@ export default function PermitReadiness() {
         </div>
       </div>
 
-      {loading ? (
+      {loading && !readiness ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)' }}>
-          Checking permit readiness...
+          Checking what you need...
         </div>
       ) : readiness ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          {/* Main Score Card */}
+          {/* Main Readiness Card */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '2rem', boxShadow: 'var(--shadow-card)', borderTop: `4px solid ${stateColor}` }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Readiness Score</div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', marginBottom: '0.5rem' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: '800', color: stateColor, lineHeight: '1' }}>{score}%</div>
-              <div style={{ padding: '0.25rem 0.75rem', backgroundColor: `${stateColor}15`, color: stateColor, borderRadius: '999px', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.35rem' }}>
-                {isReady ? '✓' : '⚠'} {stateLabel}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+              {isReady ? <CheckCircle2 size={32} color={stateColor} /> : <AlertCircle size={32} color={stateColor} />}
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: stateColor }}>{stateLabel}</div>
             </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{readiness.recommendation}</div>
+            <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{readiness.recommendation}</div>
           </div>
 
-          {/* Checklist */}
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)' }}>
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldCheck size={18} color="var(--primary-green)" /> Readiness Checklist</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {readiness.categories.map(cat => (
-                <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: '#F8FAFC', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <CategoryIcon status={cat.status} />
-                    <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-dark)' }}>{cat.label}</span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: '700', color: cat.status === 'Complete' ? '#16A34A' : '#D97706' }}>{cat.status === 'Complete' ? `✓ ${cat.score}%` : `⚠ ${cat.score}%`}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{cat.detail}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Required */}
+          {/* ACTION REQUIRED SECTION */}
           {readiness.action_required && readiness.action_required.length > 0 && (
-            <div style={{ backgroundColor: '#FEF3C7', borderRadius: 'var(--radius-md)', padding: '1.5rem', border: '1px solid #FDE68A' }}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400E' }}><AlertCircle size={18} /> Action Required</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ border: '2px solid #FDE68A', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: '#FEF3C7', padding: '1rem 1.5rem', borderBottom: '1px solid #FDE68A' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400E' }}>
+                  <AlertCircle size={20} /> ACTION REQUIRED
+                </h3>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#B45309' }}>
+                  {readiness.action_required.length} item{readiness.action_required.length > 1 ? 's' : ''} need your attention.
+                </p>
+              </div>
+              <div style={{ backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
                 {readiness.action_required.map((act, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: 'white', borderRadius: 'var(--radius-sm)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#78350F', fontWeight: '500' }}>
-                      <span style={{ color: '#D97706' }}>•</span> {act.text}
+                  <div key={i} style={{ padding: '1.5rem', borderBottom: i < readiness.action_required.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-dark)', marginBottom: '0.25rem' }}>
+                        {i + 1}. {act.text}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        {act.type === 'fee' || act.type === 'profile' ? 'Required for fee calculation and profile completeness.' : 'Required document for your application.'}
+                      </div>
                     </div>
-                    {act.link && (
-                      <Link to={act.link} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', fontWeight: '600', color: 'var(--primary-green)', textDecoration: 'none', padding: '0.35rem 0.75rem', border: '1px solid var(--primary-green)', borderRadius: '999px', backgroundColor: '#F0FDF4' }}>
-                        {act.type === 'document' ? <UploadCloud size={14} /> : <Edit size={14} />} {act.actionText}
+                    {act.type === 'document' ? (
+                      <button 
+                        onClick={() => setUploadModal({ isOpen: true, reqName: act.document_name || act.text.replace(' is missing.', ''), reqId: act.requirement_id })}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'white', backgroundColor: 'var(--primary-green)', border: 'none', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
+                        <UploadCloud size={16} /> Upload Document
+                      </button>
+                    ) : act.link ? (
+                      <Link to={act.link} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'white', backgroundColor: 'var(--primary-green)', textDecoration: 'none', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)' }}>
+                        <Edit size={16} /> {act.actionText}
                       </Link>
-                    )}
+                    ) : null}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* Checklist Progress */}
+          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)' }}>
+            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldCheck size={18} color="var(--primary-green)" /> Preparation Progress
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {readiness.categories.map(cat => (
+                <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: '#F8FAFC', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <CategoryIcon status={cat.status} />
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-dark)' }}>{cat.label}</span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: cat.status === 'Complete' ? '#16A34A' : '#D97706', fontWeight: '500' }}>
+                    {cat.status === 'Complete' ? '✓ Complete' : '⚠ Action needed'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Estimated Cost Summary */}
           {readiness.fee_assessment && (
             <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)' }}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: '1rem' }}>Estimated Permit Cost</h3>
+              <h3 style={{ margin: '0 0 1rem', fontSize: '1.1rem' }}>Estimated Fees</h3>
               
               {readiness.fee_assessment.is_incomplete ? (
                 <div style={{ color: '#D97706', fontSize: '0.9rem', marginBottom: '1rem', fontWeight: '500' }}>
-                  ⚠ Incomplete
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', fontWeight: '400' }}>
-                    Cannot calculate full estimate because required business information is missing.
-                  </div>
+                  ⚠ More business information is needed to calculate your fees.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                   {readiness.fee_assessment.breakdown.map(b => (
-                    <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-dark)' }}>
+                    <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', color: 'var(--text-dark)' }}>
                       <span>{b.name}</span>
                       <span style={{ fontWeight: '500' }}>{formatPHP(b.amount)}</span>
                     </div>
                   ))}
-                  <div style={{ borderTop: '2px solid var(--border-light)', paddingTop: '0.5rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>ESTIMATED TOTAL</span>
-                    <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--primary-green)' }}>{formatPHP(readiness.fee_assessment.total_estimated_amount)}</span>
+                  <div style={{ borderTop: '2px solid var(--border-light)', paddingTop: '1rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)' }}>ESTIMATED TOTAL</span>
+                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--primary-green)' }}>{formatPHP(readiness.fee_assessment.total_estimated_amount)}</span>
                   </div>
                 </div>
               )}
               
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{readiness.fee_assessment.disclaimer}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', backgroundColor: '#F8FAFC', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                {readiness.fee_assessment.disclaimer || 'This is an estimate. Final fees are subject to LGU assessment.'}
+              </div>
             </div>
           )}
 
-          {/* Continue Button */}
-          <button
-            onClick={handleContinue}
-            disabled={submitting || (isReady === false && isAlmostReady === false)} // Only disable if totally NOT ready, though users might still want to proceed and fix later? Prompt says: "The readiness page should NOT automatically submit. user must explicitly submit". If we disable it on NOT_READY, it's safer. Actually let's allow it but they have to fix it in draft.
-            style={{ 
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', 
-              backgroundColor: submitting ? '#9CA3AF' : 'var(--primary-green)', color: 'white', 
-              border: 'none', padding: '1rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', 
-              cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '1rem', marginTop: '0.5rem' 
-            }}
-          >
-            {submitting ? 'Creating Draft...' : <>Continue to Application <ArrowRight size={18} /></>}
-          </button>
+          {/* Application Summary & Submit */}
+          <div style={{ backgroundColor: '#F8FAFC', borderRadius: 'var(--radius-md)', padding: '2rem', border: '1px solid var(--border-light)' }}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: '1.1rem' }}>Ready to Start Your Application?</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', fontSize: '0.95rem', color: 'var(--text-dark)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Business:</span> <strong>{readiness.business_name}</strong></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Application:</span> <strong>{applicationType === 'NEW' ? 'New Business Permit' : 'Renewal'}</strong></div>
+            </div>
+            
+            {isReady ? (
+              <button
+                onClick={handleContinue}
+                disabled={submitting}
+                style={{ 
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', 
+                  backgroundColor: submitting ? '#9CA3AF' : 'var(--primary-green)', color: 'white', 
+                  border: 'none', padding: '1.1rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', 
+                  cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '1.05rem' 
+                }}
+              >
+                {submitting ? 'Creating...' : <>Continue to Application <ArrowRight size={18} /></>}
+              </button>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#B45309', backgroundColor: '#FEF3C7', padding: '1rem', borderRadius: 'var(--radius-sm)', fontWeight: '500', fontSize: '0.95rem' }}>
+                Complete the items above before starting your application.
+              </div>
+            )}
+          </div>
 
         </div>
       ) : null}
+
+      {/* Upload Document Modal */}
+      {uploadModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-card)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Upload Document</h2>
+              <button onClick={() => setUploadModal({ isOpen: false, reqName: '', reqId: null })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
+            </div>
+            <div style={{ padding: '1.5rem' }}>
+              {uploadError && <div style={{ color: '#DC2626', backgroundColor: '#FEE2E2', padding: '0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.9rem' }}>{uploadError}</div>}
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Document Type</label>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-dark)' }}>{uploadModal.reqName}</div>
+              </div>
+
+              <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2rem', textAlign: 'center', marginBottom: '1.5rem', cursor: 'pointer', background: '#FAFAFA', position: 'relative' }}>
+                <FileText size={32} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem' }} />
+                <p style={{ color: 'var(--text-dark)', marginBottom: '0.5rem', fontWeight: '500' }}>{file ? file.name : 'Click to select a file'}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PDF, JPG, PNG supported</p>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files[0])} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }} />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="button" onClick={() => setUploadModal({ isOpen: false, reqName: '', reqId: null })} style={{ flex: 1, padding: '0.875rem', backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={handleUpload} disabled={uploadingDoc} style={{ flex: 1, padding: '0.875rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: uploadingDoc ? 'not-allowed' : 'pointer' }}>
+                  {uploadingDoc ? 'Uploading...' : 'Upload File'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

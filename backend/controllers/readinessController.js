@@ -93,7 +93,7 @@ const getReadiness = async (req, res) => {
         let missingDocs = [];
         for (const ar of applicableRequirements) {
             if (!submittedDocIds.includes(ar.id)) {
-                missingDocs.push(ar.permit_name);
+                missingDocs.push({ id: ar.id, name: ar.permit_name });
             }
         }
 
@@ -103,7 +103,7 @@ const getReadiness = async (req, res) => {
         } else {
             categories.push({ label: 'Documents', status: 'Incomplete', score: 0, detail: `${applicableRequirements.length - missingDocs.length}/${applicableRequirements.length} documents provided` });
             missingDocs.forEach(md => {
-                actionRequired.push({ type: 'document', text: `${md} not uploaded`, actionText: 'Upload Document', link: '/documents' });
+                actionRequired.push({ type: 'document', text: `${md.name} is missing.`, actionText: 'Upload Document', document_name: md.name, requirement_id: md.id });
             });
         }
 

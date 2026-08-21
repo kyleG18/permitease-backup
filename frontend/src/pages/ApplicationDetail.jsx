@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { CheckCircle, AlertCircle, Clock, XCircle, FileText, Building2, ChevronRight, Send, Edit, ArrowRight } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, XCircle, FileText, Building2, ChevronRight, Send, Edit, ArrowRight, UploadCloud, X, Printer, Download } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
 
 const API = 'http://localhost:5000/api';
@@ -27,7 +27,7 @@ const StatusBadge = ({ status }) => {
 
 export default function ApplicationDetail() {
   const { id } = useParams();
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [app, setApp] = useState(null);
@@ -37,6 +37,17 @@ export default function ApplicationDetail() {
   const [submitError, setSubmitError] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [successData, setSuccessData] = useState(null);
+
+  // Document Upload Modal State
+  const [uploadModal, setUploadModal] = useState({ isOpen: false, reqName: '', reqId: null });
+  const [file, setFile] = useState(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  // Physical Preparation Checklist State
+  const [physicalPrep, setPhysicalPrep] = useState({});
+  const [appNotes, setAppNotes] = useState('');
+  const [downloadingSummary, setDownloadingSummary] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -48,11 +59,94 @@ export default function ApplicationDetail() {
         if (data.message && !data.id) { setError(data.message); setLoading(false); return; }
         setApp(data);
         setLoading(false);
+        // Load localStorage
+        if (user && user.id) {
+          try {
+            const savedPrep = localStorage.getItem(`physicalPrep_${user.id}_${id}`);
+            if (savedPrep) setPhysicalPrep(JSON.parse(savedPrep));
+            const savedNotes = localStorage.getItem(`physicalNotes_${user.id}_${id}`);
+            if (savedNotes) setAppNotes(savedNotes);
+          } catch (e) {
+            console.error("Failed parsing localStorage", e);
+          }
+        }
       })
       .catch(() => { setError('Unable to load application.'); setLoading(false); });
   };
 
   useEffect(() => { loadApp(); }, [id]);
+
+  const handlePrepToggle = (reqId, field) => {
+    const updated = { ...physicalPrep };
+    if (!updated[reqId]) updated[reqId] = { printed: false, signed: false, photocopied: false };
+    updated[reqId][field] = !updated[reqId][field];
+    setPhysicalPrep(updated);
+    if (user && user.id) {
+      localStorage.setItem(`physicalPrep_${user.id}_${id}`, JSON.stringify(updated));
+    }
+  };
+
+  const handleNotesChange = (e) => {
+    const val = e.target.value;
+    setAppNotes(val);
+    if (user && user.id) {
+      localStorage.setItem(`physicalNotes_${user.id}_${id}`, val);
+    }
+  };
+
+  const handleDownloadSummary = async () => {
+    setDownloadingSummary(true);
+    try {
+      const res = await fetch(`${API}/applications/${id}/preparation-summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to generate summary');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Preparation_Summary_${app.application_number || 'Draft'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      alert("Unable to download preparation summary.");
+    } finally {
+      setDownloadingSummary(false);
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) { setUploadError('Please select a file'); return; }
+    setUploadingDoc(true);
+    setUploadError('');
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      uploadData.append('business_id', app.business_id);
+      uploadData.append('document_name', uploadModal.reqName);
+      if (uploadModal.reqId) {
+        uploadData.append('requirement_id', uploadModal.reqId);
+      }
+      
+      const res = await fetch(`${API}/documents/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: uploadData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Upload failed');
+      
+      setUploadModal({ isOpen: false, reqName: '', reqId: null });
+      setFile(null);
+      loadApp(); // Refresh application data after upload
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setSubmitError('');
@@ -274,9 +368,17 @@ export default function ApplicationDetail() {
                         <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-dark)' }}>{req.permit_name}</div>
                         {req.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{req.description}</div>}
                       </div>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '600', color: submitted ? '#16A34A' : '#D97706' }}>
-                        {submitted ? 'Submitted' : 'Missing'}
-                      </span>
+                      {!submitted && canSubmit ? (
+                        <button 
+                          onClick={() => setUploadModal({ isOpen: true, reqName: req.permit_name, reqId: req.id })}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: '600', color: 'var(--primary-green)', backgroundColor: 'transparent', border: '1px solid var(--primary-green)', padding: '0.4rem 0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
+                          <UploadCloud size={14} /> Upload
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', fontWeight: '600', color: submitted ? '#16A34A' : '#D97706' }}>
+                          {submitted ? 'Submitted' : 'Missing'}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -313,6 +415,137 @@ export default function ApplicationDetail() {
               </div>
             )}
           </div>
+
+          {/* Physical Document Preparation (Task 12) */}
+          {['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'NEEDS_CORRECTION'].includes(app.status) && (
+            <div className="physical-prep-section" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Printer size={18} color="var(--primary-green)" /> Physical Document Preparation
+              </h3>
+              <p style={{ margin: '0 0 1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Your digital application is prepared. Review the documents below and mark what you have physically prepared.
+              </p>
+              
+              {app.status === 'NEEDS_CORRECTION' ? (
+                <div style={{ backgroundColor: '#FEE2E2', borderLeft: '4px solid #DC2626', padding: '1rem', marginBottom: '1.5rem', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#991B1B', fontWeight: '600', marginBottom: '0.25rem' }}>
+                     <AlertCircle size={16} /> CORRECTION REQUIRED
+                   </div>
+                   <p style={{ margin: '0', fontSize: '0.85rem', color: '#7F1D1D' }}>
+                     Resolve the LGU's requested corrections before completing physical preparation.
+                   </p>
+                </div>
+              ) : null}
+
+              {(() => {
+                 const submittedReqs = app.requirements.filter(r => ['Submitted', 'Approved'].includes(r.req_status));
+                 const printedCount = submittedReqs.filter(r => physicalPrep[r.id]?.printed).length;
+                 const isReady = submittedReqs.length > 0 && printedCount === submittedReqs.length;
+                 const showReady = isReady && app.status !== 'NEEDS_CORRECTION';
+                 
+                 return (
+                   <>
+                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                       <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-dark)' }}>
+                         Progress: {printedCount} of {submittedReqs.length} documents marked as Printed
+                       </span>
+                     </div>
+                     <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                       <div style={{ height: '100%', backgroundColor: 'var(--primary-green)', width: submittedReqs.length ? `${(printedCount / submittedReqs.length) * 100}%` : '0%' }}></div>
+                     </div>
+                     
+                     {showReady ? (
+                       <div style={{ backgroundColor: '#DCFCE7', borderLeft: '4px solid #16A34A', padding: '1rem', marginBottom: '1.5rem', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0' }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '600', marginBottom: '0.25rem' }}>
+                           <CheckCircle size={16} /> READY FOR PHYSICAL SUBMISSION
+                         </div>
+                         <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#14532D' }}>
+                           Your physical preparation checklist is complete. You can now bring your documents to the BPLO.
+                         </p>
+                         <div style={{ display: 'flex', gap: '0.75rem' }}>
+                           <button onClick={handleDownloadSummary} disabled={downloadingSummary} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'white', color: '#166534', border: '1px solid #16A34A', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: '600', cursor: downloadingSummary ? 'wait' : 'pointer' }}>
+                             <Download size={14} /> {downloadingSummary ? 'Generating...' : 'Download Preparation Summary'}
+                           </button>
+                           <button onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'transparent', color: '#166534', border: 'none', textDecoration: 'underline', padding: '0.5rem', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>
+                             <Printer size={14} /> Print Checklist
+                           </button>
+                         </div>
+                       </div>
+                     ) : (
+                       app.status !== 'NEEDS_CORRECTION' && submittedReqs.length > 0 && (
+                         <div style={{ backgroundColor: '#FEF3C7', borderLeft: '4px solid #D97706', padding: '1rem', marginBottom: '1.5rem', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0' }}>
+                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400E', fontWeight: '600', marginBottom: '0.25rem' }}>
+                             <AlertCircle size={16} /> PHYSICAL PREPARATION INCOMPLETE
+                           </div>
+                           <p style={{ margin: '0', fontSize: '0.85rem', color: '#78350F' }}>
+                             {submittedReqs.length - printedCount} documents not yet marked as Printed. Review the checklist below.
+                           </p>
+                         </div>
+                       )
+                     )}
+
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                       {app.requirements.map(req => {
+                         const submitted = ['Submitted', 'Approved'].includes(req.req_status);
+                         const prepState = physicalPrep[req.id] || { printed: false, signed: false, photocopied: false };
+                         
+                         return (
+                           <div key={req.id} style={{ border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '1rem' }}>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                               <div style={{ fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-dark)' }}>{req.permit_name}</div>
+                               <div style={{ fontSize: '0.8rem', fontWeight: '600', color: submitted ? '#16A34A' : '#D97706', backgroundColor: submitted ? '#DCFCE7' : '#FEF3C7', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                                 Digital: {submitted ? '✓ Submitted' : '⚠ Missing'}
+                               </div>
+                             </div>
+                             
+                             {submitted ? (
+                               <>
+                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
+                                   Physical preparation instructions are not configured. Please verify the current BPLO instructions.
+                                 </p>
+                                 <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer', color: 'var(--text-dark)' }}>
+                                     <input type="checkbox" checked={prepState.printed} onChange={() => handlePrepToggle(req.id, 'printed')} style={{ accentColor: 'var(--primary-green)' }} /> Printed
+                                   </label>
+                                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer', color: 'var(--text-dark)' }}>
+                                     <input type="checkbox" checked={prepState.signed} onChange={() => handlePrepToggle(req.id, 'signed')} style={{ accentColor: 'var(--primary-green)' }} /> Signed
+                                   </label>
+                                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer', color: 'var(--text-dark)' }}>
+                                     <input type="checkbox" checked={prepState.photocopied} onChange={() => handlePrepToggle(req.id, 'photocopied')} style={{ accentColor: 'var(--primary-green)' }} /> Photocopied
+                                   </label>
+                                 </div>
+                               </>
+                             ) : (
+                               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '4px' }}>
+                                 Physical preparation is not available until the digital document is uploaded.
+                                 {app.status !== 'UNDER_REVIEW' && (
+                                   <div style={{ marginTop: '0.5rem' }}>
+                                     <button onClick={() => setUploadModal({ isOpen: true, reqName: req.permit_name, reqId: req.id })} style={{ background: 'none', border: 'none', color: 'var(--primary-green)', textDecoration: 'underline', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}>
+                                       Upload Document
+                                     </button>
+                                   </div>
+                                 )}
+                               </div>
+                             )}
+                           </div>
+                         );
+                       })}
+                     </div>
+
+                     <div style={{ marginTop: '1rem' }}>
+                       <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-dark)', marginBottom: '0.5rem' }}>Personal Notes (Optional)</label>
+                       <textarea 
+                         value={appNotes}
+                         onChange={handleNotesChange}
+                         placeholder="Add any reminders for your BPLO visit..."
+                         style={{ width: '100%', minHeight: '80px', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)', fontFamily: 'inherit', fontSize: '0.85rem', resize: 'vertical' }}
+                       />
+                     </div>
+                   </>
+                 );
+              })()}
+            </div>
+          )}
 
           {/* Review & Submit (Existing) */}
           {canSubmit && (
@@ -418,6 +651,40 @@ export default function ApplicationDetail() {
         </div>
 
       </div>
+
+      {/* Upload Document Modal */}
+      {uploadModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-card)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Upload Document</h2>
+              <button onClick={() => setUploadModal({ isOpen: false, reqName: '', reqId: null })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
+            </div>
+            <div style={{ padding: '1.5rem' }}>
+              {uploadError && <div style={{ color: '#DC2626', backgroundColor: '#FEE2E2', padding: '0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.9rem' }}>{uploadError}</div>}
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Document Type</label>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-dark)' }}>{uploadModal.reqName}</div>
+              </div>
+
+              <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2rem', textAlign: 'center', marginBottom: '1.5rem', cursor: 'pointer', background: '#FAFAFA', position: 'relative' }}>
+                <FileText size={32} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem' }} />
+                <p style={{ color: 'var(--text-dark)', marginBottom: '0.5rem', fontWeight: '500' }}>{file ? file.name : 'Click to select a file'}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PDF, JPG, PNG supported</p>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files[0])} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }} />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="button" onClick={() => setUploadModal({ isOpen: false, reqName: '', reqId: null })} style={{ flex: 1, padding: '0.875rem', backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={handleUpload} disabled={uploadingDoc} style={{ flex: 1, padding: '0.875rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: uploadingDoc ? 'not-allowed' : 'pointer' }}>
+                  {uploadingDoc ? 'Uploading...' : 'Upload File'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
