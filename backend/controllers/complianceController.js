@@ -75,7 +75,8 @@ const evaluateCompliance = async (req, res) => {
 
     } catch (error) {
         console.error('Evaluate Compliance Error:', error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -117,7 +118,8 @@ const getCompliance = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

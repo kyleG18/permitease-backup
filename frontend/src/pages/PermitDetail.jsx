@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Download, ExternalLink, Shield, ChevronRight, QrCode } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const getValidityInfo = (expDate) => {
   if (!expDate) return { label: 'Unknown', color: '#64748B', bg: '#F1F5F9', icon: '?' };

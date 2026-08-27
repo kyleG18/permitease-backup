@@ -170,7 +170,8 @@ const sendMessage = async (req, res) => {
         res.json({ question: question.trim(), response });
     } catch (error) {
         console.error('[ChatController] Error:', error.message);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -185,7 +186,8 @@ const getChatHistory = async (req, res) => {
         );
         res.json(history);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

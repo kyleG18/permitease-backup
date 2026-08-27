@@ -19,7 +19,7 @@ const Requirements = () => {
 
   const fetchRequirements = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/requirements');
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/requirements`);
       setRequirements(data);
       setFiltered(data);
     } catch (err) { setError('Failed to load requirements'); }
@@ -41,15 +41,15 @@ const Requirements = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingReq) { await axios.put(`http://localhost:5000/api/requirements/${editingReq.id}`, formData, config); }
-      else { await axios.post('http://localhost:5000/api/requirements', formData, config); }
+      if (editingReq) { await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/requirements/${editingReq.id}`, formData, config); }
+      else { await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/requirements`, formData, config); }
       setShowModal(false); fetchRequirements();
     } catch (err) { setError(err.response?.data?.message || 'Failed to save'); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this requirement?')) return;
-    try { await axios.delete(`http://localhost:5000/api/requirements/${id}`, config); fetchRequirements(); }
+    try { await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/requirements/${id}`, config); fetchRequirements(); }
     catch (err) { setError('Failed to delete'); }
   };
 

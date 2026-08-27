@@ -17,7 +17,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/users', config);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/users`, config);
       setUsers(res.data);
       setLoading(false);
     } catch (err) {
@@ -28,7 +28,7 @@ const UserManagement = () => {
 
   const updateRole = async (id, newRole) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/users/${id}/role`, { role: newRole }, config);
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/users/${id}/role`, { role: newRole }, config);
       fetchUsers();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update role');
@@ -37,7 +37,7 @@ const UserManagement = () => {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/users/${id}/status`, { status: newStatus }, config);
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/users/${id}/status`, { status: newStatus }, config);
       fetchUsers();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update status');

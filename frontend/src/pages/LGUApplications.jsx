@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { ClipboardList, Search } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const STATUS_CONFIG = {
   SUBMITTED:        { label: 'Submitted',        color: '#2563EB', bg: '#DBEAFE' },

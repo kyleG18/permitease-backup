@@ -5,7 +5,7 @@ import {
   TrendingUp, FileWarning, ChevronDown, ChevronUp
 } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const statusConfig = {
   Missing:       { color: '#EF4444', bg: '#FEE2E2', icon: <XCircle size={14}/> },

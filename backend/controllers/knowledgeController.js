@@ -27,7 +27,8 @@ const getKnowledgeDocs = async (req, res) => {
         const [docs] = await db.query('SELECT * FROM knowledge_base ORDER BY uploaded_at DESC');
         res.json(docs);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -50,7 +51,8 @@ const uploadKnowledgeDoc = [
             );
             res.status(201).json({ id: result.insertId, message: 'Document uploaded to knowledge base' });
         } catch (error) {
-            res.status(500).json({ message: 'Server error: ' + error.message });
+            console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
         }
     }
 ];
@@ -69,7 +71,8 @@ const deleteKnowledgeDoc = async (req, res) => {
         await db.query('DELETE FROM knowledge_base WHERE id = ?', [req.params.id]);
         res.json({ message: 'Document deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

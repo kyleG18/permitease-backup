@@ -22,7 +22,8 @@ const getPermits = async (req, res) => {
         );
         res.json(permits);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -35,7 +36,8 @@ const getPermit = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ message: 'Permit not found' });
         res.json(rows[0]);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -61,7 +63,8 @@ const createPermit = async (req, res) => {
 
         res.status(201).json({ id: result.insertId, message: 'Permit created successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -101,7 +104,8 @@ const updatePermit = async (req, res) => {
 
         res.json({ message: 'Permit updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -113,7 +117,8 @@ const deletePermit = async (req, res) => {
         await db.query('DELETE FROM permits WHERE id = ?', [req.params.id]);
         res.json({ message: 'Permit deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 const path = require('path');
@@ -206,7 +211,8 @@ const downloadPermitPdf = async (req, res) => {
 
     } catch (error) {
         console.error('Download error:', error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -237,7 +243,8 @@ const getAllPermitsAdmin = async (req, res) => {
 
         res.json(mappedPermits);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

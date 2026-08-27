@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CalendarClock, CheckCircle, AlertTriangle, XCircle, FileText, ArrowRight, Eye } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const Renewals = () => {
   const { token } = useContext(AuthContext);

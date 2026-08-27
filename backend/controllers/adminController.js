@@ -9,7 +9,8 @@ const getUsers = async (req, res) => {
         const [users] = await db.query('SELECT id, full_name, email, contact_number, role, status, created_at FROM users ORDER BY created_at DESC');
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -36,7 +37,8 @@ const updateUserRole = async (req, res) => {
         
         res.json({ message: 'User role updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -62,7 +64,8 @@ const updateUserStatus = async (req, res) => {
         
         res.json({ message: 'User status updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -74,7 +77,8 @@ const getAuditLogs = async (req, res) => {
         const [logs] = await db.query('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 500');
         res.json(logs);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

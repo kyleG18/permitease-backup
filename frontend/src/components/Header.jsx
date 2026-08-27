@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Bell, LogOut, Menu } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const Header = ({ toggleSidebar }) => {
   const { user, logout } = useContext(AuthContext);

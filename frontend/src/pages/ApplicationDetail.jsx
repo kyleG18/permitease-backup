@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { CheckCircle, AlertCircle, Clock, XCircle, FileText, Building2, ChevronRight, Send, Edit, ArrowRight, UploadCloud, X, Printer, Download } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const STATUS_CONFIG = {
   DRAFT:            { label: 'Draft',            color: '#64748B', bg: '#F1F5F9' },

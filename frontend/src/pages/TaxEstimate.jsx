@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Calculator, AlertTriangle, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 export default function TaxEstimate() {
   const { token, user } = useContext(AuthContext);

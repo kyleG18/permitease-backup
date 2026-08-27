@@ -31,7 +31,8 @@ const getReportsSummary = async (req, res) => {
             permits_by_status: permitsByStatus
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

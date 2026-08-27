@@ -17,7 +17,7 @@ const Settings = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put('http://localhost:5000/api/users/profile', profile, config);
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/profile`, profile, config);
       setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
       // Minor issue: the AuthContext still has the old name in memory until they re-login, but that's okay for now.
     } catch (err) {
@@ -32,7 +32,7 @@ const Settings = () => {
       return;
     }
     try {
-      await axios.put('http://localhost:5000/api/users/password', passwords, config);
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/password`, passwords, config);
       setPasswordMessage({ type: 'success', text: 'Password changed successfully!' });
       setPasswords({ current_password: '', new_password: '', confirm_password: '' });
     } catch (err) {

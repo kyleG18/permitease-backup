@@ -36,7 +36,7 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 // Basic route for testing
 app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to BizCheckPermit API' });
+    res.json({ message: 'Welcome to PermitEase API' });
 });
 
 const PORT = process.env.PORT || 5000;

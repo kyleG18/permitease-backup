@@ -12,7 +12,8 @@ const getBusinesses = async (req, res) => {
         res.json(businesses);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -31,7 +32,8 @@ const getBusiness = async (req, res) => {
         res.json(businesses[0]);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -54,7 +56,8 @@ const createBusiness = async (req, res) => {
         res.status(201).json({ id: result.insertId, message: 'Business created successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -78,7 +81,8 @@ const updateBusiness = async (req, res) => {
         res.json({ message: 'Business updated successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -96,7 +100,8 @@ const deleteBusiness = async (req, res) => {
         res.json({ message: 'Business deleted successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

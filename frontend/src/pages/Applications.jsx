@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { FileText, Plus, Eye, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Send, Ban } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const STATUS_CONFIG = {
   DRAFT:            { label: 'Draft',            color: '#64748B', bg: '#F1F5F9' },

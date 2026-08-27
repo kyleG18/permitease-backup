@@ -48,7 +48,8 @@ const getDocuments = async (req, res) => {
         );
         res.json(docs);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -88,7 +89,8 @@ const uploadDocument = [
 
             res.status(201).json({ id: result.insertId, message: 'Document uploaded successfully', file_path });
         } catch (error) {
-            res.status(500).json({ message: 'Server error: ' + error.message });
+            console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
         }
     }
 ];
@@ -108,7 +110,8 @@ const deleteDocument = async (req, res) => {
         await db.query('DELETE FROM documents WHERE id = ?', [req.params.id]);
         res.json({ message: 'Document deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

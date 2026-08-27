@@ -15,7 +15,8 @@ const getNotifications = async (req, res) => {
         );
         res.json(notifications);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -30,7 +31,8 @@ const getUnreadCount = async (req, res) => {
         );
         res.json({ count: row.count });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -45,7 +47,8 @@ const markAsRead = async (req, res) => {
         );
         res.json({ message: 'Notification marked as read' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -60,7 +63,8 @@ const markAllAsRead = async (req, res) => {
         );
         res.json({ message: 'All notifications marked as read' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -75,7 +79,8 @@ const deleteNotification = async (req, res) => {
         );
         res.json({ message: 'Notification deleted' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

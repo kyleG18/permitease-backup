@@ -20,7 +20,7 @@ const BusinessProfile = () => {
 
   const fetchBusinesses = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/businesses', config);
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, config);
       setBusinesses(data);
     } catch (err) {
       setError('Failed to load businesses');
@@ -53,9 +53,9 @@ const BusinessProfile = () => {
     e.preventDefault();
     try {
       if (editingBusiness) {
-        await axios.put(`http://localhost:5000/api/businesses/${editingBusiness.id}`, formData, config);
+        await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses/${editingBusiness.id}`, formData, config);
       } else {
-        await axios.post('http://localhost:5000/api/businesses', formData, config);
+        await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, formData, config);
       }
       setShowModal(false);
       fetchBusinesses();
@@ -67,7 +67,7 @@ const BusinessProfile = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this business?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/businesses/${id}`, config);
+      await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses/${id}`, config);
       fetchBusinesses();
     } catch (err) {
       setError('Failed to delete business');

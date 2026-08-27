@@ -8,7 +8,8 @@ const getRequirements = async (req, res) => {
         const [requirements] = await db.query('SELECT * FROM permit_requirements ORDER BY created_at DESC');
         res.json(requirements);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -21,7 +22,8 @@ const getRequirement = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ message: 'Requirement not found' });
         res.json(rows[0]);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -40,7 +42,8 @@ const createRequirement = async (req, res) => {
         );
         res.status(201).json({ id: result.insertId, message: 'Requirement created successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -56,7 +59,8 @@ const updateRequirement = async (req, res) => {
         );
         res.json({ message: 'Requirement updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -68,7 +72,8 @@ const deleteRequirement = async (req, res) => {
         await db.query('DELETE FROM permit_requirements WHERE id = ?', [req.params.id]);
         res.json({ message: 'Requirement deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

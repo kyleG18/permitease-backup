@@ -18,7 +18,7 @@ export const BusinessProvider = ({ children }) => {
     
     try {
       setLoadingBusinesses(true);
-      const { data } = await axios.get('http://localhost:5000/api/businesses', {
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setBusinesses(data || []);

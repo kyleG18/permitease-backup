@@ -19,8 +19,8 @@ const Documents = () => {
   const fetchData = async () => {
     try {
       const [docsRes, bizsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/documents', config),
-        axios.get('http://localhost:5000/api/businesses', config)
+        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents`, config),
+        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, config)
       ]);
       setDocuments(docsRes.data);
       setBusinesses(bizsRes.data);
@@ -40,7 +40,7 @@ const Documents = () => {
       uploadData.append('business_id', formData.business_id);
       uploadData.append('document_name', formData.document_name);
       uploadData.append('expiration_date', formData.expiration_date);
-      await axios.post('http://localhost:5000/api/documents/upload', uploadData, {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/upload`, uploadData, {
         headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'multipart/form-data' }
       });
       setShowModal(false); setFile(null); setFormData({ business_id: '', document_name: '', expiration_date: '' }); fetchData();
@@ -50,7 +50,7 @@ const Documents = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this document?')) return;
-    try { await axios.delete(`http://localhost:5000/api/documents/${id}`, config); fetchData(); }
+    try { await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${id}`, config); fetchData(); }
     catch (err) { setError('Failed to delete'); }
   };
 

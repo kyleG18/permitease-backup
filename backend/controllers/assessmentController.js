@@ -80,7 +80,8 @@ const createAssessment = async (req, res) => {
 
     } catch (error) {
         console.error('[AssessmentController] createAssessment error:', error.message);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -96,7 +97,8 @@ const getAssessments = async (req, res) => {
         );
         res.json(assessments);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -109,7 +111,8 @@ const getAssessment = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ message: 'Assessment not found' });
         res.json(rows[0]);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

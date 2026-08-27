@@ -28,7 +28,7 @@ const Chatbot = () => {
     // Load chat history on mount
     const fetchHistory = async () => {
       try {
-        const { data } = await axios.get('http://localhost:5000/api/chat/history', config);
+        const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/chat/history`, config);
         if (data.length > 0) {
           const histMsgs = data.flatMap(h => [
             { type: 'user', text: h.question },
@@ -59,7 +59,7 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:5000/api/chat', { question }, config);
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/chat`, { question }, config);
       setMessages(prev => [...prev, { type: 'bot', text: data.response }]);
     } catch (err) {
       if (err.response?.status === 429) {

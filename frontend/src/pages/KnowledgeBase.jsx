@@ -18,7 +18,7 @@ const KnowledgeBase = () => {
 
   const fetchDocs = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/knowledge');
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/knowledge`);
       setDocs(data);
     } catch (err) { setError('Failed to load documents'); }
     finally { setLoading(false); }
@@ -34,7 +34,7 @@ const KnowledgeBase = () => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('title', title);
-      await axios.post('http://localhost:5000/api/knowledge/upload', formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/knowledge/upload`, formData, {
         headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'multipart/form-data' }
       });
       setShowModal(false); setFile(null); setTitle(''); fetchDocs();
@@ -44,7 +44,7 @@ const KnowledgeBase = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this document?')) return;
-    try { await axios.delete(`http://localhost:5000/api/knowledge/${id}`, config); fetchDocs(); }
+    try { await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/knowledge/${id}`, config); fetchDocs(); }
     catch (err) { setError('Failed to delete'); }
   };
 

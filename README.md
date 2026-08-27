@@ -97,9 +97,9 @@ npm run test:ai
 npm run test:onboarding
 \\\
 
-## Default Admin Credentials
+### Administrator Access
 
-If you seeded the database correctly, you can access the admin dashboard using:
-*   **Email:** admin@bizcheckpermit.gov.ph
-*   **Password:** Admin@12345 (or run \
-ode backend/resetAdmin.js\ to reset to \dmin123\)
+The system administrator account must be provisioned using environment-specific
+credentials or the project's administrative setup procedure.
+
+*(If using the default local seed for development, refer to `backend/scripts/resetAdmin.js` for the local test credentials).*

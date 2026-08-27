@@ -126,7 +126,7 @@ const Onboarding = () => {
     setLoading(true);
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const response = await axios.post('http://localhost:5000/api/businesses', formData, config);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, formData, config);
       
       // Update global context
       await refreshBusinesses();

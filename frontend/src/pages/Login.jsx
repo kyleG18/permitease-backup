@@ -35,7 +35,7 @@ const Login = () => {
       const user = result.data;
       if (user.role === 'business_owner') {
         try {
-          const bizRes = await fetch('http://localhost:5000/api/businesses', {
+          const bizRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, {
             headers: { Authorization: `Bearer ${user.token}` }
           });
           const businesses = await bizRes.json();

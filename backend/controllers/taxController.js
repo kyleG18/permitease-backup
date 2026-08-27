@@ -84,7 +84,8 @@ const getEstimate = async (req, res) => {
 
     } catch (error) {
         console.error('Tax Estimate Error:', error);
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -96,7 +97,8 @@ const getRules = async (req, res) => {
         const [rules] = await db.query('SELECT * FROM tax_fee_rules ORDER BY category, name');
         res.json(rules);
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -117,7 +119,8 @@ const createRule = async (req, res) => {
 
         res.status(201).json({ id: result.insertId, message: 'Rule created successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -133,7 +136,8 @@ const updateRule = async (req, res) => {
         );
         res.json({ message: 'Rule updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 
@@ -145,7 +149,8 @@ const deleteRule = async (req, res) => {
         await db.query('DELETE FROM tax_fee_rules WHERE id=?', [req.params.id]);
         res.json({ message: 'Rule deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error: ' + error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };
 

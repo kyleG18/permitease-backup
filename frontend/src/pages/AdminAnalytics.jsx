@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { Building2, FileText, CheckCircle, Clock, AlertTriangle, AlertCircle, FileX, CreditCard, RotateCw } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const COLORS = ['#059669', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#64748B'];
 

@@ -18,7 +18,7 @@ const Assessment = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const assessRes = await axios.get('http://localhost:5000/api/assessments', config);
+        const assessRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/assessments`, config);
         setAssessments(assessRes.data);
       } catch (err) { setError('Failed to load assessment history.'); }
       finally { setLoadingHistory(false); }
@@ -35,7 +35,7 @@ const Assessment = () => {
     setCurrentResult(null);
     
     try {
-      const { data } = await axios.post('http://localhost:5000/api/assessments', { business_description: description }, config);
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/assessments`, { business_description: description }, config);
       setCurrentResult({
         ai_assessment: data.ai_assessment,
         official_assessment: data.official_assessment
@@ -43,7 +43,7 @@ const Assessment = () => {
       setDescription('');
       
       // Refresh assessment history
-      const histRes = await axios.get('http://localhost:5000/api/assessments', config);
+      const histRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/assessments`, config);
       setAssessments(histRes.data);
     } catch (err) { 
         if (err.response?.status === 429) {

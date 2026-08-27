@@ -13,7 +13,7 @@ const AuditLogs = () => {
     const fetchLogs = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const res = await axios.get('http://localhost:5000/api/admin/audit-logs', config);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/audit-logs`, config);
         setLogs(res.data);
         setLoading(false);
       } catch (err) {

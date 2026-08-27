@@ -12,7 +12,7 @@ const Reports = () => {
     const fetchReports = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const res = await axios.get('http://localhost:5000/api/reports/summary', config);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/reports/summary`, config);
         setData(res.data);
         setLoading(false);
       } catch (err) {

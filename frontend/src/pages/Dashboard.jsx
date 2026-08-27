@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const API = 'http://localhost:5000/api';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const StatCard = ({ icon: Icon, label, value, color, bg }) => (
   <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-md)', padding: '1.25rem 1.5rem', boxShadow: 'var(--shadow-card)', display: 'flex', alignItems: 'center', gap: '1rem' }}>

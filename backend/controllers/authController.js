@@ -50,7 +50,7 @@ const registerUser = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error during registration: ' + error.message });
+        console.error('Registration error:', error); res.status(500).json({ message: 'An internal server error occurred during registration. Please try again later.' });
     }
 };
 
@@ -89,7 +89,7 @@ const loginUser = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error during login: ' + error.message });
+        console.error('Login error:', error); res.status(500).json({ message: 'An internal server error occurred during login. Please try again later.' });
     }
 };
 
