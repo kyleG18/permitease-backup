@@ -35,7 +35,7 @@ import PermitDetail from './pages/PermitDetail';
 import VerifyPermit from './pages/VerifyPermit';
 import AdminPermits from './pages/AdminPermits';
 import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
+import Layout from './layouts/Layout';
 import Onboarding from './pages/Onboarding';
 
 // Reusable wrapper for protected layout pages

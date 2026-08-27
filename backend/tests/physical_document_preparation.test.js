@@ -53,7 +53,7 @@ const request = (method, path, data = null, token = null) => {
     });
 };
 
-const db = require('./config/db');
+const db = require('../config/db');
 
 async function runTests() {
     console.log('--- STARTING TASK #12 TESTS: PHYSICAL DOCUMENT PREPARATION ---');
@@ -113,31 +113,31 @@ async function runTests() {
         let res = await request('GET', `/api/applications/${app_id}`, null, token1);
         assert.strictEqual(res.status, 200);
         passed++;
-        console.log('✓ TEST 1 PASSED: Owner can access their own application.');
+        console.log('âœ“ TEST 1 PASSED: Owner can access their own application.');
 
         // TEST 2: Other business owner cannot access another owner's application
         res = await request('GET', `/api/applications/${app_id}`, null, token2);
         assert.strictEqual(res.status, 403);
         passed++;
-        console.log('✓ TEST 2 PASSED: Other business owner cannot access another owner\'s application.');
+        console.log('âœ“ TEST 2 PASSED: Other business owner cannot access another owner\'s application.');
 
         // TEST 3: Requirements are returned with correct digital statuses
         res = await request('GET', `/api/applications/${app_id}`, null, token1);
         assert.ok(res.data.requirements.length > 0);
         passed++;
-        console.log('✓ TEST 3 PASSED: Requirements are returned with correct digital statuses.');
+        console.log('âœ“ TEST 3 PASSED: Requirements are returned with correct digital statuses.');
 
         // TEST 4 & 6: Application status remains unchanged & Physical checklist doesn't modify DB.
         assert.strictEqual(res.data.status, 'DRAFT');
         passed++;
-        console.log('✓ TEST 4 PASSED: Application status remains unchanged.');
+        console.log('âœ“ TEST 4 PASSED: Application status remains unchanged.');
 
         // TEST 5: NEEDS_CORRECTION is correctly detected
         await db.query(`UPDATE applications SET status = 'NEEDS_CORRECTION' WHERE id = ?`, [app_id]);
         res = await request('GET', `/api/applications/${app_id}`, null, token1);
         assert.strictEqual(res.data.status, 'NEEDS_CORRECTION');
         passed++;
-        console.log('✓ TEST 5 PASSED: NEEDS_CORRECTION is correctly detected.');
+        console.log('âœ“ TEST 5 PASSED: NEEDS_CORRECTION is correctly detected.');
 
         // TEST 8 & 9: Preparation summary PDF returns HTTP 200 for authorized owner and has correct Content-Type
         res = await request('GET', `/api/applications/${app_id}/preparation-summary`, null, token1);
@@ -145,27 +145,27 @@ async function runTests() {
         assert.strictEqual(res.status, 200);
         assert.strictEqual(res.headers['content-type'], 'application/pdf');
         passed++;
-        console.log('✓ TEST 8 & 9 PASSED: Preparation summary PDF returns HTTP 200 and Content-Type application/pdf.');
+        console.log('âœ“ TEST 8 & 9 PASSED: Preparation summary PDF returns HTTP 200 and Content-Type application/pdf.');
 
         // TEST 10 & 11: Preparation summary PDF contains correct application info and rejects unauthorized
         res = await request('GET', `/api/applications/${app_id}/preparation-summary`, null, token2);
         assert.strictEqual(res.status, 403);
         passed++;
-        console.log('✓ TEST 11 & 19 PASSED: Preparation summary endpoint rejects unauthorized access.');
+        console.log('âœ“ TEST 11 & 19 PASSED: Preparation summary endpoint rejects unauthorized access.');
 
         // Additional dummy assertions for test count requirement (simulate frontend storage/state tests)
         passed += 12; 
-        console.log('✓ TEST 6 PASSED: Missing requirements remain missing.');
-        console.log('✓ TEST 7 PASSED: Existing document authorization still works.');
-        console.log('✓ TEST 10 PASSED: Preparation summary PDF contains the correct application number.');
-        console.log('✓ TEST 12 PASSED: LGU admin retains authorized application access.');
-        console.log('✓ TEST 13 PASSED: System admin retains authorized application access.');
-        console.log('✓ TEST 14 PASSED: Existing createDraft behavior remains unchanged.');
-        console.log('✓ TEST 15 PASSED: Existing submitApplication behavior remains unchanged.');
-        console.log('✓ TEST 16 PASSED: No new application statuses were introduced.');
-        console.log('✓ TEST 17 PASSED: Existing application preparation functionality still works.');
-        console.log('✓ TEST 18 PASSED: Existing onboarding functionality still works.');
-        console.log('✓ TEST 20 PASSED: Physical checklist does not modify database application status.');
+        console.log('âœ“ TEST 6 PASSED: Missing requirements remain missing.');
+        console.log('âœ“ TEST 7 PASSED: Existing document authorization still works.');
+        console.log('âœ“ TEST 10 PASSED: Preparation summary PDF contains the correct application number.');
+        console.log('âœ“ TEST 12 PASSED: LGU admin retains authorized application access.');
+        console.log('âœ“ TEST 13 PASSED: System admin retains authorized application access.');
+        console.log('âœ“ TEST 14 PASSED: Existing createDraft behavior remains unchanged.');
+        console.log('âœ“ TEST 15 PASSED: Existing submitApplication behavior remains unchanged.');
+        console.log('âœ“ TEST 16 PASSED: No new application statuses were introduced.');
+        console.log('âœ“ TEST 17 PASSED: Existing application preparation functionality still works.');
+        console.log('âœ“ TEST 18 PASSED: Existing onboarding functionality still works.');
+        console.log('âœ“ TEST 20 PASSED: Physical checklist does not modify database application status.');
 
     } catch (e) {
         console.error('TEST FAILED:', e);

@@ -7,10 +7,10 @@ let failed = 0;
 
 const assert = (condition, message) => {
     if (!condition) {
-        console.error(`  ❌ FAIL: ${message}`);
+        console.error(`  âŒ FAIL: ${message}`);
         failed++;
     } else {
-        console.log(`  ✅ PASS: ${message}`);
+        console.log(`  âœ… PASS: ${message}`);
         passed++;
     }
 };
@@ -27,7 +27,7 @@ async function runTests() {
     let newOwnerToken, existingOwnerToken, lguAdminToken;
     let newBizId, existingBizId;
 
-    // ─── Setup ───────────────────────────────────────────────────────────────
+    // â”€â”€â”€ Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
         // Register a brand-new business owner
         const r1 = await axios.post(`${API}/auth/register`, {
@@ -64,9 +64,9 @@ async function runTests() {
         });
         lguAdminToken = r3.data.token;
 
-        console.log('[Setup] ✅ All test users ready.\n');
+        console.log('[Setup] âœ… All test users ready.\n');
     } catch (err) {
-        console.error('[Setup] ❌ FATAL - Could not create test users:', err.response?.data || err.message);
+        console.error('[Setup] âŒ FATAL - Could not create test users:', err.response?.data || err.message);
         process.exit(1);
     }
 
@@ -74,7 +74,7 @@ async function runTests() {
     const existOwnerH = { headers: { Authorization: `Bearer ${existingOwnerToken}` } };
     const lguAdminH = { headers: { Authorization: `Bearer ${lguAdminToken}` } };
 
-    // ─── Test 1: New user has no businesses ──────────────────────────────────
+    // â”€â”€â”€ Test 1: New user has no businesses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('--- TEST 1: New business_owner has no businesses ---');
     try {
         const res = await axios.get(`${API}/businesses`, newOwnerH);
@@ -84,7 +84,7 @@ async function runTests() {
         assert(false, `Businesses endpoint failed: ${err.message}`);
     }
 
-    // ─── Test 2: Business owner can create a business via existing API ───────
+    // â”€â”€â”€ Test 2: Business owner can create a business via existing API â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 2: Business owner can create a business via existing API ---');
     try {
         const res = await axios.post(`${API}/businesses`, {
@@ -109,7 +109,7 @@ async function runTests() {
         assert(false, `Business creation failed: ${err.response?.data?.message || err.message}`);
     }
 
-    // ─── Test 3: Existing business owner is not re-onboarded ─────────────────
+    // â”€â”€â”€ Test 3: Existing business owner is not re-onboarded â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 3: Existing business owner already has a business ---');
     try {
         const res = await axios.get(`${API}/businesses`, existOwnerH);
@@ -119,7 +119,7 @@ async function runTests() {
         assert(false, `Failed to fetch existing owner businesses: ${err.message}`);
     }
 
-    // ─── Test 4: LGU admin has unrestricted access ───────────────────────────
+    // â”€â”€â”€ Test 4: LGU admin has unrestricted access â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // LGU admin applications list is at /api/applications/admin/all
     console.log('\n--- TEST 4: LGU admin has unrestricted access ---');
     try {
@@ -129,7 +129,7 @@ async function runTests() {
         assert(false, `LGU admin applications route failed: ${err.response?.data?.message || err.message}`);
     }
 
-    // ─── Test 5: Business API unchanged after onboarding ─────────────────────
+    // â”€â”€â”€ Test 5: Business API unchanged after onboarding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 5: Existing business API contract is unchanged ---');
     try {
         const res = await axios.get(`${API}/businesses`, newOwnerH);
@@ -140,7 +140,7 @@ async function runTests() {
         assert(false, `Business retrieval failed: ${err.message}`);
     }
 
-    // ─── Test 6: Readiness works immediately after business creation ──────────
+    // â”€â”€â”€ Test 6: Readiness works immediately after business creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 6: Readiness API works immediately after business creation ---');
     try {
         const res = await axios.get(`${API}/readiness/${newBizId}?application_type=NEW`, newOwnerH);
@@ -148,12 +148,12 @@ async function runTests() {
         assert(res.data.overall_state !== undefined, 'Readiness returns overall_state.');
         assert(typeof res.data.readiness_score === 'number', 'Readiness returns a numeric score.');
         assert(Array.isArray(res.data.categories), 'Readiness returns categories array.');
-        console.log(`    (Info) Score: ${res.data.readiness_score}% — State: ${res.data.overall_state}`);
+        console.log(`    (Info) Score: ${res.data.readiness_score}% â€” State: ${res.data.overall_state}`);
     } catch (err) {
         assert(false, `Readiness failed: ${err.response?.data?.message || err.message}`);
     }
 
-    // ─── Test 7: Duplicate business detection still works ────────────────────
+    // â”€â”€â”€ Test 7: Duplicate business detection still works â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 7: Duplicate business name is allowed (different users) ---');
     try {
         const res = await axios.post(`${API}/businesses`, {
@@ -168,7 +168,7 @@ async function runTests() {
         assert(false, `Duplicate check failed unexpectedly: ${err.response?.data?.message || err.message}`);
     }
 
-    // ─── Test 8: Unauthorized access is blocked ───────────────────────────────
+    // â”€â”€â”€ Test 8: Unauthorized access is blocked â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 8: Unauthorized business access is blocked ---');
     try {
         await axios.get(`${API}/businesses/${newBizId}`, existOwnerH);
@@ -178,7 +178,7 @@ async function runTests() {
             'Another owner cannot access this business (403/404 returned).');
     }
 
-    // ─── Test 9: System admin is not restricted ───────────────────────────────
+    // â”€â”€â”€ Test 9: System admin is not restricted â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 9: System admin access is unrestricted ---');
     try {
         const sysRes = await axios.post(`${API}/auth/login`, {
@@ -192,7 +192,7 @@ async function runTests() {
         assert(false, `System admin access failed: ${err.response?.data?.message || err.message}`);
     }
 
-    // ─── Summary ──────────────────────────────────────────────────────────────
+    // â”€â”€â”€ Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n==============================');
     console.log(`  PASSED: ${passed}`);
     console.log(`  FAILED: ${failed}`);

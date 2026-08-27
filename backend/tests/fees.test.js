@@ -3,7 +3,7 @@
  * Tests the GET /api/applications/:id/fees endpoint
  */
 const axios = require('axios');
-const db = require('./config/db');
+const db = require('../config/db');
 const jwt = require('jsonwebtoken');
 
 const API = 'http://localhost:5000/api';
@@ -13,18 +13,18 @@ let passed = 0;
 let failed = 0;
 
 function assert(cond, msg) {
-    if (cond) { console.log(`  ✅ PASS: ${msg}`); passed++; }
-    else { console.error(`  ❌ FAIL: ${msg}`); failed++; }
+    if (cond) { console.log(`  âœ… PASS: ${msg}`); passed++; }
+    else { console.error(`  âŒ FAIL: ${msg}`); failed++; }
 }
 
 function formatPHP(n) {
-    return '₱' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return 'â‚±' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 async function run() {
-    console.log('\n─── PERMIT TAX & FEE ASSESSMENT — ACCEPTANCE TESTS ───\n');
+    console.log('\nâ”€â”€â”€ PERMIT TAX & FEE ASSESSMENT â€” ACCEPTANCE TESTS â”€â”€â”€\n');
 
-    // ─── SETUP ───────────────────────────────────────────────────────────
+    // â”€â”€â”€ SETUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const ts = Date.now();
     await db.query("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, 'pw', 'business_owner')", [`OwnerFee ${ts}`, `ownerfee${ts}@test.com`]);
     const [[ou]] = await db.query('SELECT id FROM users WHERE email = ?', [`ownerfee${ts}@test.com`]);
@@ -45,7 +45,7 @@ async function run() {
     const AH = { headers: { Authorization: `Bearer ${adminToken}` } };
     const OBH = { headers: { Authorization: `Bearer ${ownerBToken}` } };
 
-    // ─── BUSINESS A: Complete new application (Food & Beverage) ──────────
+    // â”€â”€â”€ BUSINESS A: Complete new application (Food & Beverage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Capitalization=100000, gross_sales=200000, floor_area=50
     await db.query(
         `INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, capitalization, gross_sales, floor_area, business_status)
@@ -59,7 +59,7 @@ async function run() {
     const r1 = await axios.post(`${API}/applications`, { business_id: bizAId, application_type: 'NEW' }, OH);
     const appAId = r1.data.id;
 
-    // ─── BUSINESS B: Incomplete — capitalization missing (0.00) ──────────
+    // â”€â”€â”€ BUSINESS B: Incomplete â€” capitalization missing (0.00) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     await db.query(
         `INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, capitalization, gross_sales, floor_area, business_status)
          VALUES (?, 'Incomplete Biz', 'Retail', 'Retail', '2 Side St', 0.00, 0.00, 0.00, 'New Application')`,
@@ -70,7 +70,7 @@ async function run() {
     const r2 = await axios.post(`${API}/applications`, { business_id: bizBId, application_type: 'NEW' }, OH);
     const appBId = r2.data.id;
 
-    // ─── BUSINESS C: Renewal — gross_sales = 500000 ───────────────────────
+    // â”€â”€â”€ BUSINESS C: Renewal â€” gross_sales = 500000 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     await db.query(
         `INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, capitalization, gross_sales, floor_area, business_status)
          VALUES (?, 'Renewal Retail Biz', 'Retail', 'Retail', '3 Renewal Ave', 200000.00, 500000.00, 30.00, 'Renewal')`,
@@ -81,7 +81,7 @@ async function run() {
     const r3 = await axios.post(`${API}/applications`, { business_id: bizCId, application_type: 'RENEWAL' }, OH);
     const appCId = r3.data.id;
 
-    // ─── BUSINESS D: Owner B — for RBAC test ─────────────────────────────
+    // â”€â”€â”€ BUSINESS D: Owner B â€” for RBAC test â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     await db.query(
         `INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, capitalization, gross_sales, floor_area, business_status)
          VALUES (?, 'Owner B Biz', 'Services', 'Services', '4 Other St', 50000.00, 80000.00, 20.00, 'New Application')`,
@@ -91,12 +91,12 @@ async function run() {
     const r4 = await axios.post(`${API}/applications`, { business_id: bizD.id, application_type: 'NEW' }, OBH);
     const appDId = r4.data.id;
 
-    // ─────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // TEST 1: Complete Food & Beverage NEW application
-    console.log('\n[TEST 1] Complete Food & Beverage — New Application');
+    console.log('\n[TEST 1] Complete Food & Beverage â€” New Application');
     const t1 = await axios.get(`${API}/applications/${appAId}/fees`, OH);
     const d1 = t1.data;
-    console.log('  Rules applied:', d1.breakdown.map(b => `${b.name}: ${b.status === 'calculated' ? formatPHP(b.amount) : '⚠ ' + b.reason}`).join(' | '));
+    console.log('  Rules applied:', d1.breakdown.map(b => `${b.name}: ${b.status === 'calculated' ? formatPHP(b.amount) : 'âš  ' + b.reason}`).join(' | '));
     assert(!d1.is_incomplete, 'No incomplete flags for complete business');
     assert(d1.total_estimated_amount > 0, 'Total is positive');
     // Expected: Mayor's Permit (500) + Business Tax New (100000 * 0.01 = 1000) + Sanitary (300, Food & Bev) + Garbage (50 * 5 = 250) = 2050
@@ -114,7 +114,7 @@ async function run() {
     assert(!hasRenewal, 'Business Tax (Renewal) NOT applied for new application');
 
     // TEST 2: Missing financial data
-    console.log('\n[TEST 2] Incomplete Business — 0.00 Capitalization, Gross Sales, Floor Area');
+    console.log('\n[TEST 2] Incomplete Business â€” 0.00 Capitalization, Gross Sales, Floor Area');
     const t2 = await axios.get(`${API}/applications/${appBId}/fees`, OH);
     const d2 = t2.data;
     console.log('  Missing reasons:', d2.missing_info_reasons);
@@ -126,30 +126,30 @@ async function run() {
     // Business Tax should be incomplete
     const taxIncomplete = d2.breakdown.some(b => b.name === 'Business Tax (New)' && b.status === 'incomplete');
     assert(taxIncomplete, 'Business Tax correctly marked incomplete when capitalization is 0.00');
-    // Should not silently treat as ₱0.00 total when missing
+    // Should not silently treat as â‚±0.00 total when missing
     // The total will equal only the fixed-fee items
     console.log(`  Partial total (fixed fees only): ${formatPHP(d2.total_estimated_amount)}`);
-    assert(d2.total_estimated_amount === 500, 'Partial total equals only the fixed Mayor permit (₱500)');
+    assert(d2.total_estimated_amount === 500, 'Partial total equals only the fixed Mayor permit (â‚±500)');
 
     // TEST 3: Renewal application
-    console.log('\n[TEST 3] Renewal Application — gross_sales basis');
+    console.log('\n[TEST 3] Renewal Application â€” gross_sales basis');
     const t3 = await axios.get(`${API}/applications/${appCId}/fees`, OH);
     const d3 = t3.data;
-    console.log('  Rules applied:', d3.breakdown.map(b => `${b.name}: ${b.status === 'calculated' ? formatPHP(b.amount) : '⚠ ' + b.reason}`).join(' | '));
+    console.log('  Rules applied:', d3.breakdown.map(b => `${b.name}: ${b.status === 'calculated' ? formatPHP(b.amount) : 'âš  ' + b.reason}`).join(' | '));
     // Renewal tax: 500000 * 0.02 = 10000
     const hasTaxRenewal = d3.breakdown.some(b => b.name === 'Business Tax (Renewal)');
     assert(hasTaxRenewal, 'Business Tax (Renewal) rule applied for RENEWAL application');
     const hasNewTax = d3.breakdown.some(b => b.name === 'Business Tax (New)');
     assert(!hasNewTax, 'Business Tax (New) NOT applied for RENEWAL application');
     const renewalTaxItem = d3.breakdown.find(b => b.name === 'Business Tax (Renewal)');
-    assert(renewalTaxItem && renewalTaxItem.amount === 10000, `Renewal tax calculated correctly: ${formatPHP(renewalTaxItem?.amount)} (expected ₱10,000.00)`);
+    assert(renewalTaxItem && renewalTaxItem.amount === 10000, `Renewal tax calculated correctly: ${formatPHP(renewalTaxItem?.amount)} (expected â‚±10,000.00)`);
     // Sanitary Fee should NOT apply (Retail, not Food & Beverage)
     const hasSanitaryC = d3.breakdown.some(b => b.name === 'Sanitary Inspection Fee');
     assert(!hasSanitaryC, 'Sanitary Inspection Fee NOT applied for non-Food & Beverage');
     assert(!d3.is_incomplete, 'No incomplete flags for renewal with complete data');
 
-    // TEST 4: RBAC — Owner A cannot see Owner B's fees
-    console.log('\n[TEST 4] RBAC — Cross-owner access denied');
+    // TEST 4: RBAC â€” Owner A cannot see Owner B's fees
+    console.log('\n[TEST 4] RBAC â€” Cross-owner access denied');
     try {
         await axios.get(`${API}/applications/${appDId}/fees`, OH);
         assert(false, 'Should have blocked Owner A accessing Owner B fees');
@@ -164,7 +164,7 @@ async function run() {
     const t5b = await axios.get(`${API}/applications/${appDId}/fees`, AH);
     assert(t5b.status === 200, 'Admin can access Owner B fees');
 
-    // TEST 6: Rounding — verify 2 decimal places
+    // TEST 6: Rounding â€” verify 2 decimal places
     console.log('\n[TEST 6] Currency rounding');
     const t6 = t1.data;
     assert(Number.isFinite(t6.total_estimated_amount), 'Total is a finite number');
@@ -179,7 +179,7 @@ async function run() {
     assert(typeof t1.data.disclaimer === 'string' && t1.data.disclaimer.length > 0, 'Disclaimer string is returned by API');
 
     // SUMMARY
-    console.log(`\n─── RESULTS: ${passed} passed, ${failed} failed ───`);
+    console.log(`\nâ”€â”€â”€ RESULTS: ${passed} passed, ${failed} failed â”€â”€â”€`);
     process.exit(failed > 0 ? 1 : 0);
 }
 

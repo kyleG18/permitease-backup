@@ -1,5 +1,5 @@
 const axios = require('axios');
-const db = require('./config/db');
+const db = require('../config/db');
 require('dotenv').config();
 
 const API = 'http://localhost:5000/api';
@@ -62,10 +62,10 @@ const setupTests = async () => {
 
 const assert = (condition, message) => {
     if (!condition) {
-        console.error(`❌ FAIL: ${message}`);
+        console.error(`âŒ FAIL: ${message}`);
         throw new Error(message);
     }
-    console.log(`✅ PASS: ${message}`);
+    console.log(`âœ… PASS: ${message}`);
 };
 
 const checkNotification = async (type) => {

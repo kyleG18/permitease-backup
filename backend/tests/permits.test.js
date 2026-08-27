@@ -1,7 +1,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const db = require('./config/db');
+const db = require('../config/db');
 
 const API = 'http://localhost:5000/api';
 
@@ -10,10 +10,10 @@ let failed = 0;
 
 const assert = (condition, message) => {
     if (condition) {
-        console.log(`✅ PASS: ${message}`);
+        console.log(`âœ… PASS: ${message}`);
         passed++;
     } else {
-        console.error(`❌ FAIL: ${message}`);
+        console.error(`âŒ FAIL: ${message}`);
         failed++;
     }
 };

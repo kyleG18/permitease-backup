@@ -1,5 +1,5 @@
 const axios = require('axios');
-const db = require('./config/db');
+const db = require('../config/db');
 
 const API = 'http://localhost:5000/api';
 
@@ -10,10 +10,10 @@ async function runTest() {
 
     const assert = (condition, message) => {
         if (condition) {
-            console.log(`✅ PASS: ${message}`);
+            console.log(`âœ… PASS: ${message}`);
             passed++;
         } else {
-            console.error(`❌ FAIL: ${message}`);
+            console.error(`âŒ FAIL: ${message}`);
             failed++;
         }
     };

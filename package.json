@@ -1,0 +1,11 @@
+{
+    "private":  true,
+    "name":  "permetease-root",
+    "version":  "1.0.0",
+    "scripts":  {
+                    "start:frontend":  "npm run dev --prefix frontend",
+                    "start:backend":  "npm run start --prefix backend",
+                    "install:all":  "npm install --prefix backend \u0026\u0026 npm install --prefix frontend",
+                    "build":  "npm run build --prefix frontend"
+                }
+}

@@ -130,7 +130,7 @@ const sendMessage = async (req, res) => {
         // 3. Read static AI Context File
         let staticContext = '';
         try {
-            staticContext = fs.readFileSync(path.join(__dirname, '../ai_context.md'), 'utf8');
+            staticContext = fs.readFileSync(path.join(__dirname, '../services/ai_context.md'), 'utf8');
         } catch (e) {
             console.warn('ai_context.md not found, proceeding without it.');
         }

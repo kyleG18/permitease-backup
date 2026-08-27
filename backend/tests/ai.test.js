@@ -1,5 +1,5 @@
 const axios = require('axios');
-const db = require('./config/db');
+const db = require('../config/db');
 require('dotenv').config();
 
 const API = 'http://localhost:5000/api';
@@ -55,10 +55,10 @@ const setupTests = async () => {
 
 const assert = (condition, message) => {
     if (!condition) {
-        console.error(`❌ FAIL: ${message}`);
+        console.error(`âŒ FAIL: ${message}`);
         throw new Error(message);
     }
-    console.log(`✅ PASS: ${message}`);
+    console.log(`âœ… PASS: ${message}`);
 };
 
 const runTests = async () => {
@@ -133,7 +133,7 @@ const runTests = async () => {
     await test('Assessment: Valid business description produces structured response', async () => {
         // Only run if GROQ_API_KEY is present
         if (!process.env.GROQ_API_KEY) {
-            console.log('⚠️ Skipping live Groq test (no API key)');
+            console.log('âš ï¸ Skipping live Groq test (no API key)');
             return;
         }
 
@@ -161,7 +161,7 @@ const runTests = async () => {
 
     await test('Chat: Valid message generates response', async () => {
         if (!process.env.GROQ_API_KEY) {
-            console.log('⚠️ Skipping live Groq test (no API key)');
+            console.log('âš ï¸ Skipping live Groq test (no API key)');
             return;
         }
 

@@ -28,7 +28,7 @@ async function getTokens() {
             u.ref.headers.Authorization = `Bearer ${regRes.data.token}`;
             
             if (u.role !== 'business_owner') {
-                const db = require('./config/db');
+                const db = require('../config/db');
                 await db.query('UPDATE users SET role = ? WHERE email = ?', [u.role, u.email]);
             }
         } catch (err) {
@@ -50,8 +50,8 @@ async function runTests() {
     let passed = 0;
     let failed = 0;
 
-    const pass = (msg) => { console.log(`  ✅ PASS: ${msg}`); passed++; };
-    const fail = (msg) => { console.log(`  ❌ FAIL: ${msg}`); failed++; };
+    const pass = (msg) => { console.log(`  âœ… PASS: ${msg}`); passed++; };
+    const fail = (msg) => { console.log(`  âŒ FAIL: ${msg}`); failed++; };
 
     // Find main owner's business
     try {
@@ -73,7 +73,7 @@ async function runTests() {
         process.exit(1);
     }
 
-    // ─── Test 1: Retrieve Readiness Information ──────────────────────────────
+    // â”€â”€â”€ Test 1: Retrieve Readiness Information â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 1: Retrieve Readiness Information ---');
     try {
         const res = await axios.get(`${API}/readiness/${mainBizId}?application_type=NEW`, ownerH);
@@ -89,7 +89,7 @@ async function runTests() {
         fail(`Test 1 Failed: ${err.message}`);
     }
 
-    // ─── Test 2: Cannot access another user's business readiness ───────────
+    // â”€â”€â”€ Test 2: Cannot access another user's business readiness â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 2: Business Privacy ---');
     try {
         await axios.get(`${API}/readiness/${mainBizId}?application_type=NEW`, otherOwnerH);
@@ -99,7 +99,7 @@ async function runTests() {
         pass('Business owner cannot access another user\'s business readiness.');
     }
 
-    // ─── Test 3: Continue to Application creates correct type ────────────────
+    // â”€â”€â”€ Test 3: Continue to Application creates correct type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 3: Create Application ---');
     try {
         // Try creating an application (if it doesn't already exist as draft)
@@ -121,7 +121,7 @@ async function runTests() {
         }
     }
 
-    // ─── Test 4: Existing application states and LGU behavior ────────────────
+    // â”€â”€â”€ Test 4: Existing application states and LGU behavior â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 4: Application States and LGU Admin ---');
     if (appId) {
         try {
@@ -148,7 +148,7 @@ async function runTests() {
         fail('No appId to test details.');
     }
 
-    // ─── Test 5: Unauthorized Application Manipulation ───────────────────────
+    // â”€â”€â”€ Test 5: Unauthorized Application Manipulation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 5: Application Security ---');
     if (appId) {
         try {
@@ -160,7 +160,7 @@ async function runTests() {
         }
     }
 
-    // ─── Test 6: System Admin Behavior ───────────────────────────────────────
+    // â”€â”€â”€ Test 6: System Admin Behavior â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     console.log('\n--- TEST 6: System Admin Behavior ---');
     try {
         const sysRes = await axios.get(`${API}/admin/users`, systemAdminH);

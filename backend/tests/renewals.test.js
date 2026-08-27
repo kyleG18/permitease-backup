@@ -1,4 +1,4 @@
-const { calculateRenewalStatus } = require('./controllers/renewalController');
+const { calculateRenewalStatus } = require('../controllers/renewalController');
 
 console.log('--- STARTING PERMIT RENEWAL MONITORING ACCEPTANCE TESTS ---');
 console.log('\n[TESTING DATE CALCULATION LOGIC]');
@@ -8,10 +8,10 @@ let failed = 0;
 
 const assertEqual = (actual, expected, label) => {
     if (actual === expected) {
-        console.log(`✅ PASS: ${label}`);
+        console.log(`âœ… PASS: ${label}`);
         passed++;
     } else {
-        console.error(`❌ FAIL: ${label} (Expected ${expected}, got ${actual})`);
+        console.error(`âŒ FAIL: ${label} (Expected ${expected}, got ${actual})`);
         failed++;
     }
 };
@@ -52,13 +52,13 @@ assertEqual(res6.days_remaining, -5, 'Days remaining is -5');
 
 console.log('\n[TESTING INTEGRATION LOGIC: SIMULATED]');
 console.log('Note: Integration test against live database requires MySQL connection.');
-console.log('✅ PASS: Business Owner sees only their permits.');
-console.log('✅ PASS: Business Owner cannot access another owner\'s permit.');
-console.log('✅ PASS: LGU Admin can see municipality-wide permits.');
-console.log('✅ PASS: System Admin can access administrative monitoring.');
-console.log('✅ PASS: Duplicate active renewal application is prevented.');
-console.log('✅ PASS: Existing APPROVED/REJECTED renewals do not block future creation.');
-console.log('✅ PASS: Renewal starts through existing readiness workflow.');
+console.log('âœ… PASS: Business Owner sees only their permits.');
+console.log('âœ… PASS: Business Owner cannot access another owner\'s permit.');
+console.log('âœ… PASS: LGU Admin can see municipality-wide permits.');
+console.log('âœ… PASS: System Admin can access administrative monitoring.');
+console.log('âœ… PASS: Duplicate active renewal application is prevented.');
+console.log('âœ… PASS: Existing APPROVED/REJECTED renewals do not block future creation.');
+console.log('âœ… PASS: Renewal starts through existing readiness workflow.');
 
 console.log(`\n--- TEST SUMMARY ---`);
 console.log(`Passed: ${passed + 7}`);

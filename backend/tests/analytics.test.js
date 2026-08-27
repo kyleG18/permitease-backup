@@ -1,12 +1,12 @@
 /**
  * test_analytics.js
- * Task #8 — Advanced LGU Analytics & Permit Management Dashboard
+ * Task #8 â€” Advanced LGU Analytics & Permit Management Dashboard
  * Integration Test Suite
  *
  * Tests:
- *  1. RBAC: business_owner → 403
- *  2. RBAC: lgu_admin → 200
- *  3. RBAC: system_admin → 200
+ *  1. RBAC: business_owner â†’ 403
+ *  2. RBAC: lgu_admin â†’ 200
+ *  3. RBAC: system_admin â†’ 200
  *  4. Overview Analytics structure & safe values
  *  5. Overview date filtering
  *  6. Application Analytics (status, type, trend arrays)
@@ -14,14 +14,14 @@
  *  8. Requirement Analytics (ranked list)
  *  9. Business Analytics (industry, type aggregation)
  * 10. Activity Analytics (recent actions, safe processing time)
- * 11. Unauthenticated access → 401
+ * 11. Unauthenticated access â†’ 401
  * 12. Estimated fees NOT labeled as revenue
  * 13. No NaN / undefined in numeric fields
  * 14. Date period variants don't crash
  */
 
 const axios = require('axios');
-const db = require('./config/db');
+const db = require('../config/db');
 
 const API = 'http://localhost:5000/api';
 
@@ -64,7 +64,7 @@ const setup = async () => {
     if (!admins.length) throw new Error('No lgu_admin user found in DB. Cannot run RBAC tests.');
     const lguAdminEmail = admins[0].email;
 
-    // Generate a token directly (same as authController does) — avoids needing to know the hashed password
+    // Generate a token directly (same as authController does) â€” avoids needing to know the hashed password
     const jwt = require('jsonwebtoken');
     const [lguUser] = await db.query('SELECT id, role FROM users WHERE email = ?', [lguAdminEmail]);
     lguAdminToken = jwt.sign(
@@ -79,10 +79,10 @@ const setup = async () => {
 // -----------------------------------------------------------
 const assert = (condition, message) => {
     if (!condition) {
-        console.error(`❌ FAIL: ${message}`);
+        console.error(`âŒ FAIL: ${message}`);
         throw new Error(message);
     }
-    console.log(`✅ PASS: ${message}`);
+    console.log(`âœ… PASS: ${message}`);
 };
 
 const authHeader = (token) => ({ headers: { Authorization: `Bearer ${token}` } });
@@ -103,7 +103,7 @@ const runTests = async () => {
             passed++;
         } catch (e) {
             failed++;
-            console.error(`   └─ ${e.message}`);
+            console.error(`   â””â”€ ${e.message}`);
         }
     };
 
@@ -113,9 +113,9 @@ const runTests = async () => {
 
     console.log('[Setup] Obtaining tokens...');
     await setup();
-    console.log(`[Setup] ✅ business_owner token: ${bizOwnerToken ? 'obtained' : 'MISSING'}`);
-    console.log(`[Setup] ✅ lgu_admin token: ${lguAdminToken ? 'obtained' : 'MISSING'}`);
-    console.log(`[Setup] ✅ system_admin token: ${sysAdminToken ? 'obtained' : 'MISSING'}\n`);
+    console.log(`[Setup] âœ… business_owner token: ${bizOwnerToken ? 'obtained' : 'MISSING'}`);
+    console.log(`[Setup] âœ… lgu_admin token: ${lguAdminToken ? 'obtained' : 'MISSING'}`);
+    console.log(`[Setup] âœ… system_admin token: ${sysAdminToken ? 'obtained' : 'MISSING'}\n`);
 
     // -------------------------------------------------------
     // TEST GROUP 1: RBAC Security
@@ -131,7 +131,7 @@ const runTests = async () => {
         }
     });
 
-    await test('business_owner → 403 on /overview', async () => {
+    await test('business_owner â†’ 403 on /overview', async () => {
         try {
             await axios.get(`${API}/analytics/overview`, authHeader(bizOwnerToken));
             assert(false, 'Should have thrown 403');
@@ -140,7 +140,7 @@ const runTests = async () => {
         }
     });
 
-    await test('business_owner → 403 on /applications', async () => {
+    await test('business_owner â†’ 403 on /applications', async () => {
         try {
             await axios.get(`${API}/analytics/applications`, authHeader(bizOwnerToken));
             assert(false, 'Should have thrown 403');
@@ -149,7 +149,7 @@ const runTests = async () => {
         }
     });
 
-    await test('business_owner → 403 on /permits', async () => {
+    await test('business_owner â†’ 403 on /permits', async () => {
         try {
             await axios.get(`${API}/analytics/permits`, authHeader(bizOwnerToken));
             assert(false, 'Should have thrown 403');
@@ -158,7 +158,7 @@ const runTests = async () => {
         }
     });
 
-    await test('lgu_admin → 200 on all analytics endpoints', async () => {
+    await test('lgu_admin â†’ 200 on all analytics endpoints', async () => {
         const endpoints = ['overview', 'applications', 'permits', 'requirements', 'businesses', 'activity'];
         for (const ep of endpoints) {
             const res = await axios.get(`${API}/analytics/${ep}`, authHeader(lguAdminToken));
@@ -166,7 +166,7 @@ const runTests = async () => {
         }
     });
 
-    await test('system_admin → 200 on all analytics endpoints', async () => {
+    await test('system_admin â†’ 200 on all analytics endpoints', async () => {
         const endpoints = ['overview', 'applications', 'permits', 'requirements', 'businesses', 'activity'];
         for (const ep of endpoints) {
             const res = await axios.get(`${API}/analytics/${ep}`, authHeader(sysAdminToken));
