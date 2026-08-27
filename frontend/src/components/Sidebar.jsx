@@ -22,10 +22,11 @@ import {
   ShieldCheck,
   Shield,
   History,
-  Rocket
+  Rocket,
+  X
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, closeSidebar }) => {
   const location = useLocation();
   const { user } = useContext(AuthContext);
   const { isOnboarded } = useContext(BusinessContext);
@@ -96,17 +97,27 @@ const Sidebar = () => {
   const navItems = getNavItems();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
       {/* Logo Area */}
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <div style={{ 
           width: '40px', height: '40px', backgroundColor: 'var(--primary-green)', borderRadius: 'var(--radius-sm)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.25rem'
-        }}>R</div>
-        <div>
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.25rem',
+          flexShrink: 0
+        }}>P</div>
+        <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: '1.05rem', margin: 0, color: 'var(--primary-green)' }}>PermitEase</h2>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Municipality of Roxas</span>
         </div>
+        {/* Mobile Close Button */}
+        <button
+          className="sidebar-close-btn"
+          onClick={closeSidebar}
+          aria-label="Close navigation"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'none', padding: '0.25rem' }}
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Navigation Links */}
@@ -117,7 +128,7 @@ const Sidebar = () => {
             const Icon = item.icon;
             return (
               <li key={item.name}>
-                <Link to={item.path} style={{
+                <Link to={item.path} onClick={closeSidebar} style={{
                   display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1rem',
                   borderRadius: 'var(--radius-sm)', backgroundColor: isActive ? 'var(--light-green)' : 'transparent',
                   color: isActive ? 'var(--primary-green)' : 'var(--text-muted)', fontWeight: isActive ? '600' : '500',
@@ -137,7 +148,7 @@ const Sidebar = () => {
 
       {/* Settings */}
       <div style={{ padding: '1rem 0.75rem', borderTop: '1px solid var(--border-color)' }}>
-        <Link to="/settings" style={{
+        <Link to="/settings" onClick={closeSidebar} style={{
           display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1rem',
           borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', fontWeight: '500',
           fontSize: '0.875rem', transition: 'all var(--transition-fast)', textDecoration: 'none'

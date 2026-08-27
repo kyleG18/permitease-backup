@@ -58,9 +58,9 @@ const Login = () => {
       {/* Sidebar Branding (Desktop Only) */}
       <div className="auth-sidebar">
         <div>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>BizCheckPermit</h1>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>PermitEase</h1>
           <p style={{ fontSize: '1.2rem', opacity: 0.9 }}>
-            Municipality of Roxas' official portal for business permit pre-assessment and renewal tracking.
+            Business Permit Compliance and Renewal System — Municipality of Roxas, Oriental Mindoro.
           </p>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -72,7 +72,7 @@ const Login = () => {
       <div className="auth-content">
         <div className="auth-card">
           <div className="text-center mb-4">
-            <h2 style={{ color: 'var(--text-dark)' }}>Welcome Back</h2>
+            <h2 style={{ color: 'var(--text-dark)' }}>Welcome to PermitEase</h2>
             <p className="text-muted">Sign in to manage your business permits.</p>
           </div>
           

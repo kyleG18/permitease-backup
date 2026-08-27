@@ -51,7 +51,7 @@ const Register = () => {
       {/* Sidebar Branding (Desktop Only) */}
       <div className="auth-sidebar">
         <div>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>BizCheckPermit</h1>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>PermitEase</h1>
           <p style={{ fontSize: '1.2rem', opacity: 0.9 }}>
             Join the digital platform for fast and easy business permit compliance.
           </p>

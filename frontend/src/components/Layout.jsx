@@ -7,12 +7,39 @@ import { Link, useLocation } from 'react-router-dom';
 const Layout = ({ children }) => {
   const location = useLocation();
   const isChatPage = location.pathname === '/assistant';
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
+  };
+
+  // Close sidebar on route change
+  React.useEffect(() => {
+    closeSidebar();
+  }, [location.pathname]);
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={closeSidebar}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 30
+          }}
+        />
+      )}
+
+      <Sidebar isOpen={isSidebarOpen} closeSidebar={closeSidebar} />
+      
       <div className="main-content">
-        <Header />
+        <Header toggleSidebar={toggleSidebar} />
         <main className="page-content animate-fade-in">
           {children}
         </main>

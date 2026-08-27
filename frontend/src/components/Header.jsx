@@ -1,11 +1,11 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Bell, LogOut } from 'lucide-react';
+import { Search, Bell, LogOut, Menu } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 const API = 'http://localhost:5000/api';
 
-const Header = () => {
+const Header = ({ toggleSidebar }) => {
   const { user, logout } = useContext(AuthContext);
   const [unreadCount, setUnreadCount] = useState(0);
   const token = user?.token;
@@ -37,21 +37,33 @@ const Header = () => {
       padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid var(--border-color)',
       position: 'sticky', top: 0, zIndex: 10
     }}>
-      {/* Search Bar */}
-      <div style={{ position: 'relative', width: '300px' }}>
-        <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-        <input
-          type="text"
-          placeholder="Search permits, requirements..."
-          className="form-control"
-          style={{ paddingLeft: '2.5rem', borderRadius: 'var(--radius-full)', backgroundColor: '#F9FAFB', border: '1px solid transparent', transition: 'all var(--transition-fast)' }}
-          onFocus={(e) => { e.target.style.backgroundColor = 'white'; e.target.style.borderColor = 'var(--primary-green)'; }}
-          onBlur={(e) => { e.target.style.backgroundColor = '#F9FAFB'; e.target.style.borderColor = 'transparent'; }}
-        />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+        {/* Hamburger Menu (Mobile Only) */}
+        <button 
+          className="menu-btn" 
+          onClick={toggleSidebar} 
+          aria-label="Open navigation"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-dark)', display: 'none' }}
+        >
+          <Menu size={24} />
+        </button>
+
+        {/* Search Bar */}
+        <div className="header-search" style={{ position: 'relative', width: '300px', maxWidth: '100%' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input
+            type="text"
+            placeholder="Search permits, requirements..."
+            className="form-control"
+            style={{ paddingLeft: '2.5rem', borderRadius: 'var(--radius-full)', backgroundColor: '#F9FAFB', border: '1px solid transparent', transition: 'all var(--transition-fast)' }}
+            onFocus={(e) => { e.target.style.backgroundColor = 'white'; e.target.style.borderColor = 'var(--primary-green)'; }}
+            onBlur={(e) => { e.target.style.backgroundColor = '#F9FAFB'; e.target.style.borderColor = 'transparent'; }}
+          />
+        </div>
       </div>
 
       {/* User Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
         {/* Notification Bell with real count */}
         <Link to="/notifications" style={{ background: 'none', border: 'none', position: 'relative', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Notifications">
           <Bell size={20} color="var(--text-muted)" />
