@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
   FileText, CheckCircle, AlertTriangle, XCircle, ArrowRight, Clock,
   Building2, ClipboardCheck, Receipt, TrendingUp, Users, BarChart2,
-  ShieldCheck, AlertCircle, Zap, ChevronRight
+  ShieldCheck, AlertCircle, Zap, ChevronRight, BrainCircuit
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -237,7 +237,7 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
               {[
                 { to: '/readiness', icon: ClipboardCheck, label: 'View Permit Readiness', primary: true },
                 { to: '/tax-estimate', icon: Receipt, label: 'View Fee Estimate', primary: false },
-                { to: '/assistant', icon: Zap, label: 'Run AI Assistant', primary: false },
+                { to: '/assessment', icon: BrainCircuit, label: 'AI Permit Assessor', primary: false },
                 { to: '/permits', icon: FileText, label: 'My Permits', primary: false },
               ].map(({ to, icon: Icon, label, primary }) => (
                 <Link key={to} to={to} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: '600', backgroundColor: primary ? 'var(--primary-green)' : 'var(--light-green)', color: primary ? 'white' : 'var(--primary-green)', textDecoration: 'none', transition: 'opacity 0.15s' }}>

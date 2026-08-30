@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ShieldCheck, CheckCircle2, XCircle, AlertCircle, ArrowRight, UploadCloud, Edit, FileText, X } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, AlertCircle, ArrowRight, UploadCloud, Edit, FileText, X, BrainCircuit } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
@@ -286,6 +286,19 @@ export default function PermitReadiness() {
               </div>
             </div>
           )}
+
+          {/* AI Assessment Promo Banner */}
+          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <h3 style={{ margin: '0 0 0.25rem', fontSize: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <BrainCircuit size={18} color="var(--primary-green)" /> Planning a different business?
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Use our AI Assessor to explore permit requirements for any business idea.</p>
+            </div>
+            <Link to="/assessment" style={{ padding: '0.6rem 1.25rem', backgroundColor: 'var(--light-green)', color: 'var(--primary-green)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Try AI Assessor <ArrowRight size={16} />
+            </Link>
+          </div>
 
           {/* Application Summary & Submit */}
           <div style={{ backgroundColor: '#F8FAFC', borderRadius: 'var(--radius-md)', padding: '2rem', border: '1px solid var(--border-light)' }}>

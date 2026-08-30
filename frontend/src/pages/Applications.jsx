@@ -47,9 +47,14 @@ export default function Applications() {
           <h1 style={{ fontSize: '1.6rem', margin: 0, color: 'var(--text-dark)' }}>My Applications</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>Track all your business permit applications</p>
         </div>
-        <Link to="/readiness" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-green)', color: 'white', padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', textDecoration: 'none', fontWeight: '600', fontSize: '0.875rem' }}>
-          <Plus size={18} /> New Application
-        </Link>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-green)', color: 'white', padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', textDecoration: 'none', fontWeight: '600', fontSize: '0.875rem' }}>
+            <FileText size={18} /> Download Form
+          </a>
+          <Link to="/readiness" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-green)', color: 'white', padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-sm)', textDecoration: 'none', fontWeight: '600', fontSize: '0.875rem' }}>
+            <Plus size={18} /> New Application
+          </Link>
+        </div>
       </div>
 
       {/* Content */}
@@ -94,10 +99,13 @@ export default function Applications() {
                   <td style={{ padding: '1rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                     {new Date(app.updated_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td style={{ padding: '1rem' }}>
+                  <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
                     <Link to={`/applications/${app.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.9rem', backgroundColor: 'var(--light-green)', color: 'var(--primary-green)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', fontWeight: '600', textDecoration: 'none' }}>
                       <Eye size={14} /> View
                     </Link>
+                    <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" title="Print Application Form" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', color: '#64748B', borderRadius: 'var(--radius-sm)', textDecoration: 'none' }}>
+                      <FileText size={16} />
+                    </a>
                   </td>
                 </tr>
               ))}

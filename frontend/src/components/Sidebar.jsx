@@ -51,6 +51,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         { name: 'My Applications', path: '/applications', icon: FileText },
         { name: 'My Permits', path: '/permits', icon: Shield },
         { name: 'Renewals', path: '/renewals', icon: CalendarClock },
+        { name: 'AI Assessment', path: '/assessment', icon: BrainCircuit },
         { name: 'AI Help', path: '/assistant', icon: MessageSquare }
       ];
     }

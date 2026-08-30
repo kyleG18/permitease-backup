@@ -36,12 +36,20 @@ import VerifyPermit from './pages/VerifyPermit';
 import AdminPermits from './pages/AdminPermits';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './layouts/Layout';
+import OnboardingLayout from './layouts/OnboardingLayout';
 import Onboarding from './pages/Onboarding';
 
 // Reusable wrapper for protected layout pages
 const ProtectedLayout = ({ children, allowedRoles }) => (
   <ProtectedRoute allowedRoles={allowedRoles}>
     <Layout>{children}</Layout>
+  </ProtectedRoute>
+);
+
+// Reusable wrapper for standalone protected pages (like onboarding)
+const StandaloneProtectedLayout = ({ children, allowedRoles }) => (
+  <ProtectedRoute allowedRoles={allowedRoles}>
+    <OnboardingLayout>{children}</OnboardingLayout>
   </ProtectedRoute>
 );
 
@@ -59,7 +67,7 @@ function App() {
 
           {/* Protected routes with Layout */}
           <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
-          <Route path="/onboarding" element={<ProtectedLayout allowedRoles={['business_owner']}><Onboarding /></ProtectedLayout>} />
+          <Route path="/onboarding" element={<StandaloneProtectedLayout allowedRoles={['business_owner']}><Onboarding /></StandaloneProtectedLayout>} />
           
           {/* Business Owner & System Admin Routes */}
           <Route path="/profile" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><BusinessProfile /></ProtectedLayout>} />

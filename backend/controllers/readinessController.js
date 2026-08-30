@@ -43,11 +43,13 @@ const getReadiness = async (req, res) => {
 
         const categories = [];
         const actionRequired = [];
-        let earnedScore = 0;
+        let earnedPoints = 0;
+        let totalPoints = 0;
 
         const appTypeStatus = APP_TYPE_TO_STATUS[applicationType] || applicationType;
 
-        // --- 1. Business Profile (20%) ---
+        // --- 1. Business Profile ---
+        totalPoints += 20;
         const reqFields = [
             { field: 'business_name', label: 'Business Name' },
             { field: 'business_type', label: 'Business Type' },
@@ -55,110 +57,112 @@ const getReadiness = async (req, res) => {
             { field: 'address', label: 'Business Address' }
         ];
         
-        const missingProfileFields = [];
-        for (const rf of reqFields) {
-            if (!business[rf.field] || String(business[rf.field]).trim() === '') {
-                missingProfileFields.push(rf.label);
-            }
-        }
+        const missingProfileFields = reqFields.filter(rf => !business[rf.field] || String(business[rf.field]).trim() === '');
 
         if (missingProfileFields.length === 0) {
-            categories.push({ label: 'Business Profile', status: 'Complete', score: 20, detail: 'All required fields are complete' });
-            earnedScore += 20;
+            categories.push({ label: 'Business Profile', status: 'Complete', max: 20, score: 20, detail: 'All required fields are complete' });
+            earnedPoints += 20;
         } else {
-            categories.push({ label: 'Business Profile', status: 'Incomplete', score: 0, detail: `${missingProfileFields.length} field(s) missing` });
+            categories.push({ label: 'Business Profile', status: 'Incomplete', max: 20, score: 0, detail: `${missingProfileFields.length} field(s) missing` });
             missingProfileFields.forEach(mf => {
-                actionRequired.push({ type: 'profile', text: `Missing ${mf}`, actionText: 'Update Business Profile', link: '/profile' });
+                actionRequired.push({ type: 'profile', text: `Missing ${mf.label}`, actionText: 'Update Business Profile', link: '/profile' });
             });
         }
 
-        // --- 2. Requirements (20%) ---
-        // Determine which permit requirements actually apply to this business
+        // --- 2. Documents & Requirements (Combined conceptually for scoring) ---
         const [allReqRules] = await db.query('SELECT * FROM permit_requirements');
         const applicableRequirements = allReqRules.filter(r => evaluateRequirementCondition(r, business, appTypeStatus));
         
-        if (applicableRequirements.length > 0) {
-            categories.push({ label: 'Requirements', status: 'Complete', score: 20, detail: `${applicableRequirements.length} requirement(s) identified` });
-            earnedScore += 20;
-        } else {
-            // If no requirements configured/applicable, it's not a block, just 20%
-            categories.push({ label: 'Requirements', status: 'Complete', score: 20, detail: 'No specific requirements identified' });
-            earnedScore += 20;
-        }
-
-        // --- 3. Documents (20%) ---
         const [bizReqs] = await db.query('SELECT * FROM business_requirements WHERE business_id = ?', [businessId]);
         const submittedDocIds = bizReqs.filter(br => br.status === 'Submitted' || br.status === 'Approved').map(br => br.requirement_id);
         
-        let missingDocs = [];
-        for (const ar of applicableRequirements) {
-            if (!submittedDocIds.includes(ar.id)) {
-                missingDocs.push({ id: ar.id, name: ar.permit_name });
+        const missingDocs = applicableRequirements.filter(ar => !submittedDocIds.includes(ar.id));
+
+        // Requirements category (Is it known what they need?)
+        totalPoints += 20;
+        if (applicableRequirements.length > 0) {
+            if (missingDocs.length === 0) {
+                categories.push({ label: 'Requirements', status: 'Complete', max: 20, score: 20, detail: 'All requirements met' });
+                earnedPoints += 20;
+            } else {
+                categories.push({ label: 'Requirements', status: 'Incomplete', max: 20, score: 0, detail: 'Pending requirement fulfillment' });
             }
+        } else {
+            categories.push({ label: 'Requirements', status: 'Incomplete', max: 20, score: 0, detail: 'No applicable permit requirements found. Contact the BPLO.' });
+            actionRequired.push({ type: 'profile', text: 'No permit requirements are configured for your business type.', actionText: 'Update Profile', link: '/profile' });
         }
 
-        if (missingDocs.length === 0) {
-            categories.push({ label: 'Documents', status: 'Complete', score: 20, detail: `${applicableRequirements.length}/${applicableRequirements.length} documents provided` });
-            earnedScore += 20;
+        // Documents category (Have they uploaded them?)
+        totalPoints += 40; // Weight documents heavily
+        if (missingDocs.length === 0 && applicableRequirements.length > 0) {
+            categories.push({ label: 'Documents', status: 'Complete', max: 40, score: 40, detail: `${applicableRequirements.length}/${applicableRequirements.length} documents provided` });
+            earnedPoints += 40;
         } else {
-            categories.push({ label: 'Documents', status: 'Incomplete', score: 0, detail: `${applicableRequirements.length - missingDocs.length}/${applicableRequirements.length} documents provided` });
+            const uploadedCount = applicableRequirements.length - missingDocs.length;
+            const docScore = applicableRequirements.length > 0 ? Math.floor((uploadedCount / applicableRequirements.length) * 40) : 0;
+            categories.push({ label: 'Documents', status: 'Incomplete', max: 40, score: docScore, detail: `${uploadedCount}/${applicableRequirements.length} documents provided` });
+            earnedPoints += docScore;
             missingDocs.forEach(md => {
-                actionRequired.push({ type: 'document', text: `${md.name} is missing.`, actionText: 'Upload Document', document_name: md.name, requirement_id: md.id });
+                actionRequired.push({ type: 'document', text: `${md.permit_name} is missing.`, actionText: 'Upload Document', document_name: md.permit_name, requirement_id: md.id });
             });
         }
 
-        // --- 4. Fees (20%) ---
+        // --- 3. Fees ---
         const [feeRules] = await db.query('SELECT * FROM tax_fee_rules WHERE is_active = 1 ORDER BY category, id');
         const feeData = calculateFeesCore(business, appTypeStatus, feeRules);
         
-        if (!feeData.is_incomplete) {
-            categories.push({ label: 'Fees', status: 'Complete', score: 20, detail: 'Estimated successfully' });
-            earnedScore += 20;
+        totalPoints += 20;
+        // Fees should only give points if documents are also complete, otherwise they aren't "ready"
+        if (!feeData.is_incomplete && missingDocs.length === 0) {
+            categories.push({ label: 'Fees', status: 'Complete', max: 20, score: 20, detail: 'Estimated successfully' });
+            earnedPoints += 20;
+        } else if (!feeData.is_incomplete) {
+            categories.push({ label: 'Fees', status: 'Incomplete', max: 20, score: 0, detail: 'Pending document completion' });
         } else {
-            categories.push({ label: 'Fees', status: 'Incomplete', score: 0, detail: 'Fee assessment incomplete' });
+            categories.push({ label: 'Fees', status: 'Incomplete', max: 20, score: 0, detail: 'Fee assessment incomplete' });
             feeData.missing_info_reasons.forEach(mr => {
                 actionRequired.push({ type: 'fee', text: mr, actionText: 'Update Business Profile', link: '/profile' });
             });
         }
 
-        // --- 5. Existing Permits (20%) ---
-        const [permits] = await db.query(
-            `SELECT * FROM permits WHERE business_id = ? AND status = 'Approved' AND (expiration_date IS NULL OR expiration_date >= CURDATE())`,
-            [businessId]
-        );
-        const hasValidPermit = permits.length > 0;
-        
-        if (applicationType === 'NEW') {
-            categories.push({ label: 'Existing Permits', status: 'Complete', score: 20, detail: 'No blocking issue detected' });
-            earnedScore += 20;
-        } else {
-            // For renewal, use the existing logic mapping
-            if (hasValidPermit) {
-                categories.push({ label: 'Existing Permits', status: 'Complete', score: 20, detail: `${permits.length} valid permit(s)` });
-                earnedScore += 20;
+        // --- 4. Existing Permits (Only for Renewal) ---
+        if (applicationType === 'RENEWAL') {
+            totalPoints += 20;
+            const [permits] = await db.query(
+                `SELECT * FROM permits WHERE business_id = ? AND status = 'Approved' AND (expiration_date IS NULL OR expiration_date >= CURDATE())`,
+                [businessId]
+            );
+            if (permits.length > 0) {
+                categories.push({ label: 'Existing Permits', status: 'Complete', max: 20, score: 20, detail: `${permits.length} valid permit(s)` });
+                earnedPoints += 20;
             } else {
-                categories.push({ label: 'Existing Permits', status: 'Incomplete', score: 0, detail: 'No valid permit found for renewal' });
+                categories.push({ label: 'Existing Permits', status: 'Incomplete', max: 20, score: 0, detail: 'No valid permit found for renewal' });
                 actionRequired.push({ type: 'permit', text: 'No active permit found to renew.', actionText: 'View Permits', link: '/permits' });
             }
         }
 
         // --- Overall State ---
+        const readinessPercentage = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+        
         let overallState = 'READY';
         let recommendation = 'Your application has the required information and documents needed for submission.';
         
-        if (earnedScore < 100 && earnedScore >= 60) {
+        if (readinessPercentage < 100 && readinessPercentage >= 80) {
             overallState = 'READY_WITH_ACTIONS';
-            recommendation = 'Complete the remaining items before submitting your application.';
-        } else if (earnedScore < 60) {
+            recommendation = 'Almost there! Complete the remaining items before submitting your application.';
+        } else if (readinessPercentage < 80) {
             overallState = 'NOT_READY';
             recommendation = 'Complete the required items before submitting your application.';
         }
+
+        // Only override to 0 if they genuinely haven't done any documents
+        const displayScore = (missingDocs.length === applicableRequirements.length && applicableRequirements.length > 0) ? 0 : readinessPercentage;
 
         res.json({
             business_id: businessId,
             business_name: business.business_name,
             application_type: applicationType,
-            readiness_score: earnedScore,
+            readiness_score: displayScore,
             overall_state: overallState,
             recommendation,
             categories,

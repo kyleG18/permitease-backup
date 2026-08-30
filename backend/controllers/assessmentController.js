@@ -6,23 +6,51 @@ const { generateStructuredAssessment } = require('../services/aiService');
 // @access  Private
 const createAssessment = async (req, res) => {
     try {
-        const { business_description } = req.body;
+        const { business_description, business_id } = req.body;
 
-        if (!business_description) {
-            return res.status(400).json({ message: 'Business description is required.' });
+        let descriptionToUse = business_description;
+        let resolvedBusinessId = business_id || null;
+
+        // If a business_id was provided, fetch the profile and build description automatically
+        if (business_id) {
+            const [businesses] = await db.query(
+                'SELECT * FROM businesses WHERE id = ? AND user_id = ?',
+                [business_id, req.user.id]
+            );
+            if (businesses.length === 0) {
+                return res.status(404).json({ message: 'Business profile not found.' });
+            }
+            const biz = businesses[0];
+            // Build a rich description from the actual business profile data
+            const parts = [
+                `Business name: ${biz.business_name}.`,
+                `Type of business: ${biz.business_type}.`,
+                `Industry/Category: ${biz.industry_category}.`,
+                biz.address ? `Located at: ${biz.address}.` : null,
+                biz.employees ? `Number of employees: ${biz.employees}.` : null,
+                biz.floor_area ? `Floor area: ${biz.floor_area} sqm.` : null,
+                biz.capitalization ? `Capitalization: PHP ${Number(biz.capitalization).toLocaleString()}.` : null,
+                biz.gross_sales ? `Gross sales: PHP ${Number(biz.gross_sales).toLocaleString()}.` : null,
+                biz.business_status ? `Application type: ${biz.business_status}.` : null,
+            ].filter(Boolean);
+            descriptionToUse = parts.join(' ');
         }
 
-        if (business_description.length > 1000) {
-            return res.status(400).json({ message: 'Description is too long. Maximum 1000 characters.' });
+        if (!descriptionToUse || !descriptionToUse.trim()) {
+            return res.status(400).json({ message: 'A business profile or description is required.' });
         }
 
-        // 1. Fetch available permits for context (if needed by AI, though AI service gets it via description now)
+        if (descriptionToUse.length > 2000) {
+            descriptionToUse = descriptionToUse.substring(0, 2000);
+        }
+
+        // 1. Fetch all configured permit requirements
         const [allRequirements] = await db.query('SELECT permit_name, description, condition_field, condition_value, applicable_business_type, required_documents FROM permit_requirements');
 
-        // 2. Call AI Service to get structured prediction
+        // 2. Call AI Service to classify and assess
         let aiResult;
         try {
-            aiResult = await generateStructuredAssessment(business_description, allRequirements);
+            aiResult = await generateStructuredAssessment(descriptionToUse, allRequirements);
         } catch (aiError) {
             return res.status(503).json({ message: aiError.message });
         }
@@ -31,27 +59,18 @@ const createAssessment = async (req, res) => {
         const predictedIndustry = aiResult.industry_category;
         const predictedType = aiResult.business_type;
 
-        // Deterministic PermitEase assessment based on AI's predicted industry
         const officialRequirements = [];
-        
         for (const reqRule of allRequirements) {
             let applicable = false;
-            
-            // "always" applies to everyone
             if (reqRule.condition_field === 'always') {
                 applicable = true;
-            } 
-            // matching industry category
-            else if (reqRule.condition_field === 'industry_category' && 
+            } else if (reqRule.condition_field === 'industry_category' &&
                      String(reqRule.condition_value).toLowerCase() === String(predictedIndustry).toLowerCase()) {
                 applicable = true;
-            }
-            // we could also match by business_type if they configured it that way
-            else if (reqRule.condition_field === 'business_type' && 
+            } else if (reqRule.condition_field === 'business_type' &&
                      String(reqRule.condition_value).toLowerCase() === String(predictedType).toLowerCase()) {
                 applicable = true;
             }
-
             if (applicable) {
                 officialRequirements.push({
                     permit_name: reqRule.permit_name,
@@ -61,15 +80,15 @@ const createAssessment = async (req, res) => {
             }
         }
 
-        // 4. Save to assessments table for history (business_id is null)
+        // 4. Save assessment — linked to business if business_id was given
         const assessmentPayload = {
             ai_assessment: aiResult,
             official_assessment: officialRequirements
         };
 
         const [inserted] = await db.query(
-            'INSERT INTO assessments (user_id, business_id, assessment_result, compliance_score) VALUES (?, NULL, ?, ?)',
-            [req.user.id, JSON.stringify(assessmentPayload), 0]
+            'INSERT INTO assessments (user_id, business_id, assessment_result, compliance_score) VALUES (?, ?, ?, ?)',
+            [req.user.id, resolvedBusinessId, JSON.stringify(assessmentPayload), 0]
         );
 
         res.status(201).json({
@@ -80,7 +99,6 @@ const createAssessment = async (req, res) => {
 
     } catch (error) {
         console.error('[AssessmentController] createAssessment error:', error.message);
-        console.error('Server error:', error);
         res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
     }
 };

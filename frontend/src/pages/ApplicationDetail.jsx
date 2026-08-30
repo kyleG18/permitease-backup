@@ -258,7 +258,10 @@ export default function ApplicationDetail() {
           <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Permit Application</div>
           <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-green)', fontFamily: 'monospace', marginBottom: '0.5rem' }}>{app.application_number || 'DRAFT'}</div>
           <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.25rem', color: 'var(--text-dark)' }}>{app.business_name}</h1>
-          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal'}</div>
+          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>{app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal'}</div>
+          <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', color: '#475569', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', textDecoration: 'none', fontWeight: '600', fontSize: '0.85rem', transition: 'background-color 0.2s' }}>
+            <Printer size={16} /> Print Application Form
+          </a>
         </div>
         <div style={{ display: 'flex', gap: '2rem', textAlign: 'right' }}>
           <div>
