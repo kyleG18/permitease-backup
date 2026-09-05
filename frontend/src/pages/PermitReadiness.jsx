@@ -1,64 +1,28 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ShieldCheck, CheckCircle2, XCircle, AlertCircle, ArrowRight, UploadCloud, Edit, FileText, X, BrainCircuit } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, AlertCircle, FileText, Info, Download, BrainCircuit, Check, X } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
-function formatPHP(amount) {
-  return '₱' + Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-const CategoryIcon = ({ status }) => {
-  if (status === 'Complete') return <CheckCircle2 size={18} color="#16A34A" />;
-  if (status === 'Incomplete') return <AlertCircle size={18} color="#D97706" />;
-  return <XCircle size={18} color="#DC2626" />;
-};
-
 export default function PermitReadiness() {
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   
   const queryParams = new URLSearchParams(location.search);
   const initialBizId = queryParams.get('businessId') || '';
-  const initialType = queryParams.get('type') || 'NEW';
   
   const [businesses, setBusinesses] = useState([]);
   const [selectedBizId, setSelectedBizId] = useState(initialBizId);
-  const [applicationType, setApplicationType] = useState(initialType);
+  const [loading, setLoading] = useState(true);
   
-  const [readiness, setReadiness] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  
-  // Document Upload Modal State
-  const [uploadModal, setUploadModal] = useState({ isOpen: false, reqName: '', reqId: null });
-  const [file, setFile] = useState(null);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  // Requirement state
+  const [assessment, setAssessment] = useState(null);
+  const [requirements, setRequirements] = useState([]);
+  const [reqStatus, setReqStatus] = useState({}); // { reqId: 'HAVE' | 'NEED' | 'UNCHECKED' }
 
   const headers = { Authorization: `Bearer ${token}` };
-
-  const loadReadiness = () => {
-    if (!selectedBizId || !applicationType) return;
-    setLoading(true);
-    setError('');
-    fetch(`${API}/readiness/${selectedBizId}?application_type=${applicationType}`, { headers })
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.message || 'Error fetching readiness');
-        return data;
-      })
-      .then(data => setReadiness(data))
-      .catch(err => {
-        console.error(err);
-        setError('Unable to calculate permit readiness.');
-        setReadiness(null);
-      })
-      .finally(() => setLoading(false));
-  };
 
   useEffect(() => {
     fetch(`${API}/businesses`, { headers })
@@ -70,77 +34,115 @@ export default function PermitReadiness() {
           setSelectedBizId(String(bizList[0].id));
         }
       })
-      .catch(() => setError('Unable to load businesses.'));
+      .catch(console.error);
   }, []);
 
-  useEffect(() => {
-    loadReadiness();
-  }, [selectedBizId, applicationType]);
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) { setUploadError('Please select a file'); return; }
-    setUploadingDoc(true);
-    setUploadError('');
-    try {
-      const uploadData = new FormData();
-      uploadData.append('file', file);
-      uploadData.append('business_id', selectedBizId);
-      uploadData.append('document_name', uploadModal.reqName);
-      if (uploadModal.reqId) {
-        uploadData.append('requirement_id', uploadModal.reqId);
-      }
-      
-      const res = await fetch(`${API}/documents/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }, // FormData sets its own content-type boundary
-        body: uploadData
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Upload failed');
-      
-      setUploadModal({ isOpen: false, reqName: '', reqId: null });
-      setFile(null);
-      loadReadiness(); // Refresh readiness after successful upload
-    } catch (err) {
-      setUploadError(err.message);
-    } finally {
-      setUploadingDoc(false);
-    }
-  };
-
-  const handleContinue = async () => {
+  const loadAssessmentAndReqs = async () => {
     if (!selectedBizId) return;
-    setSubmitting(true);
+    setLoading(true);
     try {
-      const res = await fetch(`${API}/applications`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ business_id: selectedBizId, application_type: applicationType })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || 'Unable to create application.');
-        setSubmitting(false);
-        return;
+      // Get assessments to see if this business has one
+      const r1 = await fetch(`${API}/assessments`, { headers });
+      const assessmentsData = await r1.json();
+      
+      const bizAssessments = Array.isArray(assessmentsData) ? assessmentsData.filter(a => String(a.business_id) === String(selectedBizId)) : [];
+      const latestAssessment = bizAssessments.length > 0 ? bizAssessments[0] : null;
+      
+      if (latestAssessment) {
+        let parsed = latestAssessment.assessment_result;
+        if (typeof parsed === 'string') {
+          try { parsed = JSON.parse(parsed); } catch(e) {}
+        }
+        setAssessment({ ...latestAssessment, parsed });
+
+        // We will combine official requirements and AI recommendations
+        let combinedReqs = [];
+        if (parsed?.official_assessment) {
+          combinedReqs = [...parsed.official_assessment];
+        }
+        
+        // Add AI recommendations that aren't already in official
+        if (parsed?.ai_assessment?.recommended_permits) {
+          parsed.ai_assessment.recommended_permits.forEach(rec => {
+            if (!combinedReqs.some(r => r.permit_name === rec.permit_name)) {
+              combinedReqs.push({
+                permit_name: rec.permit_name,
+                description: rec.reason,
+                is_ai_recommended: true
+              });
+            }
+          });
+        }
+        
+        // Assign a consistent ID for tracking status
+        combinedReqs = combinedReqs.map((r, idx) => ({ ...r, id: `req-${idx}` }));
+        setRequirements(combinedReqs);
+
+        // Load saved checklist status
+        try {
+          const saved = localStorage.getItem(`readiness_${user.id}_${selectedBizId}`);
+          if (saved) {
+            setReqStatus(JSON.parse(saved));
+          } else {
+            // Default everything to UNCHECKED
+            const defaultStatus = {};
+            combinedReqs.forEach(r => { defaultStatus[r.id] = 'UNCHECKED'; });
+            setReqStatus(defaultStatus);
+          }
+        } catch (e) {
+          console.error("Localstorage error", e);
+        }
+      } else {
+        setAssessment(null);
+        setRequirements([]);
+        setReqStatus({});
       }
-      navigate(`/applications/${data.id}`);
-    } catch {
-      setError('Unable to continue to application.');
-      setSubmitting(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (businesses.length === 0 && !loading && !error) {
+  useEffect(() => {
+    loadAssessmentAndReqs();
+  }, [selectedBizId]);
+
+  const updateReqStatus = (id, status) => {
+    const updated = { ...reqStatus, [id]: status };
+    setReqStatus(updated);
+    if (user && user.id && selectedBizId) {
+      localStorage.setItem(`readiness_${user.id}_${selectedBizId}`, JSON.stringify(updated));
+    }
+  };
+
+  const selectedBusiness = businesses.find(b => String(b.id) === String(selectedBizId));
+
+  const stats = useMemo(() => {
+    let have = 0;
+    let need = 0;
+    let unchecked = 0;
+    requirements.forEach(r => {
+      const s = reqStatus[r.id];
+      if (s === 'HAVE') have++;
+      else if (s === 'NEED') need++;
+      else unchecked++;
+    });
+    const total = requirements.length;
+    const percentage = total > 0 ? Math.round((have / total) * 100) : 0;
+    return { have, need, unchecked, total, percentage };
+  }, [requirements, reqStatus]);
+
+  if (businesses.length === 0 && !loading) {
     return (
-      <div style={{ padding: '2rem', maxWidth: '900px' }}>
-        <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '3rem', textAlign: 'center', boxShadow: 'var(--shadow-card)' }}>
-          <AlertCircle size={48} color="var(--warning)" style={{ marginBottom: '1rem', opacity: 0.7 }} />
-          <h3 style={{ color: 'var(--text-dark)', marginBottom: '0.75rem' }}>No Business Profile Found</h3>
-          <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
-            You need to create a business profile before assessing readiness.
+      <div style={{ padding: '2.5rem', maxWidth: '900px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ backgroundColor: 'white', borderRadius: '10px', padding: '3rem', textAlign: 'center', border: '1px solid #E2E8F0' }}>
+          <AlertCircle size={48} color="#D97706" style={{ margin: '0 auto 1rem' }} />
+          <h3 style={{ color: 'var(--government-navy)', fontSize: '20px', margin: '0 0 0.5rem' }}>No Business Profile Found</h3>
+          <p style={{ color: '#64748B', fontSize: '14px', margin: '0 auto 1.5rem', maxWidth: '400px' }}>
+            You need to create a business profile before tracking permit readiness.
           </p>
-          <button onClick={() => navigate('/onboarding')} style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.75rem 2rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/onboarding')} style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.625rem 1.5rem', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '14px' }}>
             Set Up My Business
           </button>
         </div>
@@ -148,223 +150,204 @@ export default function PermitReadiness() {
     );
   }
 
-  const isReady = readiness?.overall_state === 'READY';
-  const stateLabel = isReady ? 'READY TO APPLY' : 'NOT READY YET';
-  const stateColor = isReady ? '#16A34A' : '#DC2626';
-
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.6rem', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Permit Readiness</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Check if your business is ready before starting a permit application.</p>
-      </div>
+    <div style={{ padding: '2.5rem', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* HEADER */}
+      <header style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 0.25rem', color: 'var(--government-navy)' }}>
+          Permit Readiness
+        </h1>
+        <p style={{ color: '#64748B', fontSize: '15px', margin: 0 }}>
+          Check whether you're ready for your business permit application.
+        </p>
+      </header>
 
-      {error && (
-        <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <AlertCircle size={18} /> {error}
-        </div>
-      )}
-
-      {/* Selectors */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem', backgroundColor: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)' }}>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Business</label>
-          <select value={selectedBizId} onChange={e => setSelectedBizId(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+      {/* Selector */}
+      {businesses.length > 0 && (
+        <div style={{ marginBottom: '2rem', maxWidth: '400px' }}>
+          <select 
+            value={selectedBizId} 
+            onChange={e => setSelectedBizId(e.target.value)} 
+            style={{ width: '100%', padding: '0.625rem 1rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', color: 'var(--government-navy)', backgroundColor: 'white' }}
+          >
             {businesses.map(b => <option key={b.id} value={b.id}>{b.business_name}</option>)}
           </select>
         </div>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Application Type</label>
-          <select value={applicationType} onChange={e => setApplicationType(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-            <option value="NEW">New Business Permit</option>
-            <option value="RENEWAL">Renewal</option>
-          </select>
-        </div>
-      </div>
+      )}
 
-      {loading && !readiness ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)' }}>
-          Checking what you need...
+      {loading ? (
+        <div style={{ padding: '4rem', textAlign: 'center', color: '#64748B' }}>Loading readiness data...</div>
+      ) : !assessment ? (
+        /* ================= EMPTY STATE (AI Not Done) ================= */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '700px', margin: '0 auto' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '3rem 2rem', textAlign: 'center' }}>
+            <div style={{ width: '64px', height: '64px', backgroundColor: '#F0FDF4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <ShieldCheck size={32} color="var(--primary-green)" />
+            </div>
+            <h2 style={{ fontSize: '20px', fontWeight: '650', color: 'var(--government-navy)', margin: '0 0 1rem' }}>Personalized requirements have not been generated yet.</h2>
+            <p style={{ fontSize: '14px', color: '#64748B', margin: '0 auto 2rem', lineHeight: '1.6', maxWidth: '480px' }}>
+              Complete the AI Permit Assessment first to identify requirements that may apply to your business. Permit requirements may vary depending on your business type, location, and other business information.
+            </p>
+            <button 
+              onClick={() => navigate('/assessment')} 
+              style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '6px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <BrainCircuit size={18} /> Start AI Permit Assessment
+            </button>
+          </div>
+
+          <div style={{ backgroundColor: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '2rem' }}>
+            <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', margin: '0 0 1.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>How It Works</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem' }}>
+              <div><div style={{ fontWeight: '600', color: 'var(--government-navy)', fontSize: '14px', marginBottom: '0.25rem' }}>1. Complete AI Assessment</div><div style={{ fontSize: '12px', color: '#64748B' }}>Identify applicable rules.</div></div>
+              <div><div style={{ fontWeight: '600', color: 'var(--government-navy)', fontSize: '14px', marginBottom: '0.25rem' }}>2. Review requirements</div><div style={{ fontSize: '12px', color: '#64748B' }}>See what applies to you.</div></div>
+              <div><div style={{ fontWeight: '600', color: 'var(--government-navy)', fontSize: '14px', marginBottom: '0.25rem' }}>3. Track what you have</div><div style={{ fontSize: '12px', color: '#64748B' }}>Manage your readiness.</div></div>
+              <div><div style={{ fontWeight: '600', color: 'var(--government-navy)', fontSize: '14px', marginBottom: '0.25rem' }}>4. Download application</div><div style={{ fontSize: '12px', color: '#64748B' }}>Prepare the physical form.</div></div>
+              <div><div style={{ fontWeight: '600', color: 'var(--government-navy)', fontSize: '14px', marginBottom: '0.25rem' }}>5. Visit BPLO</div><div style={{ fontSize: '12px', color: '#64748B' }}>Official processing.</div></div>
+            </div>
+          </div>
         </div>
-      ) : readiness ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      ) : (
+        /* ================= ASSESSMENT DONE STATE ================= */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
-          {/* Main Readiness Card */}
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '2rem', boxShadow: 'var(--shadow-card)', borderTop: `4px solid ${stateColor}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-              {isReady ? <CheckCircle2 size={32} color={stateColor} /> : <AlertCircle size={32} color={stateColor} />}
-              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: stateColor }}>{stateLabel}</div>
-            </div>
-            <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{readiness.recommendation}</div>
-          </div>
-
-          {/* ACTION REQUIRED SECTION */}
-          {readiness.action_required && readiness.action_required.length > 0 && (
-            <div style={{ border: '2px solid #FDE68A', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-              <div style={{ backgroundColor: '#FEF3C7', padding: '1rem 1.5rem', borderBottom: '1px solid #FDE68A' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400E' }}>
-                  <AlertCircle size={20} /> ACTION REQUIRED
-                </h3>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#B45309' }}>
-                  {readiness.action_required.length} item{readiness.action_required.length > 1 ? 's' : ''} need your attention.
-                </p>
-              </div>
-              <div style={{ backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-                {readiness.action_required.map((act, i) => (
-                  <div key={i} style={{ padding: '1.5rem', borderBottom: i < readiness.action_required.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-dark)', marginBottom: '0.25rem' }}>
-                        {i + 1}. {act.text}
-                      </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {act.type === 'fee' || act.type === 'profile' ? 'Required for fee calculation and profile completeness.' : 'Required document for your application.'}
-                      </div>
-                    </div>
-                    {act.type === 'document' ? (
-                      <button 
-                        onClick={() => setUploadModal({ isOpen: true, reqName: act.document_name || act.text.replace(' is missing.', ''), reqId: act.requirement_id })}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'white', backgroundColor: 'var(--primary-green)', border: 'none', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
-                        <UploadCloud size={16} /> Upload Document
-                      </button>
-                    ) : act.link ? (
-                      <Link to={act.link} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'white', backgroundColor: 'var(--primary-green)', textDecoration: 'none', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)' }}>
-                        <Edit size={16} /> {act.actionText}
-                      </Link>
-                    ) : null}
-                  </div>
-                ))}
+          {/* AI Success Banner */}
+          <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <BrainCircuit size={20} color="#166534" />
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#166534', marginBottom: '0.25rem' }}>AI ASSESSMENT COMPLETED</div>
+                <div style={{ fontSize: '13px', color: '#14532D' }}>Your personalized requirement checklist was generated from your business information.</div>
               </div>
             </div>
-          )}
-
-          {/* Checklist Progress */}
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)' }}>
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShieldCheck size={18} color="var(--primary-green)" /> Preparation Progress
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {readiness.categories.map(cat => (
-                <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: '#F8FAFC', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <CategoryIcon status={cat.status} />
-                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-dark)' }}>{cat.label}</span>
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: cat.status === 'Complete' ? '#16A34A' : '#D97706', fontWeight: '500' }}>
-                    {cat.status === 'Complete' ? '✓ Complete' : '⚠ Action needed'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Estimated Cost Summary */}
-          {readiness.fee_assessment && (
-            <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)' }}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: '1.1rem' }}>Estimated Fees</h3>
-              
-              {readiness.fee_assessment.is_incomplete ? (
-                <div style={{ color: '#D97706', fontSize: '0.9rem', marginBottom: '1rem', fontWeight: '500' }}>
-                  ⚠ More business information is needed to calculate your fees.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                  {readiness.fee_assessment.breakdown.map(b => (
-                    <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', color: 'var(--text-dark)' }}>
-                      <span>{b.name}</span>
-                      <span style={{ fontWeight: '500' }}>{formatPHP(b.amount)}</span>
-                    </div>
-                  ))}
-                  <div style={{ borderTop: '2px solid var(--border-light)', paddingTop: '1rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)' }}>ESTIMATED TOTAL</span>
-                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--primary-green)' }}>{formatPHP(readiness.fee_assessment.total_estimated_amount)}</span>
-                  </div>
-                </div>
-              )}
-              
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', backgroundColor: '#F8FAFC', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
-                {readiness.fee_assessment.disclaimer || 'This is an estimate. Final fees are subject to LGU assessment.'}
-              </div>
-            </div>
-          )}
-
-          {/* AI Assessment Promo Banner */}
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-            <div>
-              <h3 style={{ margin: '0 0 0.25rem', fontSize: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <BrainCircuit size={18} color="var(--primary-green)" /> Planning a different business?
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Use our AI Assessor to explore permit requirements for any business idea.</p>
-            </div>
-            <Link to="/assessment" style={{ padding: '0.6rem 1.25rem', backgroundColor: 'var(--light-green)', color: 'var(--primary-green)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Try AI Assessor <ArrowRight size={16} />
+            <Link to="/assessment" style={{ fontSize: '13px', fontWeight: '600', color: '#166534', backgroundColor: 'white', border: '1px solid #86EFAC', padding: '0.5rem 1rem', borderRadius: '6px', textDecoration: 'none' }}>
+              Review AI Assessment
             </Link>
           </div>
 
-          {/* Application Summary & Submit */}
-          <div style={{ backgroundColor: '#F8FAFC', borderRadius: 'var(--radius-md)', padding: '2rem', border: '1px solid var(--border-light)' }}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: '1.1rem' }}>Ready to Start Your Application?</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', fontSize: '0.95rem', color: 'var(--text-dark)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Business:</span> <strong>{readiness.business_name}</strong></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Application:</span> <strong>{applicationType === 'NEW' ? 'New Business Permit' : 'Renewal'}</strong></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--government-navy)' }}>{selectedBusiness?.business_name}</div>
+              <div style={{ fontSize: '14px', color: '#64748B' }}>{selectedBusiness?.business_status === 'Renewal' ? 'Renewal' : 'New Business Permit'}</div>
+            </div>
+          </div>
+
+          {/* OVERALL READINESS SCORE */}
+          <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '2rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>OVERALL READINESS</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--government-navy)' }}>
+                {stats.have} of {stats.total} requirements ready
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: stats.percentage === 100 ? '#16A34A' : 'var(--primary-green)' }}>
+                {stats.percentage}%
+              </div>
             </div>
             
-            {isReady ? (
-              <button
-                onClick={handleContinue}
-                disabled={submitting}
-                style={{ 
-                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', 
-                  backgroundColor: submitting ? '#9CA3AF' : 'var(--primary-green)', color: 'white', 
-                  border: 'none', padding: '1.1rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', 
-                  cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '1.05rem' 
-                }}
-              >
-                {submitting ? 'Creating...' : <>Continue to Application <ArrowRight size={18} /></>}
-              </button>
+            {/* Progress Bar */}
+            <div style={{ height: '12px', backgroundColor: '#E2E8F0', borderRadius: '6px', overflow: 'hidden', marginBottom: '1.25rem', display: 'flex' }}>
+              <div style={{ height: '100%', backgroundColor: stats.percentage === 100 ? '#16A34A' : 'var(--primary-green)', width: `${stats.percentage}%`, transition: 'width 0.3s ease' }}></div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1.5rem', fontSize: '13px', color: '#64748B' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#16A34A' }}></div>{stats.have} Have</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#EA580C' }}></div>{stats.need} Still Need</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#94A3B8' }}></div>{stats.unchecked} Not Checked</div>
+            </div>
+
+            {/* Readness State Banner */}
+            {stats.percentage === 100 ? (
+              <div style={{ marginTop: '1.5rem', backgroundColor: '#F0FDF4', borderLeft: '4px solid #16A34A', padding: '1rem', borderRadius: '0 6px 6px 0' }}>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#166534', marginBottom: '0.25rem' }}>READY FOR PHYSICAL SUBMISSION</div>
+                <div style={{ fontSize: '13px', color: '#14532D' }}>You've marked all recommended requirements as ready.</div>
+              </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#B45309', backgroundColor: '#FEF3C7', padding: '1rem', borderRadius: 'var(--radius-sm)', fontWeight: '500', fontSize: '0.95rem' }}>
-                Complete the items above before starting your application.
+              <div style={{ marginTop: '1.5rem', backgroundColor: '#FFF7ED', borderLeft: '4px solid #EA580C', padding: '1rem', borderRadius: '0 6px 6px 0' }}>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#9A3412', marginBottom: '0.25rem' }}>NOT YET READY</div>
+                <div style={{ fontSize: '13px', color: '#9A3412' }}>You still have {stats.need + stats.unchecked} requirements to prepare before visiting the BPLO office.</div>
               </div>
             )}
           </div>
 
-        </div>
-      ) : null}
-
-      {/* Upload Document Modal */}
-      {uploadModal.isOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-card)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Upload Document</h2>
-              <button onClick={() => setUploadModal({ isOpen: false, reqName: '', reqId: null })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
-            </div>
-            <div style={{ padding: '1.5rem' }}>
-              {uploadError && <div style={{ color: '#DC2626', backgroundColor: '#FEE2E2', padding: '0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.9rem' }}>{uploadError}</div>}
-              
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Document Type</label>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-dark)' }}>{uploadModal.reqName}</div>
-              </div>
-
-              <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2rem', textAlign: 'center', marginBottom: '1.5rem', cursor: 'pointer', background: '#FAFAFA', position: 'relative' }}>
-                <FileText size={32} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem' }} />
-                <p style={{ color: 'var(--text-dark)', marginBottom: '0.5rem', fontWeight: '500' }}>{file ? file.name : 'Click to select a file'}</p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PDF, JPG, PNG supported</p>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files[0])} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }} />
-              </div>
-              
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="button" onClick={() => setUploadModal({ isOpen: false, reqName: '', reqId: null })} style={{ flex: 1, padding: '0.875rem', backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
-                <button type="button" onClick={handleUpload} disabled={uploadingDoc} style={{ flex: 1, padding: '0.875rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: uploadingDoc ? 'not-allowed' : 'pointer' }}>
-                  {uploadingDoc ? 'Uploading...' : 'Upload File'}
-                </button>
-              </div>
+          {/* REQUIREMENTS CHECKLIST */}
+          <div>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>REQUIRED DOCUMENTS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {requirements.map((req) => {
+                const s = reqStatus[req.id];
+                const isHave = s === 'HAVE';
+                const isNeed = s === 'NEED';
+                
+                return (
+                  <div key={req.id} style={{ 
+                    backgroundColor: 'white', 
+                    border: `1px solid ${isHave ? '#86EFAC' : isNeed ? '#FDBA74' : '#E2E8F0'}`, 
+                    borderRadius: '8px', padding: '1.25rem', 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'
+                  }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                        {isHave ? <CheckCircle2 size={18} color="#16A34A" style={{ marginTop: '2px' }} /> : isNeed ? <AlertCircle size={18} color="#EA580C" style={{ marginTop: '2px' }} /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #CBD5E1', marginTop: '2px' }}></div>}
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--government-navy)', marginBottom: '0.25rem' }}>{req.permit_name}</div>
+                          <div style={{ fontSize: '13px', color: '#64748B', marginBottom: '0.5rem' }}>
+                            {req.is_ai_recommended ? 'May apply based on your business profile.' : req.description || 'Required business document.'}
+                          </div>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: isHave ? '#16A34A' : isNeed ? '#EA580C' : '#64748B' }}>
+                            Status: {isHave ? 'Ready' : isNeed ? 'Still Needed' : 'Not Checked'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {!isHave && (
+                        <button onClick={() => updateReqStatus(req.id, 'HAVE')} style={{ padding: '0.5rem 1rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          I Have This
+                        </button>
+                      )}
+                      {!isNeed && (
+                        <button onClick={() => updateReqStatus(req.id, 'NEED')} style={{ padding: '0.5rem 1rem', backgroundColor: '#FFF7ED', color: '#9A3412', border: '1px solid #FED7AA', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          I Still Need This
+                        </button>
+                      )}
+                      {(isHave || isNeed) && (
+                        <button onClick={() => updateReqStatus(req.id, 'UNCHECKED')} aria-label="Reset status" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#94A3B8', border: 'none', cursor: 'pointer' }}>
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+
+          {/* DOWNLOAD SECTION */}
+          <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>APPLICATION FORM</div>
+              <div style={{ fontSize: '14px', color: 'var(--government-navy)', marginBottom: '0.25rem', fontWeight: '500' }}>Once you have reviewed your requirements, download or print the application form.</div>
+              <div style={{ fontSize: '13px', color: '#64748B' }}>Bring the completed form and required physical documents to the BPLO office.</div>
+            </div>
+            <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+              <Download size={18} /> Download Application Form
+            </a>
+          </div>
+
+          {/* OFFICIAL PROCESS NOTICE */}
+          <div style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '8px', padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+            <Info size={18} color="#0284C7" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: '#0369A1', marginBottom: '0.25rem' }}>OFFICIAL BPLO PROCESS</div>
+              <p style={{ fontSize: '13px', color: '#0C4A6E', margin: 0, lineHeight: 1.5 }}>
+                PermitEase helps you prepare and check your requirements. Physical document submission, official assessment, signatures, payment, and permit processing are handled by the Municipality of Roxas / BPLO office.
+              </p>
+            </div>
+          </div>
+
         </div>
       )}
-
     </div>
   );
 }

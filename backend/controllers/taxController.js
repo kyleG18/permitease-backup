@@ -1,5 +1,7 @@
 const db = require('../config/db');
 
+const { generateFeeEstimate } = require('../services/aiService');
+
 // @desc    Get estimated tax and fee breakdown for a business
 // @route   GET /api/taxes/estimate/:businessId
 // @access  Private
@@ -17,70 +19,13 @@ const getEstimate = async (req, res) => {
         const business = biz[0];
         const [rules] = await db.query('SELECT * FROM tax_fee_rules WHERE is_active = TRUE');
 
-        const breakdown = [];
-        let total = 0;
-
-        for (const rule of rules) {
-            // Check if rule condition applies to this business
-            if (rule.condition_field !== 'always') {
-                const bizVal = String(business[rule.condition_field] || '').toLowerCase();
-                const ruleVal = String(rule.condition_value || '').toLowerCase();
-                if (bizVal !== ruleVal) continue;
-            }
-
-            let amount = 0;
-            let basisLabel = '';
-            let basisAmount = 0;
-
-            switch (rule.basis) {
-                case 'fixed':
-                    amount = parseFloat(rule.fixed_amount);
-                    basisLabel = 'Fixed Rate';
-                    basisAmount = null;
-                    break;
-                case 'gross_sales':
-                    basisAmount = parseFloat(business.gross_sales || 0);
-                    amount = basisAmount * parseFloat(rule.rate);
-                    basisLabel = `Gross Sales (₱${Number(basisAmount).toLocaleString()})`;
-                    break;
-                case 'capitalization':
-                    basisAmount = parseFloat(business.capitalization || 0);
-                    amount = basisAmount * parseFloat(rule.rate);
-                    basisLabel = `Capitalization (₱${Number(basisAmount).toLocaleString()})`;
-                    break;
-                case 'floor_area':
-                    basisAmount = parseFloat(business.floor_area || 0);
-                    amount = basisAmount * parseFloat(rule.rate);
-                    basisLabel = `Floor Area (${basisAmount} sqm)`;
-                    break;
-                case 'employees':
-                    basisAmount = parseInt(business.employees || 0);
-                    amount = basisAmount * parseFloat(rule.rate);
-                    basisLabel = `No. of Employees (${basisAmount})`;
-                    break;
-                default:
-                    amount = parseFloat(rule.fixed_amount || 0);
-                    basisLabel = 'Fixed Rate';
-            }
-
-            breakdown.push({
-                name: rule.name,
-                category: rule.category,
-                description: rule.description,
-                basis: basisLabel,
-                rate: rule.basis === 'fixed' ? 'Fixed' : `${(parseFloat(rule.rate) * 100).toFixed(2)}%`,
-                estimated_amount: Math.round(amount * 100) / 100
-            });
-
-            total += amount;
+        try {
+            const aiEstimate = await generateFeeEstimate(business, rules);
+            res.json(aiEstimate);
+        } catch (aiError) {
+            console.error('AI Estimation failed:', aiError);
+            res.status(503).json({ message: aiError.message });
         }
-
-        res.json({
-            business_name: business.business_name,
-            breakdown,
-            estimated_total: Math.round(total * 100) / 100,
-            disclaimer: 'Estimated amount for reference only. Final taxes and fees are subject to official assessment by the Business Permits and Licensing Office (BPLO).'
-        });
 
     } catch (error) {
         console.error('Tax Estimate Error:', error);

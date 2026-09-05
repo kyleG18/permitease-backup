@@ -174,7 +174,92 @@ Instructions:
     }
 };
 
+/**
+ * Generate a structured JSON fee estimate using AI.
+ */
+const generateFeeEstimate = async (businessData, rulesData) => {
+    const groq = getGroqClient();
+    if (!groq) {
+        throw new Error('AI Assessment is temporarily unavailable. GROQ_API_KEY is not configured on the server.');
+    }
+
+    const prompt = `You are an AI fee estimation assistant for the Municipality of Roxas PermitEase system.
+Your task is to estimate business permit fees based ONLY on the provided configured LGU rules and business profile.
+
+BUSINESS PROFILE:
+${JSON.stringify(businessData, null, 2)}
+
+CONFIGURED LGU FEE RULES:
+${JSON.stringify(rulesData, null, 2)}
+
+INSTRUCTIONS:
+1. Read the business profile to identify the business type, category, status (New/Renewal), sales, capitalization, employees, and floor area.
+2. Evaluate each configured LGU fee rule to see if it applies to this business.
+3. For applicable rules, calculate the fee transparently.
+4. Calculate BFP Fire Safety Inspection Fee separately (e.g. 15% of applicable LGU fees, minimum 500) if it is in the rules.
+5. Do NOT invent a fee or rate. If a rate is missing, mark it as "Requires LGU Confirmation".
+6. Prevent double counting (e.g., if a generic "Fire Inspection" is there, don't duplicate it if BFP FSIF is computed).
+7. Return a STRICT JSON object exactly matching this structure (no markdown, no other text):
+
+{
+  "business_summary": {
+    "business_name": "Name",
+    "business_type": "Type",
+    "application_type": "Status"
+  },
+  "estimation_confidence": "HIGH|MEDIUM|LOW|REQUIRES LGU CONFIRMATION",
+  "fees": [
+    {
+      "name": "Fee Name",
+      "category": "Fee Category",
+      "basis": "Calculation Basis Details",
+      "rate": "Rate Used",
+      "calculation": "Step-by-step formula",
+      "amount": 100.00,
+      "status": "ESTIMATED|REQUIRES LGU CONFIRMATION"
+    }
+  ],
+  "subtotal_lgu_fees": 0,
+  "bfp_fee": 0,
+  "other_fees": 0,
+  "estimated_total": 0,
+  "missing_information": ["List missing fields if any"],
+  "fees_requiring_confirmation": ["List fees if any"],
+  "explanation": "Brief explanation of the estimate.",
+  "disclaimer": "Estimated amount only. Final fees are determined by the Municipality of Roxas based on the submitted business information and applicable ordinances and fee schedules."
+}`;
+
+    try {
+        const completion = await groq.chat.completions.create({
+            model: DEFAULT_MODEL,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.1,
+            max_tokens: 4096
+        });
+
+        let rawText = completion.choices[0]?.message?.content || '{}';
+        if (rawText.includes('</think>')) {
+            rawText = rawText.split('</think>')[1];
+        } else if (rawText.includes('<think>')) {
+             throw new Error("AI response truncated. Please try again.");
+        }
+
+        let jsonText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+        const start = jsonText.indexOf('{');
+        const end = jsonText.lastIndexOf('}');
+        if (start !== -1 && end !== -1 && end >= start) {
+            jsonText = jsonText.substring(start, end + 1);
+        }
+
+        return JSON.parse(jsonText);
+    } catch (error) {
+        console.error('[aiService] generateFeeEstimate error:', error.message);
+        throw new Error('AI Fee Estimation service is temporarily unavailable. Please try again later.');
+    }
+};
+
 module.exports = {
     generateStructuredAssessment,
-    generateChatResponse
+    generateChatResponse,
+    generateFeeEstimate
 };

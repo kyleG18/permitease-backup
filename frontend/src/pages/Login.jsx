@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -58,40 +59,65 @@ const Login = () => {
       {/* Sidebar Branding (Desktop Only) */}
       <div className="auth-sidebar">
         <div>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>PermitEase</h1>
-          <p style={{ fontSize: '1.2rem', opacity: 0.9 }}>
-            Business Permit Compliance and Renewal System — Municipality of Roxas, Oriental Mindoro.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '4rem' }}>
+            <div style={{ 
+              width: '40px', height: '40px', backgroundColor: 'var(--surface)', 
+              borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', 
+              justifyContent: 'center', color: 'var(--primary-green-dark)', fontWeight: '800', fontSize: '1.25rem'
+            }}>P</div>
+            <h1 style={{ fontSize: '1.5rem', color: 'white', margin: 0 }}>PermitEase</h1>
+          </div>
+
+          <div style={{ 
+            display: 'inline-block', backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+            padding: '0.4rem 1rem', borderRadius: 'var(--radius-full)', 
+            color: 'var(--accent-gold-light)', fontSize: '0.75rem', fontWeight: '700', 
+            letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '1.5rem',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            BUSINESS PERMIT SERVICES
+          </div>
+
+          <h2 style={{ fontSize: '2.5rem', color: 'white', marginBottom: '1.5rem', lineHeight: 1.2 }}>
+            Business Permit Compliance and Renewal System
+          </h2>
+          
+          <p style={{ fontSize: '1.1rem', color: 'rgba(255, 255, 255, 0.85)', marginBottom: '1.5rem', lineHeight: 1.5, maxWidth: '400px' }}>
+            Municipality of Roxas<br />
+            Oriental Mindoro
+          </p>
+
+          <p style={{ fontSize: '1.1rem', color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.5, maxWidth: '400px' }}>
+            A simpler way to prepare, manage, and renew your business permit requirements.
           </p>
         </div>
-        <div style={{ marginTop: 'auto' }}>
-          <p style={{ fontSize: '0.875rem', opacity: 0.8 }}>© 2026 Municipality of Roxas. All rights reserved.</p>
+
+        <div style={{ zIndex: 1 }}>
+          <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>© {new Date().getFullYear()} Municipality of Roxas. All rights reserved.</p>
         </div>
       </div>
 
       {/* Main Login Area */}
       <div className="auth-content">
         <div className="auth-card">
-          <div className="text-center mb-4">
-            <h2 style={{ color: 'var(--text-dark)' }}>Welcome to PermitEase</h2>
-            <p className="text-muted">Sign in to manage your business permits.</p>
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h2 style={{ color: 'var(--government-navy)', fontSize: '1.75rem', marginBottom: '0.5rem' }}>Welcome back</h2>
+            <p className="text-muted" style={{ fontSize: '0.9375rem' }}>Sign in to manage your business permits.</p>
           </div>
           
           {error && (
-            <div style={{ 
-              backgroundColor: 'var(--status-expired-bg)', 
-              color: 'var(--status-expired)', 
-              padding: '0.75rem', 
-              borderRadius: 'var(--radius-sm)', 
-              marginBottom: '1.5rem',
-              fontSize: '0.875rem',
-              textAlign: 'center'
-            }}>
-              {error}
+            <div className="alert alert-danger" style={{ marginBottom: '1.5rem', padding: '0.75rem 1rem' }}>
+              <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.2rem' }}>We couldn't sign you in.</strong>
+                {error}
+              </div>
             </div>
           )}
           
           <form onSubmit={onSubmit}>
-            <div className="form-group">
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label htmlFor="email" className="label">Email address</label>
               <input
                 type="email"
                 className="form-control"
@@ -99,12 +125,16 @@ const Login = () => {
                 name="email"
                 value={email}
                 onChange={onChange}
-                placeholder="Email Address"
+                placeholder="name@example.com"
+                style={{ padding: '0.75rem 1rem' }}
               />
-              <label htmlFor="email" className="form-label">Email Address</label>
             </div>
             
-            <div className="form-group mb-4">
+            <div style={{ marginBottom: '0.75rem' }}>
+              <label htmlFor="password" className="label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                Password
+                <Link to="#" style={{ fontWeight: '500', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Forgot password?</Link>
+              </label>
               <input
                 type="password"
                 className="form-control"
@@ -112,20 +142,18 @@ const Login = () => {
                 name="password"
                 value={password}
                 onChange={onChange}
-                placeholder="Password"
+                placeholder="••••••••••••"
+                style={{ padding: '0.75rem 1rem' }}
               />
-              <label htmlFor="password" className="form-label">Password</label>
             </div>
             
-            <button type="submit" className="btn btn-primary btn-block" style={{ padding: '0.875rem' }}>
+            <button type="submit" className="btn btn-primary btn-block mt-4" style={{ padding: '0.875rem', fontSize: '0.9375rem' }}>
               Sign In
             </button>
           </form>
           
-          <div className="text-center mt-4 text-muted">
-            <p>
-              Don't have an account? <Link to="/register" style={{ fontWeight: '600' }}>Register here</Link>
-            </p>
+          <div className="text-center text-muted" style={{ marginTop: '2rem', fontSize: '0.875rem' }}>
+            Don't have an account? <Link to="/register" style={{ fontWeight: '600', color: 'var(--primary-green)' }}>Register here</Link>
           </div>
         </div>
       </div>

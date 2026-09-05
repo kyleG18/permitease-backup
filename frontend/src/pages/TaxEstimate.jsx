@@ -10,6 +10,7 @@ export default function TaxEstimate() {
   const [selectedBizId, setSelectedBizId] = useState('');
   const [estimate, setEstimate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Admin Rule Management state
   const [rules, setRules] = useState([]);
@@ -27,30 +28,41 @@ export default function TaxEstimate() {
         if (data.length > 0) setSelectedBizId(String(data[0].id));
       });
     } else {
-      fetch(`${API}/taxes/rules`, { headers }).then(r => r.json()).then(data => setRules(Array.isArray(data) ? data : []));
+      fetch(`${API}/tax/rules`, { headers }).then(r => r.json()).then(data => setRules(Array.isArray(data) ? data : []));
     }
   }, []);
 
-  useEffect(() => {
-    if (selectedBizId) fetchEstimate();
-  }, [selectedBizId]);
+  // Estimate is now triggered manually via button
 
   const fetchEstimate = async () => {
+    if (!selectedBizId) return;
     setLoading(true);
+    setError('');
+    setEstimate(null);
     try {
-      const res = await fetch(`${API}/taxes/estimate/${selectedBizId}`, { headers });
+      const authToken = token || user?.token;
+      const res = await fetch(`${API}/tax/estimate/${selectedBizId}`, {
+        headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }
+      });
       const data = await res.json();
-      setEstimate(data);
-    } catch (e) { console.error(e); }
+      if (!res.ok) {
+        setError(data.message || `Error ${res.status}: Could not load estimate.`);
+      } else {
+        setEstimate(data);
+      }
+    } catch (e) {
+      console.error('Estimate fetch error:', e);
+      setError('Network error — make sure the server is running.');
+    }
     setLoading(false);
   };
 
   const handleRuleSubmit = async (e) => {
     e.preventDefault();
     const method = editingRule ? 'PUT' : 'POST';
-    const url = editingRule ? `${API}/taxes/rules/${editingRule.id}` : `${API}/taxes/rules`;
+    const url = editingRule ? `${API}/tax/rules/${editingRule.id}` : `${API}/tax/rules`;
     await fetch(url, { method, headers, body: JSON.stringify(ruleForm) });
-    const fresh = await fetch(`${API}/taxes/rules`, { headers });
+    const fresh = await fetch(`${API}/tax/rules`, { headers });
     setRules(await fresh.json());
     setShowRuleForm(false);
     setEditingRule(null);
@@ -59,7 +71,7 @@ export default function TaxEstimate() {
 
   const handleDeleteRule = async (id) => {
     if (!confirm('Delete this rule?')) return;
-    await fetch(`${API}/taxes/rules/${id}`, { method: 'DELETE', headers });
+    await fetch(`${API}/tax/rules/${id}`, { method: 'DELETE', headers });
     setRules(prev => prev.filter(r => r.id !== id));
   };
 
@@ -186,62 +198,133 @@ export default function TaxEstimate() {
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>View an itemized estimate of your permit taxes and fees based on your business profile.</p>
       </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <select value={selectedBizId} onChange={e => setSelectedBizId(e.target.value)}
-          style={{ padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', minWidth: '240px', fontSize: '0.9rem' }}>
+      <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <select
+          value={selectedBizId}
+          onChange={e => { setSelectedBizId(e.target.value); setEstimate(null); }}
+          style={{ padding: '0.65rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', minWidth: '240px', fontSize: '0.9rem', color: 'var(--text-primary)' }}
+        >
           {businesses.map(b => <option key={b.id} value={b.id}>{b.business_name}</option>)}
         </select>
+
+        <button
+          onClick={fetchEstimate}
+          disabled={!selectedBizId || loading}
+          className="btn btn-primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '160px' }}
+        >
+          <Calculator size={16} />
+          {loading ? 'Calculating...' : 'Run Estimation'}
+        </button>
       </div>
 
+      {/* Error */}
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.875rem 1rem', backgroundColor: '#FDECEC', border: '1px solid #F2C7C7', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', color: '#8B1E1E', fontSize: '0.875rem' }}>
+          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div><strong>Could not run estimation.</strong><br />{error}</div>
+        </div>
+      )}
+
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Calculating estimate...</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
+          <Calculator size={20} color="var(--primary-green)" />
+          Calculating your estimated permit fees...
+        </div>
       ) : estimate ? (
         <div style={{ display: 'grid', gap: '1.5rem' }}>
-          {/* Disclaimer */}
-          <div style={{ backgroundColor: '#FEF9C3', border: '1px solid #FDE047', borderRadius: 'var(--radius-sm)', padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-            <AlertTriangle size={18} color="#CA8A04" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <p style={{ fontSize: '0.825rem', color: '#78350F', margin: 0 }}>{estimate.disclaimer}</p>
+          {/* Header & Confidence */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem', color: 'var(--government-navy)' }}>
+                Estimated Charges — {estimate.business_summary?.business_name || 'Business'}
+              </h2>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                {estimate.business_summary?.business_type} • {estimate.business_summary?.application_type}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.25rem', fontWeight: '600' }}>AI Confidence</div>
+              <span style={{ 
+                padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700',
+                backgroundColor: estimate.estimation_confidence === 'HIGH' ? '#DCFCE7' : estimate.estimation_confidence === 'MEDIUM' ? '#FEF9C3' : '#FEE2E2',
+                color: estimate.estimation_confidence === 'HIGH' ? '#166534' : estimate.estimation_confidence === 'MEDIUM' ? '#854D0E' : '#991B1B'
+              }}>
+                {estimate.estimation_confidence}
+              </span>
+            </div>
           </div>
+
+          {/* Missing Info Warning */}
+          {estimate.missing_information?.length > 0 && (
+            <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-sm)', padding: '1rem', display: 'flex', gap: '0.75rem' }}>
+              <AlertTriangle size={18} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong style={{ color: '#92400E', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Missing Information</strong>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#B45309', fontSize: '0.8125rem' }}>
+                  {estimate.missing_information.map((info, idx) => <li key={idx}>{info}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Breakdown Table */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Calculator size={18} color="var(--primary-green)" />
-              <h3 style={{ margin: 0, fontSize: '1rem' }}>Estimated Charges — {estimate.business_name}</h3>
-            </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead style={{ backgroundColor: '#F9FAFB' }}>
-                <tr>{['Component', 'Category', 'Basis', 'Rate', 'Estimated Amount'].map(h => (
+                <tr>{['Component', 'Category', 'Basis / Rate', 'Calculation', 'Estimated Amount', 'Status'].map(h => (
                   <th key={h} style={{ padding: '0.85rem 1rem', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{h}</th>
                 ))}</tr>
               </thead>
               <tbody>
-                {estimate.breakdown?.length === 0 ? (
-                  <tr><td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No applicable fees found for this business.</td></tr>
-                ) : estimate.breakdown?.map((item, i) => (
+                {(!estimate.fees || estimate.fees.length === 0) ? (
+                  <tr><td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No applicable fees found.</td></tr>
+                ) : estimate.fees.map((item, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                    <td style={{ padding: '0.85rem 1rem', fontWeight: '600', color: 'var(--text-dark)' }}>{item.name}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-muted)' }}>{item.category}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>{item.basis}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-muted)' }}>{item.rate}</td>
-                    <td style={{ padding: '0.85rem 1rem', fontWeight: '600', textAlign: 'right', color: 'var(--primary-green)' }}>₱{Number(item.estimated_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: '0.85rem 1rem', fontWeight: '600', color: 'var(--government-navy)', verticalAlign: 'top' }}>{item.name}</td>
+                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)', fontSize: '0.8125rem', verticalAlign: 'top' }}>{item.category}</td>
+                    <td style={{ padding: '0.85rem 1rem', verticalAlign: 'top' }}>
+                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{item.basis}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Rate: {item.rate}</div>
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)', fontSize: '0.8125rem', verticalAlign: 'top' }}>{item.calculation}</td>
+                    <td style={{ padding: '0.85rem 1rem', fontWeight: '700', textAlign: 'right', color: 'var(--primary-green)', verticalAlign: 'top' }}>
+                      ₱{Number(item.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem', verticalAlign: 'top' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: item.status === 'ESTIMATED' ? '#F0FDF4' : '#FFF7ED', color: item.status === 'ESTIMATED' ? '#166534' : '#C2410C', textTransform: 'uppercase' }}>
+                        {item.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr style={{ backgroundColor: '#F0FDF4' }}>
-                  <td colSpan="4" style={{ padding: '1rem 1.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Estimated Total</td>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: '700', fontSize: '1.1rem', textAlign: 'right', color: 'var(--primary-green)' }}>
-                    ₱{Number(estimate.estimated_total).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                <tr style={{ backgroundColor: '#F0FDF4', borderTop: '2px solid var(--primary-green)' }}>
+                  <td colSpan="4" style={{ padding: '1rem 1.5rem', fontWeight: '800', fontSize: '0.9375rem', color: 'var(--government-navy)' }}>ESTIMATED TOTAL</td>
+                  <td colSpan="2" style={{ padding: '1rem 1.5rem', fontWeight: '800', fontSize: '1.25rem', textAlign: 'right', color: 'var(--primary-green)' }}>
+                    ₱{Number(estimate.estimated_total || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-            💡 Tip: Update your <strong>Business Profile</strong> with your capitalization and gross sales for a more accurate estimate.
-          </p>
+          {/* Explanation & Disclaimer */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {estimate.explanation && (
+              <div style={{ padding: '1.25rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
+                <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: 'var(--government-navy)' }}>AI Explanation</h4>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{estimate.explanation}</p>
+              </div>
+            )}
+            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 'var(--radius-sm)', padding: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <AlertTriangle size={18} color="#64748B" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <p style={{ fontSize: '0.8125rem', color: '#475569', margin: 0, lineHeight: 1.5 }}>
+                {estimate.disclaimer || 'Estimated amount only. Final fees are determined by the Municipality of Roxas based on the submitted business information and applicable ordinances and fee schedules.'}
+              </p>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

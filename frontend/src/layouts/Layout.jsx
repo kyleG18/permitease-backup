@@ -1,26 +1,30 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { MessageSquare } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
+  const { user } = useContext(AuthContext);
   const isChatPage = location.pathname === '/assistant';
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => setIsSidebarOpen(false);
 
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
-
-  // Close sidebar on route change
   React.useEffect(() => {
     closeSidebar();
   }, [location.pathname]);
+
+  const roleLabels = {
+    'business_owner': 'BUSINESS OWNER',
+    'lgu_admin': 'LGU ADMIN',
+    'system_admin': 'SYSTEM ADMIN'
+  };
+
+  const roleClass = user?.role ? user.role.replace('_', '-') : 'business-owner';
 
   return (
     <div className="app-layout">
@@ -31,7 +35,7 @@ const Layout = ({ children }) => {
           onClick={closeSidebar}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 30
+            backgroundColor: 'rgba(23, 32, 51, 0.6)', zIndex: 30
           }}
         />
       )}
@@ -45,28 +49,20 @@ const Layout = ({ children }) => {
         </main>
       </div>
 
-      {/* Floating AI Chat Button (Hidden on the actual chat page) */}
+      {/* Floating AI Chat Button */}
       {!isChatPage && (
         <Link 
           to="/assistant" 
           className="btn btn-primary"
           style={{
-            position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
-            zIndex: 100,
-            padding: 0
+            position: 'fixed', bottom: '2rem', right: '2rem',
+            width: '56px', height: '56px', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: 'var(--shadow-lg)', zIndex: 100, padding: 0
           }}
           title="Ask AI Assistant"
         >
-          <MessageSquare size={28} />
+          <MessageSquare size={24} />
         </Link>
       )}
     </div>
