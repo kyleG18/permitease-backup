@@ -42,15 +42,20 @@ const getBusiness = async (req, res) => {
 // @access  Private
 const createBusiness = async (req, res) => {
     try {
-        const { business_name, business_type, industry_category, address, employees, business_status, date_established, capitalization, gross_sales, floor_area } = req.body;
+        const { 
+            business_name, business_type, industry_category, address, 
+            employees, business_status, date_established, 
+            capitalization, gross_sales, floor_area,
+            owner_name, contact_number, barangay, business_description
+        } = req.body;
 
         if (!business_name || !business_type || !industry_category || !address) {
             return res.status(400).json({ message: 'Please provide all required fields' });
         }
 
         const [result] = await db.query(
-            'INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, employees, business_status, date_established, capitalization, gross_sales, floor_area) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [req.user.id, business_name, business_type, industry_category, address, employees || 0, business_status || 'New Application', date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0]
+            'INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, employees, business_status, date_established, capitalization, gross_sales, floor_area, owner_name, contact_number, barangay, business_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [req.user.id, business_name, business_type, industry_category, address, employees || 0, business_status || 'New Application', date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, owner_name || null, contact_number || null, barangay || null, business_description || null]
         );
 
         res.status(201).json({ id: result.insertId, message: 'Business created successfully' });
@@ -66,7 +71,12 @@ const createBusiness = async (req, res) => {
 // @access  Private
 const updateBusiness = async (req, res) => {
     try {
-        const { business_name, business_type, industry_category, address, employees, business_status, date_established, capitalization, gross_sales, floor_area } = req.body;
+        const { 
+            business_name, business_type, industry_category, address, 
+            employees, business_status, date_established, 
+            capitalization, gross_sales, floor_area,
+            owner_name, contact_number, barangay, business_description
+        } = req.body;
 
         const [existing] = await db.query('SELECT * FROM businesses WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
         if (existing.length === 0) {
@@ -74,8 +84,8 @@ const updateBusiness = async (req, res) => {
         }
 
         await db.query(
-            'UPDATE businesses SET business_name=?, business_type=?, industry_category=?, address=?, employees=?, business_status=?, date_established=?, capitalization=?, gross_sales=?, floor_area=? WHERE id=?',
-            [business_name, business_type, industry_category, address, employees, business_status, date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, req.params.id]
+            'UPDATE businesses SET business_name=?, business_type=?, industry_category=?, address=?, employees=?, business_status=?, date_established=?, capitalization=?, gross_sales=?, floor_area=?, owner_name=?, contact_number=?, barangay=?, business_description=? WHERE id=?',
+            [business_name, business_type, industry_category, address, employees || 0, business_status, date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, owner_name || null, contact_number || null, barangay || null, business_description || null, req.params.id]
         );
 
         res.json({ message: 'Business updated successfully' });

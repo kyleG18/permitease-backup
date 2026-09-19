@@ -24,7 +24,7 @@ const generateStructuredAssessment = async (businessDescription, availablePermit
     }
 
     const prompt = `You are an AI assistant for the Municipality of Roxas PermitEase system.
-Your task is to analyze the user's natural-language business description and return a STRICT JSON object containing your best assessment.
+Your task is to analyze the user's business profile and activities to return a STRICT JSON object containing your best assessment.
 DO NOT provide official permit requirements. Only provide an advisory classification.
 
 Available Industry Categories configured in PermitEase:
@@ -38,8 +38,14 @@ Available Industry Categories configured in PermitEase:
 Available Business Types (Examples):
 - Restaurant, Cafe, Sari-sari Store, Salon, Tech Startup, Farm, etc.
 
-User's Business Description:
-"${businessDescription}"
+User's Business Information:
+${typeof businessDescription === 'object' ? JSON.stringify(businessDescription, null, 2) : businessDescription}
+
+Instructions:
+1. Analyze the business name, type, and ESPECIALLY the "business_description" (activities) to understand what they actually do.
+2. If "business_description" is missing or too short, return a lower confidence score and add "missing_information" (e.g. "Please describe the specific products or services you offer").
+3. Assign the closest "industry_category".
+4. Determine the specific "business_type".
 
 You MUST respond ONLY with valid JSON exactly matching this structure, with no markdown code blocks and no surrounding text:
 {
@@ -184,7 +190,7 @@ const generateFeeEstimate = async (businessData, rulesData) => {
     }
 
     const prompt = `You are an AI fee estimation assistant for the Municipality of Roxas PermitEase system.
-Your task is to estimate business permit fees based ONLY on the provided configured LGU rules and business profile.
+Your task is to estimate business permit assessments based ONLY on the provided configured LGU rules and business profile.
 
 BUSINESS PROFILE:
 ${JSON.stringify(businessData, null, 2)}
@@ -193,13 +199,14 @@ CONFIGURED LGU FEE RULES:
 ${JSON.stringify(rulesData, null, 2)}
 
 INSTRUCTIONS:
-1. Read the business profile to identify the business type, category, status (New/Renewal), sales, capitalization, employees, and floor area.
-2. Evaluate each configured LGU fee rule to see if it applies to this business.
-3. For applicable rules, calculate the fee transparently.
-4. Calculate BFP Fire Safety Inspection Fee separately (e.g. 15% of applicable LGU fees, minimum 500) if it is in the rules.
-5. Do NOT invent a fee or rate. If a rate is missing, mark it as "Requires LGU Confirmation".
-6. Prevent double counting (e.g., if a generic "Fire Inspection" is there, don't duplicate it if BFP FSIF is computed).
-7. Return a STRICT JSON object exactly matching this structure (no markdown, no other text):
+1. Identify the business type, status (New/Renewal), sales, capitalization, employees, and floor area.
+2. Evaluate each rule. Separate them into "Local Business Tax" (taxes based on sales/receipts or capitalization) and "Regulatory Fees" (Mayor's permit, sanitary, BFP, garbage, etc.).
+3. For taxes:
+   - For Renewal, use Gross Sales/Receipts.
+   - For New Business, use Capitalization (if rule applies).
+4. For BFP Fire Safety Inspection Fee: Compute as 15% of all other LGU regulatory fees (exclude Local Business Tax from this 15% basis if that is standard, or just 15% of LGU fees), with a minimum of 500.
+5. If an exact rate is missing or cannot be computed reliably, set amount to null, and status to "TO BE ASSESSED". Do NOT invent amounts.
+6. Return a STRICT JSON object exactly matching this structure (no markdown, no other text):
 
 {
   "business_summary": {
@@ -208,25 +215,26 @@ INSTRUCTIONS:
     "application_type": "Status"
   },
   "estimation_confidence": "HIGH|MEDIUM|LOW|REQUIRES LGU CONFIRMATION",
-  "fees": [
+  "local_business_tax": [
     {
-      "name": "Fee Name",
-      "category": "Fee Category",
-      "basis": "Calculation Basis Details",
-      "rate": "Rate Used",
+      "name": "Local Business Tax",
+      "basis": "Gross Sales/Receipts or Capitalization amount",
+      "rate": "Rule or Bracket applied",
       "calculation": "Step-by-step formula",
       "amount": 100.00,
-      "status": "ESTIMATED|REQUIRES LGU CONFIRMATION"
+      "status": "ESTIMATED|TO BE ASSESSED"
     }
   ],
-  "subtotal_lgu_fees": 0,
-  "bfp_fee": 0,
-  "other_fees": 0,
-  "estimated_total": 0,
+  "regulatory_fees": [
+    {
+      "name": "Fee Name",
+      "basis": "Calculation Basis",
+      "amount": 100.00,
+      "status": "ESTIMATED|TO BE ASSESSED"
+    }
+  ],
   "missing_information": ["List missing fields if any"],
-  "fees_requiring_confirmation": ["List fees if any"],
-  "explanation": "Brief explanation of the estimate.",
-  "disclaimer": "Estimated amount only. Final fees are determined by the Municipality of Roxas based on the submitted business information and applicable ordinances and fee schedules."
+  "explanation": "Brief explanation."
 }`;
 
     try {

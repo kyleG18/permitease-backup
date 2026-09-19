@@ -22,7 +22,8 @@ import Reports from './pages/Reports';
 import AdminAnalytics from './pages/AdminAnalytics';
 import Settings from './pages/Settings';
 import Compliance from './pages/Compliance';
-import TaxEstimate from './pages/TaxEstimate';
+import TaxEstimation from './pages/TaxEstimation';
+import FeeEstimation from './pages/FeeEstimation';
 import PermitReadiness from './pages/PermitReadiness';
 import ComplianceHistory from './pages/ComplianceHistory';
 import Applications from './pages/Applications';
@@ -78,7 +79,8 @@ function App() {
           <Route path="/assessment" element={<ProtectedLayout allowedRoles={['business_owner', 'lgu_admin', 'system_admin']}><Assessment /></ProtectedLayout>} />
           <Route path="/assistant" element={<ProtectedLayout allowedRoles={['business_owner', 'lgu_admin', 'system_admin']}><Chatbot /></ProtectedLayout>} />
           <Route path="/compliance" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Compliance /></ProtectedLayout>} />
-          <Route path="/tax-estimate" element={<ProtectedLayout><TaxEstimate /></ProtectedLayout>} />
+          <Route path="/tax-estimation" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><TaxEstimation /></ProtectedLayout>} />
+          <Route path="/fee-estimation" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><FeeEstimation /></ProtectedLayout>} />
           <Route path="/readiness" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><PermitReadiness /></ProtectedLayout>} />
           <Route path="/compliance-history" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><ComplianceHistory /></ProtectedLayout>} />
           

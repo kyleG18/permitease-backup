@@ -159,7 +159,7 @@ export default function PermitReadiness() {
           Permit Readiness
         </h1>
         <p style={{ color: '#64748B', fontSize: '15px', margin: 0 }}>
-          Check whether you're ready for your business permit application.
+          Review the requirements for your business and track what you already have before visiting BPLO.
         </p>
       </header>
 
@@ -323,15 +323,36 @@ export default function PermitReadiness() {
             </div>
           </div>
 
-          {/* DOWNLOAD SECTION */}
-          <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>APPLICATION FORM</div>
-              <div style={{ fontSize: '14px', color: 'var(--government-navy)', marginBottom: '0.25rem', fontWeight: '500' }}>Once you have reviewed your requirements, download or print the application form.</div>
-              <div style={{ fontSize: '13px', color: '#64748B' }}>Bring the completed form and required physical documents to the BPLO office.</div>
-            </div>
-            <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-              <Download size={18} /> Download Application Form
+          {/* PERMIT PREPARATION / DOWNLOAD SECTION */}
+          <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '1.75rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>PERMIT PREPARATION</div>
+            <p style={{ fontSize: '14px', color: 'var(--government-navy)', marginBottom: '0.4rem', fontWeight: '500', lineHeight: '1.5' }}>
+              Once you have reviewed your requirements, download or print the application form and prepare your physical documents for your visit to BPLO.
+            </p>
+            <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 1.25rem' }}>
+              Bring the completed form and required physical documents to the BPLO office for official processing.
+            </p>
+            <a
+              href="/forms/Roxas_Business_Permit_Application_Form.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                backgroundColor: 'var(--primary-green)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <Download size={17} strokeWidth={2} />
+              Download / Print Application Form
             </a>
           </div>
 

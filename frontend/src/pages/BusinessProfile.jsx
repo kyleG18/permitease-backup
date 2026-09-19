@@ -11,7 +11,8 @@ const BusinessProfile = () => {
   const [editingBusiness, setEditingBusiness] = useState(null);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    business_name: '', business_type: '', industry_category: '',
+    business_name: '', business_type: '', industry_category: '', business_description: '',
+    owner_name: '', contact_number: '', barangay: '',
     address: '', employees: '', business_status: 'New Application', date_established: '',
     capitalization: '', gross_sales: '', floor_area: ''
   });
@@ -33,16 +34,23 @@ const BusinessProfile = () => {
 
   const openAddModal = () => {
     setEditingBusiness(null);
-    setFormData({ business_name: '', business_type: '', industry_category: '', address: '', employees: '', business_status: 'New Application', date_established: '', capitalization: '', gross_sales: '', floor_area: '' });
+    setFormData({ 
+      business_name: '', business_type: '', industry_category: '', business_description: '',
+      owner_name: '', contact_number: '', barangay: '',
+      address: '', employees: '', business_status: 'New Application', date_established: '', 
+      capitalization: '', gross_sales: '', floor_area: '' 
+    });
     setShowModal(true);
   };
 
   const openEditModal = (biz) => {
     setEditingBusiness(biz);
     setFormData({
-      business_name: biz.business_name, business_type: biz.business_type,
-      industry_category: biz.industry_category, address: biz.address,
-      employees: biz.employees, business_status: biz.business_status,
+      business_name: biz.business_name || '', business_type: biz.business_type || '',
+      industry_category: biz.industry_category || '', business_description: biz.business_description || '',
+      owner_name: biz.owner_name || '', contact_number: biz.contact_number || '', barangay: biz.barangay || '',
+      address: biz.address || '',
+      employees: biz.employees || '', business_status: biz.business_status || 'New Application',
       date_established: biz.date_established ? biz.date_established.split('T')[0] : '',
       capitalization: biz.capitalization || '', gross_sales: biz.gross_sales || '', floor_area: biz.floor_area || ''
     });
@@ -149,45 +157,134 @@ const BusinessProfile = () => {
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <input className="form-control" placeholder=" " value={formData.business_name} onChange={e => setFormData({...formData, business_name: e.target.value})} required />
-                <label className="form-label">Business Name *</label>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <select className="form-control" style={{ paddingTop: '0.75rem' }} value={formData.business_type} onChange={e => setFormData({...formData, business_type: e.target.value})} required>
-                    <option value="">Select Type</option>
-                    <option>Food</option><option>Retail</option><option>Services</option>
-                    <option>Manufacturing</option><option>Agriculture</option><option>Others</option>
-                  </select>
-                  <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Business Type *</label>
+                              <div className="form-group mb-4">
+                  <input className="form-control" placeholder=" " value={formData.business_name} onChange={e => setFormData({...formData, business_name: e.target.value})} required />
+                  <label className="form-label">Business Name *</label>
                 </div>
-                <div className="form-group">
-                  <input className="form-control" placeholder=" " value={formData.industry_category} onChange={e => setFormData({...formData, industry_category: e.target.value})} required />
-                  <label className="form-label">Industry Category *</label>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="form-group">
+                    <select className="form-control" style={{ paddingTop: '0.75rem' }} value={formData.business_type} onChange={e => setFormData({...formData, business_type: e.target.value})} required>
+                      <option value="">Select Sector / Type</option>
+                      <option>Food & Beverage</option>
+                      <option>Retail & Wholesale</option>
+                      <option>Services (Professional & Personal)</option>
+                      <option>Manufacturing & Industrial</option>
+                      <option>Agriculture & Aquaculture</option>
+                      <option>Real Estate & Leasing</option>
+                      <option>Information Technology</option>
+                      <option>Healthcare & Medical</option>
+                      <option>Tourism & Hospitality</option>
+                      <option>Construction</option>
+                      <option>Education & Training</option>
+                      <option>Others</option>
+                    </select>
+                    <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Business Type *</label>
+                  </div>
+                  <div className="form-group">
+                    <select className="form-control" style={{ paddingTop: '0.75rem' }} value={formData.industry_category} onChange={e => setFormData({...formData, industry_category: e.target.value})} required>
+                      <option value="">Select Specific Category</option>
+                      <optgroup label="Food & Dining">
+                        <option>Restaurant / Eatery</option>
+                        <option>Cafe / Coffee Shop</option>
+                        <option>Bakery / Bakeshop</option>
+                        <option>Catering Services</option>
+                        <option>Food Kiosk / Cart</option>
+                        <option>Water Refilling Station</option>
+                      </optgroup>
+                      <optgroup label="Retail & Shops">
+                        <option>Sari-Sari Store</option>
+                        <option>Grocery / Supermarket</option>
+                        <option>Convenience Store</option>
+                        <option>Boutique / Clothing Store</option>
+                        <option>Hardware / Construction Supplies</option>
+                        <option>Pharmacy / Drugstore</option>
+                        <option>Auto Parts / Supply</option>
+                        <option>Agrivet Supply</option>
+                      </optgroup>
+                      <optgroup label="Services">
+                        <option>Salon / Barbershop / Spa</option>
+                        <option>Laundry Shop</option>
+                        <option>Car Wash / Auto Repair</option>
+                        <option>Internet Cafe / Computer Shop</option>
+                        <option>Print Shop / Advertising</option>
+                        <option>Logistics / Trucking</option>
+                        <option>Financial / Remittance Services</option>
+                      </optgroup>
+                      <optgroup label="Healthcare">
+                        <option>Clinic / Medical Office</option>
+                        <option>Dental Clinic</option>
+                        <option>Veterinary Clinic</option>
+                      </optgroup>
+                      <optgroup label="Real Estate & Hospitality">
+                        <option>Boarding House / Apartment</option>
+                        <option>Hotel / Resort</option>
+                        <option>Travel Agency</option>
+                      </optgroup>
+                      <optgroup label="Industrial & Others">
+                        <option>Manufacturing / Plant</option>
+                        <option>Junk Shop</option>
+                        <option>Gym / Fitness Center</option>
+                        <option>Others (Please specify in description)</option>
+                      </optgroup>
+                    </select>
+                    <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Industry Category *</label>
+                  </div>
                 </div>
-              </div>
-              <div className="form-group">
-                <input className="form-control" placeholder=" " value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
-                <label className="form-label">Business Address *</label>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <input className="form-control" type="number" placeholder=" " value={formData.employees} onChange={e => setFormData({...formData, employees: e.target.value})} />
-                  <label className="form-label">No. of Employees</label>
+
+                <div className="form-group mb-4">
+                  <textarea className="form-control" placeholder=" " value={formData.business_description} onChange={e => setFormData({...formData, business_description: e.target.value})} style={{ height: '80px', paddingTop: '1rem', resize: 'none' }} />
+                  <label className="form-label" style={{ top: '0.5rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Brief Business Description / Activities</label>
                 </div>
-                <div className="form-group">
-                  <select className="form-control" style={{ paddingTop: '0.75rem' }} value={formData.business_status} onChange={e => setFormData({...formData, business_status: e.target.value})}>
-                    <option>New Application</option><option>Renewal</option>
-                  </select>
-                  <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Status</label>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="form-group">
+                    <input className="form-control" placeholder=" " value={formData.owner_name} onChange={e => setFormData({...formData, owner_name: e.target.value})} />
+                    <label className="form-label">Owner / Proprietor Name</label>
+                  </div>
+                  <div className="form-group">
+                    <input className="form-control" placeholder=" " value={formData.contact_number} onChange={e => setFormData({...formData, contact_number: e.target.value})} />
+                    <label className="form-label">Contact Number</label>
+                  </div>
                 </div>
-              </div>
-              <div className="form-group">
-                <input className="form-control" type="date" placeholder=" " value={formData.date_established} onChange={e => setFormData({...formData, date_established: e.target.value})} />
-                <label className="form-label">Date Established</label>
-              </div>
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="form-group">
+                    <select className="form-control" style={{ paddingTop: '0.75rem' }} value={formData.barangay} onChange={e => setFormData({...formData, barangay: e.target.value})}>
+                      <option value="">Select Barangay</option>
+                      <option>Barangay Banica</option><option>Barangay Bolo</option><option>Barangay Culajao</option>
+                      <option>Barangay Culasi</option><option>Barangay Dayao</option><option>Barangay Dinginan</option>
+                      <option>Barangay Dumolog</option><option>Barangay Inzo Arnaldo Village</option><option>Barangay Jumaguicjic</option>
+                      <option>Barangay Lanot</option><option>Barangay Lawaan</option><option>Barangay Libas</option>
+                      <option>Barangay Linao</option><option>Barangay Loog</option><option>Barangay Milibili</option>
+                      <option>Barangay Pani-an</option><option>Barangay Poblacion Ilawod</option><option>Barangay Poblacion Ilaya</option>
+                      <option>Barangay Quipot</option><option>Barangay Tico</option><option>Others</option>
+                    </select>
+                    <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Barangay</label>
+                  </div>
+                  <div className="form-group">
+                    <input className="form-control" placeholder=" " value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
+                    <label className="form-label">Business Address *</label>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="form-group">
+                    <input className="form-control" type="number" placeholder=" " value={formData.employees} onChange={e => setFormData({...formData, employees: e.target.value})} />
+                    <label className="form-label">No. of Employees</label>
+                  </div>
+                  <div className="form-group">
+                    <select className="form-control" style={{ paddingTop: '0.75rem' }} value={formData.business_status} onChange={e => setFormData({...formData, business_status: e.target.value})}>
+                      <option>New Application</option><option>Renewal</option>
+                    </select>
+                    <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Status</label>
+                  </div>
+                  <div className="form-group">
+                    <input className="form-control" type="date" placeholder=" " value={formData.date_established} onChange={e => setFormData({...formData, date_established: e.target.value})} style={{ paddingTop: '0.75rem' }} />
+                    <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>Date Established</label>
+                  </div>
+                </div>
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: '600' }}>
                   💰 Financial Info <span style={{ fontWeight: '400' }}>(used for fee estimation)</span>
                 </p>
@@ -219,3 +316,4 @@ const BusinessProfile = () => {
 };
 
 export default BusinessProfile;
+

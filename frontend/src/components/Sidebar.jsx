@@ -45,7 +45,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           {
             title: 'ASSISTANCE',
             items: [
-              { name: 'Tax & Fee Estimation', path: '/tax-estimate', icon: Receipt },
+              { name: 'Tax Estimation', path: '/tax-estimation', icon: Receipt },
+              { name: 'Fee Estimation', path: '/fee-estimation', icon: Receipt },
               { name: 'AI Help', path: '/assistant', icon: MessageSquare }
             ]
           }
@@ -58,16 +59,31 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           items: [
             { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { name: 'My Business', path: '/profile', icon: Building2 },
+          ]
+        },
+        {
+          title: 'ASSESSMENT',
+          items: [
+            { name: 'AI Permit Assessment', path: '/assessment', icon: BrainCircuit },
+            { name: 'Tax Estimation', path: '/tax-estimation', icon: Receipt },
+            { name: 'Fee Estimation', path: '/fee-estimation', icon: Receipt },
+          ]
+        },
+        {
+          title: 'PERMIT PREPARATION',
+          items: [
             { name: 'Permit Readiness', path: '/readiness', icon: ShieldCheck },
-            { name: 'My Permits', path: '/permits', icon: Shield },
+          ]
+        },
+        {
+          title: 'RENEWALS',
+          items: [
             { name: 'Renewals', path: '/renewals', icon: CalendarClock }
           ]
         },
         {
           title: 'ASSISTANCE',
           items: [
-            { name: 'AI Assessment', path: '/assessment', icon: BrainCircuit },
-            { name: 'Tax & Fee Estimation', path: '/tax-estimate', icon: Receipt },
             { name: 'AI Help', path: '/assistant', icon: MessageSquare }
           ]
         }

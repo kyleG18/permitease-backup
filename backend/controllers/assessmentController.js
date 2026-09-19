@@ -26,6 +26,7 @@ const createAssessment = async (req, res) => {
                 `Business name: ${biz.business_name}.`,
                 `Type of business: ${biz.business_type}.`,
                 `Industry/Category: ${biz.industry_category}.`,
+                biz.business_description ? `Description of activities: ${biz.business_description}.` : null,
                 biz.address ? `Located at: ${biz.address}.` : null,
                 biz.employees ? `Number of employees: ${biz.employees}.` : null,
                 biz.floor_area ? `Floor area: ${biz.floor_area} sqm.` : null,

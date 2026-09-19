@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
   FileText, CheckCircle, AlertTriangle, XCircle, Clock,
   Building2, ClipboardCheck, Receipt, BarChart2,
-  ShieldCheck, AlertCircle, ChevronRight, BrainCircuit
+  ShieldCheck, AlertCircle, ChevronRight, BrainCircuit, Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ const StatCard = ({ icon: Icon, label, value, colorClass }) => (
     </div>
     <div className="stat-info">
       <h4>{label}</h4>
-      <div className="value">{value ?? '—'}</div>
+      <div className="value">{value ?? 'â€”'}</div>
     </div>
   </div>
 );
@@ -47,18 +47,15 @@ const statusStyle = (s) => ({
 const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   const [readiness, setReadiness] = useState(null);
   const [estimate, setEstimate] = useState(null);
-  const [recentPermits, setRecentPermits] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const headers = { Authorization: `Bearer ${user.token}` };
 
   useEffect(() => {
-    axios.get(`${API}/permits`, { headers }).then(r => setRecentPermits(r.data.slice(0, 5))).catch(() => {});
     axios.get(`${API}/notifications`, { headers }).then(r => setNotifications(r.data.slice(0, 4))).catch(() => {});
-
     if (stats?.businesses?.length > 0) {
       const bizId = stats.businesses[0].id;
       axios.get(`${API}/readiness/${bizId}`, { headers }).then(r => setReadiness(r.data)).catch(() => {});
-      axios.get(`${API}/taxes/estimate/${bizId}`, { headers }).then(r => setEstimate(r.data)).catch(() => {});
+      axios.get(`${API}/tax/estimate/${bizId}`, { headers }).then(r => setEstimate(r.data)).catch(() => {});
     }
   }, [stats]);
 
@@ -82,297 +79,312 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   const readScore = readiness?.readiness_score ?? 0;
   const readColor = readScore >= 80 ? 'var(--success)' : readScore >= 50 ? 'var(--warning)' : 'var(--danger)';
 
-  // Greet based on time
+  let reqHave = 0, reqNeed = 0, reqNotChecked = 0;
+  if (readiness?.categories) {
+    readiness.categories.forEach(cat => {
+      if (cat.status === 'Complete' || cat.status === 'Valid' || cat.status === 'Computed') reqHave++;
+      else if (cat.status === 'Incomplete') reqNeed++;
+      else reqNotChecked++;
+    });
+  }
+  const totalReqs = (readiness?.categories || []).length;
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const firstName = user?.full_name?.split(' ')[0] || 'User';
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  const step1Done = true;
+  const step2Done = readScore === 100;
+  const step3Done = !!estimate;
+  const step4Done = false;
+
+  let taxTotal = 0, hasUnassessedTax = false;
+  if (estimate?.local_business_tax) {
+    estimate.local_business_tax.forEach(t => {
+      if (t.status === 'TO BE ASSESSED' || t.amount === null) hasUnassessedTax = true;
+      else taxTotal += (t.amount || 0);
+    });
+  }
+  let feeTotal = 0, hasUnassessedFee = false;
+  if (estimate?.regulatory_fees) {
+    estimate.regulatory_fees.forEach(f => {
+      if (f.status === 'TO BE ASSESSED' || f.amount === null) hasUnassessedFee = true;
+      else feeTotal += (f.amount || 0);
+    });
+  }
+
+  const formatCurrency = (val) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val || 0);
 
   return (
-    <div className="animate-fade-in">
-      {/* Dashboard Header */}
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ color: 'var(--government-navy)', marginBottom: '0.35rem' }}>Dashboard</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>
-            {greeting}, {user?.full_name?.split(' ')[0]}. Here's your current business permit compliance overview.
+    <div className="animate-fade-in db-msme">
+
+      {/* HERO SECTION */}
+      <div className="db-hero">
+        <div className="db-hero__overlay" aria-hidden="true" />
+        
+        <div className="db-hero__inner">
+          <div className="db-hero__header">
+            <div>
+              <div className="db-hero__greeting">{greeting},</div>
+              <h1 className="db-hero__name">Welcome back, {firstName}!</h1>
+              <p className="db-hero__sub">{"Here's your PermitEase overview \u2014 Municipality of Roxas."}</p>
+            </div>
+            <div className="db-hero__date">
+              <Calendar size={15} />
+              {currentDate}
+            </div>
+          </div>
+
+          <div className="db-hero__text">
+            <div className="db-hero__city-title">Roxas City Business Permit</div>
+            <div className="db-hero__tagline">Prepare. Comply. Grow.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* STATS */}
+      <div className="db-stats">
+        {[
+          { label: 'Businesses',    value: stats?.total_businesses,    icon: Building2,     color: 'var(--primary-green)',   to: '/profile',    link: 'View Business Details' },
+          { label: 'Total Permits', value: stats?.total_permits,       icon: FileText,      color: 'var(--government-navy)', to: '/readiness',  link: 'View Readiness' },
+          { label: 'Active Permits',value: stats?.active_permits,      icon: CheckCircle,   color: 'var(--success)',         to: '/readiness',  link: 'View Readiness' },
+          { label: 'Expiring Soon', value: stats?.expiring_soon,       icon: AlertTriangle, color: 'var(--warning)',         to: '/renewals',   link: 'View Renewals' },
+          { label: 'Expired',       value: stats?.expired_permits,     icon: XCircle,       color: 'var(--danger)',          to: '/renewals',   link: 'View Renewals' },
+          { label: 'Pending Review',value: stats?.pending_applications, icon: Clock,        color: 'var(--text-secondary)',  to: '/renewals',   link: 'View Renewals' },
+        ].map((item, idx) => (
+          <div key={idx} className="card db-stat-card">
+            <item.icon size={22} strokeWidth={1.75} style={{ color: item.color }} />
+            <div className="db-stat-card__value">{loading ? '...' : (item.value ?? 0)}</div>
+            <div className="db-stat-card__label">{item.label}</div>
+            <Link to={item.to} className="db-stat-card__link">{item.link} &rarr;</Link>
+          </div>
+        ))}
+      </div>
+
+      {/* â”€â”€ READINESS + QUICK ACTIONS â”€â”€ */}
+      <div className="db-row">
+
+        {/* Permit Readiness */}
+        <div className="card db-readiness">
+          <div className="db-readiness__header">
+            <div className="db-readiness__title">
+              <ShieldCheck size={20} style={{ color: 'var(--government-navy)' }} />
+              <h2>Permit Readiness &mdash; {stats?.businesses?.[0]?.business_name || 'Your Business'}</h2>
+            </div>
+            {readScore === 100 ? (
+              <span className="db-badge db-badge--green" style={{ fontSize: '0.8125rem' }}>Complete</span>
+            ) : (
+              <span className="db-badge db-badge--amber" style={{ fontSize: '0.8125rem' }}>In Progress</span>
+            )}
+          </div>
+          
+          <div className="db-progress-container">
+            <div className="db-progress-bar">
+              <div className="db-progress-bar__fill" style={{ width: `${readScore}%`, backgroundColor: readColor }} />
+            </div>
+            <div className="db-progress-text">
+              {reqHave} / {totalReqs || 0} pts
+            </div>
+          </div>
+
+          <div className="db-readiness__desc">
+            {readScore === 100 
+              ? "You have completed all required requirements for your business permit."
+              : "You are currently preparing your requirements. Keep going!"}
+          </div>
+
+          <div className="db-readiness__cta">
+            {readScore === 0 && !readiness ? (
+              <Link to="/assessment" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', borderColor: 'var(--border-medium)' }}>
+                Start AI Permit Assessment <ChevronRight size={16} />
+              </Link>
+            ) : (
+              <Link to="/readiness" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', borderColor: 'var(--border-medium)' }}>
+                View Requirements <ChevronRight size={16} />
+              </Link>
+            )}
+          </div>
+        </div>
+        {/* Quick Actions */}
+        <div className="card db-quick-actions">
+          <h2 className="db-quick-actions__title">Quick Actions</h2>
+          <div className="db-quick-actions__list">
+            <Link to="/readiness" className="db-quick-action db-quick-action--primary">
+              <span className="db-quick-action__left"><ClipboardCheck size={17}/> View Permit Readiness</span>
+              <ChevronRight size={15}/>
+            </Link>
+            <Link to="/assessment" className="db-quick-action">
+              <span className="db-quick-action__left"><BrainCircuit size={17}/> AI Permit Assessment</span>
+              <ChevronRight size={15}/>
+            </Link>
+            <Link to="/tax-estimation" className="db-quick-action">
+              <span className="db-quick-action__left"><Receipt size={17}/> Tax Estimation</span>
+              <ChevronRight size={15}/>
+            </Link>
+            <Link to="/fee-estimation" className="db-quick-action">
+              <span className="db-quick-action__left"><Receipt size={17}/> Fee Estimation</span>
+              <ChevronRight size={15}/>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* â”€â”€ PREPARATION PROGRESS + ESTIMATED COST â”€â”€ */}
+      <div className="db-row">
+
+        {/* Preparation Progress */}
+        <div className="card db-progress-section">
+          <div className="db-section-title">
+            <BarChart2 size={20} style={{ color: 'var(--primary-green)' }} />
+            <h2>Permit Preparation Progress</h2>
+            <Link to="/readiness" className="db-section-link">View Details <ChevronRight size={13}/></Link>
+          </div>
+
+          {/* Horizontal timeline â€” collapses to vertical on mobile via CSS */}
+          <div className="db-timeline">
+            <div className="db-timeline__track">
+              <div className="db-timeline__fill" style={{
+                width: step2Done ? '80%' : step1Done ? '20%' : '0%'
+              }} />
+            </div>
+            {[
+              { title: 'AI Assessment',       desc: 'Identify requirements',  done: step1Done },
+              { title: 'Permit Readiness',    desc: 'Check what you have',    done: step2Done },
+              { title: 'Cost Estimation',     desc: 'Estimate taxes & fees',  done: step3Done },
+              { title: 'Download Form',       desc: 'Prepare documents',      done: step4Done },
+              { title: 'BPLO Processing',     desc: 'Official assessment',    done: false     },
+            ].map((step, i) => (
+              <div key={i} className="db-timeline__step">
+                <div className={`db-timeline__dot${step.done ? ' db-timeline__dot--done' : ''}`}>
+                  {step.done ? <CheckCircle size={16}/> : <span>{i + 1}</span>}
+                </div>
+                <div className="db-timeline__label">{step.title}</div>
+                <div className="db-timeline__desc">{step.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Estimated Cost */}
+        <div className="card db-cost-card">
+          <div className="db-section-title">
+            <Receipt size={20} style={{ color: 'var(--primary-green)' }} />
+            <h2>Estimated Preparation Cost</h2>
+            <Link to="/tax-estimation" className="db-section-link">View Details <ChevronRight size={13}/></Link>
+          </div>
+
+          <div className="db-cost-rows">
+            <div className="db-cost-row">
+              <span>Local Business Tax</span>
+              <span className={hasUnassessedTax ? 'db-cost-row__assessed' : ''}>
+                {estimate ? (hasUnassessedTax ? 'To Be Assessed' : formatCurrency(taxTotal)) : 'Not estimated yet'}
+              </span>
+            </div>
+            <div className="db-cost-row">
+              <span>Regulatory Fees</span>
+              <span className={hasUnassessedFee ? 'db-cost-row__assessed' : ''}>
+                {estimate ? (hasUnassessedFee ? 'To Be Assessed' : formatCurrency(feeTotal)) : 'Not estimated yet'}
+              </span>
+            </div>
+            <div className="db-cost-row db-cost-row--total">
+              <span>Estimated Total</span>
+              <span>
+                {estimate
+                  ? ((hasUnassessedFee || hasUnassessedTax) ? 'To Be Assessed' : formatCurrency(taxTotal + feeTotal))
+                  : 'â€”'}
+              </span>
+            </div>
+          </div>
+
+          <div className="db-cost-note">
+            <AlertCircle size={13} style={{ flexShrink: 0, marginTop: '1px' }}/>
+            <span>Estimates only. Final taxes, fees &amp; charges are determined by the LGU/BPLO during official assessment.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* â”€â”€ OFFICIAL PROCESS + RENEWAL / NOTIFICATIONS â”€â”€ */}
+      <div className="db-row db-row--bottom">
+
+        {/* Official Process */}
+        <div className="card db-official-process">
+          <div className="db-section-title">
+            <div className="db-official-process__icon" aria-hidden="true">i</div>
+            <h2>How the Official Permit Process Works</h2>
+          </div>
+          <div className="db-process-steps">
+            {[
+              { num: 1, title: 'File',    desc: 'Submit application & supporting documents at BPLO.' },
+              { num: 2, title: 'Assess',  desc: 'LGU assesses applicable taxes, fees & other charges.' },
+              { num: 3, title: 'Payment', desc: 'Pay the officially assessed amounts.' },
+              { num: 4, title: 'Claim',   desc: 'Receive your business permit & other documents.' },
+            ].map((step, i) => (
+              <div key={i} className="db-process-step">
+                <div className="db-process-step__num">{step.num}</div>
+                <div>
+                  <div className="db-process-step__title">{step.title}</div>
+                  <div className="db-process-step__desc">{step.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="db-official-process__note">
+            PermitEase helps you prepare for these steps. It does not replace official BPLO assessment or payment.
           </p>
         </div>
-        <div style={{ 
-          background: 'var(--primary-green-light)', borderRadius: 'var(--radius-full)', 
-          padding: '0.4rem 1rem', fontSize: '0.75rem', color: 'var(--primary-green-dark)', 
-          fontWeight: '600', letterSpacing: '0.03em' 
-        }}>
-          {new Date().toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}
-        </div>
-      </div>
 
-      {/* Permit Overview */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>
-          Permit Overview
-        </h3>
-        <div style={{ 
-          display: 'flex', flexWrap: 'wrap', gap: '1.5rem', padding: '1rem 1.25rem', 
-          backgroundColor: 'var(--surface)', border: '1px solid var(--border-light)', 
-          borderRadius: 'var(--radius-md)' 
-        }}>
-          {[
-            { label: 'Businesses', value: stats?.total_businesses, icon: Building2 },
-            { label: 'Total Permits', value: stats?.total_permits, icon: FileText },
-            { label: 'Active', value: stats?.active_permits, icon: CheckCircle, color: 'var(--success)' },
-            { label: 'Pending', value: stats?.pending_applications, icon: Clock },
-            { label: 'Expiring Soon', value: stats?.expiring_soon, icon: AlertTriangle, color: 'var(--warning)' },
-            { label: 'Expired', value: stats?.expired_permits, icon: XCircle, color: 'var(--danger)' }
-          ].map((item, idx) => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingRight: '1.5rem', borderRight: idx !== 5 ? '1px solid var(--border-light)' : 'none' }}>
-              <item.icon size={16} color={item.color || 'var(--text-muted)'} />
-              <div>
-                <div style={{ fontSize: '1.125rem', fontWeight: '700', color: item.color || 'var(--text-primary)', lineHeight: 1 }}>
-                  {loading ? '...' : (item.value || 0)}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>{item.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* Right: Renewal + Notifications */}
+        <div className="db-right-col">
 
-      {/* Main 2-col grid */}
-      <div className="dashboard-grid">
-        {/* Left Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-          {/* Permit Readiness Card - Focal Point */}
-          {readiness && (
-            <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-                  <div>
-                    <h2 style={{ fontSize: '1.25rem', color: 'var(--government-navy)', margin: '0 0 0.25rem' }}>Permit Readiness</h2>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{readiness.business_name}</div>
-                  </div>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', color: readColor, lineHeight: 1 }}>{readScore}%</div>
-                </div>
-                
-                <div style={{ fontSize: '1.1rem', fontWeight: '600', color: readScore === 0 ? 'var(--text-secondary)' : readColor, marginBottom: '1rem' }}>
-                  {readScore === 0 ? 'Not yet ready' : (readScore >= 90 ? 'Ready to Submit' : 'In Progress')}
-                </div>
-                
-                <ScoreBar score={readScore} label={readScore === 0 ? 'Progress' : 'Overall Progress'} color={readColor} />
-              </div>
-
-              <div style={{ padding: '0.5rem 1.5rem' }}>
-                {readiness.categories?.map((cat, i) => {
-                  const isDone = cat.status === 'Complete' || cat.status === 'Valid' || cat.status === 'Computed';
-                  return (
-                    <div key={cat.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 0', borderBottom: i !== readiness.categories.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {isDone ? <CheckCircle size={18} color="var(--success)" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid var(--border-medium)' }} />}
-                        <span style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--text-primary)' }}>{cat.label}</span>
-                      </div>
-                      <span style={{ fontSize: '0.875rem', fontWeight: isDone ? '600' : '400', color: isDone ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                        {isDone ? 'Complete' : 'Incomplete'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {readiness.recommendation && (
-                <div style={{ padding: '1rem 1.5rem', backgroundColor: 'var(--background)', borderTop: '1px solid var(--border-light)', borderBottomLeftRadius: 'var(--radius-lg)', borderBottomRightRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                  <AlertCircle size={16} color="var(--text-muted)" style={{ marginTop: '2px', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{readiness.recommendation}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Recent Permits */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Recent Permits
-              </h3>
-              {recentPermits.length > 0 && (
-                <Link to="/permits" style={{ fontSize: '0.8125rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                  View All <ChevronRight size={14} />
-                </Link>
-              )}
-            </div>
-            
-            {recentPermits.length === 0 ? (
-              <div style={{ padding: '2rem 1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-lg)' }}>
-                <FileText size={24} color="var(--text-light)" style={{ marginBottom: '1rem' }} />
-                <p style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '1rem', margin: '0 0 0.25rem' }}>No permits yet.</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '0 0 1.5rem' }}>Once you have an issued permit, it will appear here.</p>
-                <Link to="/applications/new" className="btn btn-outline btn-sm">Start Application</Link>
-              </div>
-            ) : (
-              <div className="table-responsive" style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-lg)' }}>
-                <table style={{ margin: 0 }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
-                      {['Permit Type', 'Status', 'Date'].map(h => <th key={h} style={{ padding: '0.75rem 1rem', fontSize: '0.75rem' }}>{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentPermits.map(p => {
-                      const ss = statusStyle(p.status);
-                      return (
-                        <tr key={p.id}>
-                          <td style={{ padding: '1rem', fontWeight: '500', fontSize: '0.875rem' }}>{p.permit_name}</td>
-                          <td style={{ padding: '1rem' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '600', color: ss.color }}>{p.status}</span>
-                          </td>
-                          <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                            {p.expiration_date ? new Date(p.expiration_date).toLocaleDateString('en-PH') : '—'}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-          {/* Next Step & Quick Actions */}
-          <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Next Step
-            </h3>
-            
-            {readScore < 100 ? (
-              <div style={{ marginBottom: '2rem' }}>
-                <p style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '1rem', margin: '0 0 0.5rem' }}>Your permit application is not ready yet.</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>Complete your outstanding requirements and documents before submitting.</p>
-                <Link to="/readiness" className="btn btn-primary btn-block">Complete Requirements &rarr;</Link>
-              </div>
-            ) : (
-              <div style={{ marginBottom: '2rem' }}>
-                <p style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '1rem', margin: '0 0 0.5rem' }}>You are ready to apply.</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>All requirements are met. You can now submit your application.</p>
-                <Link to="/applications/new" className="btn btn-primary btn-block">Submit Application &rarr;</Link>
-              </div>
-            )}
-
-            {/* Tax & Fee Estimate via AI */}
-            <div style={{ marginBottom: '2rem', padding: '1rem 1.25rem', backgroundColor: 'var(--accent-gold-light)', borderRadius: 'var(--radius-md)', border: '1px solid #E8D38A' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-                <Receipt size={15} color="var(--accent-gold)" />
-                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tax &amp; Fee Estimate</span>
-              </div>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 1rem', lineHeight: 1.55 }}>
-                Use our AI tool to get an estimated breakdown of your permit fees.
-              </p>
-              <Link to="/assessment" style={{ 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-                padding: '0.55rem 1rem', backgroundColor: 'var(--accent-gold)', color: '#fff', 
-                borderRadius: 'var(--radius-sm)', fontSize: '0.8125rem', fontWeight: '600', 
-                textDecoration: 'none', width: '100%'
-              }}>
-                <BrainCircuit size={14} /> Estimate with AI →
-              </Link>
-            </div>
-
-            <h3 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Quick Actions
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {[
-                { icon: BrainCircuit, label: 'AI Permit Assessment', to: '/assessment' },
-                { icon: FileText, label: 'View issued permits', to: '/permits' },
-                { icon: ClipboardCheck, label: 'My Applications', to: '/applications' }
-              ].map(action => (
-                <Link key={action.label} to={action.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: 'var(--radius-sm)', textDecoration: 'none', color: 'var(--text-primary)', transition: 'background-color var(--transition-fast)' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--background)'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <action.icon size={16} color="var(--text-secondary)" />
-                    <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{action.label}</span>
-                  </div>
-                  <ChevronRight size={14} color="var(--text-light)" />
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Renewal Alert */}
           {stats?.next_expiration && (
-            <div style={{ padding: '1.25rem', backgroundColor: stats?.days_to_expiration <= 30 ? 'var(--danger-light)' : 'var(--warning-light)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', color: stats?.days_to_expiration <= 30 ? 'var(--danger)' : 'var(--warning)' }}>
-                <AlertTriangle size={16} /> Renewal Alert
+            <div className={`card db-renewal-alert${stats?.days_to_expiration <= 30 ? ' db-renewal-alert--urgent' : ''}`}>
+              <div className="db-renewal-alert__title">
+                <AlertTriangle size={15}/> Renewal Alert
               </div>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                {stats?.days_to_expiration < 0 
-                  ? 'Your business permit has expired. Review your renewal requirements.' 
+              <p className="db-renewal-alert__body">
+                {stats?.days_to_expiration < 0
+                  ? 'Your business permit has expired. Review your renewal requirements.'
                   : `Your business permit expires in ${stats?.days_to_expiration} days.`}
               </p>
-              <Link to="/renewals" style={{ fontSize: '0.8125rem', fontWeight: '600', color: stats?.days_to_expiration <= 30 ? 'var(--danger)' : 'var(--warning)', marginTop: '0.25rem' }}>
-                View Renewals &rarr;
-              </Link>
+              <Link to="/renewals" className="db-renewal-alert__link">View Renewals &rarr;</Link>
             </div>
           )}
 
-          {/* Notifications */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Notifications
-              </h3>
-              <Link to="/notifications" style={{ fontSize: '0.8125rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                View All <ChevronRight size={14} />
-              </Link>
+          <div className="card db-notifications">
+            <div className="db-notifications__header">
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <AlertCircle size={15} style={{ color: 'var(--text-secondary)' }}/> Notifications
+              </span>
+              {notifications.length > 0 && (
+                <Link to="/notifications" className="db-notifications__all">View All</Link>
+              )}
             </div>
-            
             {notifications.length === 0 ? (
-              <div style={{ padding: '2rem 1.5rem', textAlign: 'center' }}>
-                <CheckCircle size={20} color="var(--success)" style={{ marginBottom: '0.75rem' }} />
-                <p style={{ color: 'var(--text-primary)', fontWeight: '500', fontSize: '0.9375rem', margin: '0 0 0.25rem' }}>You're all caught up.</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>No notifications require your attention.</p>
+              <div className="db-notifications__empty">
+                <CheckCircle size={20} style={{ color: 'var(--success)', opacity: 0.5 }}/>
+                <p>No new notifications â€” you're all caught up!</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="db-notifications__list">
                 {notifications.map(n => (
-                  <div key={n.id} style={{ display: 'flex', gap: '0.875rem', padding: '1rem 0', borderBottom: '1px solid var(--border-light)' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary-green)', marginTop: '6px', flexShrink: 0 }} />
+                  <div key={n.id} className="db-notification-item">
+                    <div className="db-notification-item__dot" aria-hidden="true"/>
                     <div>
-                      <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{n.title}</div>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message?.substring(0, 80)}...</div>
+                      <div className="db-notification-item__title">{n.title}</div>
+                      <div className="db-notification-item__body">{n.message?.substring(0, 70)}â€¦</div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          
-          {/* Fee Estimate Summary */}
-          {estimate && (
-            <div className="card" style={{ padding: '1.25rem' }}>
-              <div className="card-header" style={{ marginBottom: '1rem', paddingBottom: '0.5rem' }}>
-                <h3 style={{ margin: 0, fontSize: '0.9375rem', color: 'var(--government-navy)' }}>Fee Estimate</h3>
-              </div>
-              {estimate.breakdown?.slice(0, 3).map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border-light)', fontSize: '0.8125rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{item.name}</span>
-                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>₱{Number(item.estimated_amount).toLocaleString()}</span>
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0 0', fontWeight: '700', fontSize: '0.9375rem' }}>
-                <span>Estimated Total</span>
-                <span style={{ color: 'var(--primary-green)' }}>₱{Number(estimate.estimated_total).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '0.75rem', lineHeight: 1.4 }}>*Estimate only. Official amount determined by BPLO.</p>
-            </div>
-          )}
-
         </div>
       </div>
+
     </div>
   );
 };
-
 // ===========================================================================
 // LGU / SYSTEM ADMIN DASHBOARD
 // ===========================================================================
@@ -384,7 +396,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--government-navy)', marginBottom: '0.35rem' }}>LGU Compliance Dashboard</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Municipality of Roxas — Business Permit Management Overview</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Municipality of Roxas â€” Business Permit Management Overview</p>
         </div>
         <div style={{ 
           background: 'var(--primary-green-light)', borderRadius: 'var(--radius-full)', 
@@ -474,7 +486,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
               <Link to="/requirements" className="btn btn-outline btn-block" style={{ justifyContent: 'flex-start' }}>
                 <ClipboardCheck size={16} /> Manage Requirements
               </Link>
-              <Link to="/tax-estimate" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
+              <Link to="/tax-estimation" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
                 <Receipt size={16} /> Tax & Fee Rules
               </Link>
               <Link to="/reports" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
@@ -534,3 +546,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

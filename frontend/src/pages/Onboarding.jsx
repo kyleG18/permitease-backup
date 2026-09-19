@@ -20,7 +20,11 @@ const Onboarding = () => {
     business_type: '',
     industry_category: '',
     business_status: 'New Application',
+    owner_name: '',
+    contact_number: '',
+    barangay: '',
     address: '',
+    date_established: '',
     capitalization: '',
     gross_sales: '',
     floor_area: '',
@@ -211,16 +215,78 @@ const Onboarding = () => {
               
               <div className="form-group mb-4">
                 <select className="form-control" style={{ paddingTop: '0.75rem' }} name="business_type" value={formData.business_type} onChange={handleChange}>
-                  <option value="">{lang === 'en' ? 'Select Type' : 'Pumili ng Uri'}</option>
-                  <option>Food</option><option>Retail</option><option>Services</option>
-                  <option>Manufacturing</option><option>Agriculture</option><option>Others</option>
+                  <option value="">{lang === 'en' ? 'Select Sector / Type' : 'Pumili ng Uri'}</option>
+                  <option>Food & Beverage</option>
+                  <option>Retail & Wholesale</option>
+                  <option>Services (Professional & Personal)</option>
+                  <option>Manufacturing & Industrial</option>
+                  <option>Agriculture & Aquaculture</option>
+                  <option>Real Estate & Leasing</option>
+                  <option>Information Technology</option>
+                  <option>Healthcare & Medical</option>
+                  <option>Tourism & Hospitality</option>
+                  <option>Construction</option>
+                  <option>Education & Training</option>
+                  <option>Others</option>
                 </select>
                 <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>{text.bType}</label>
               </div>
               
               <div className="form-group mb-4">
-                <input className="form-control" name="industry_category" value={formData.industry_category} onChange={handleChange} placeholder=" " />
-                <label className="form-label">{text.bCat}</label>
+                <select className="form-control" style={{ paddingTop: '0.75rem' }} name="industry_category" value={formData.industry_category} onChange={handleChange}>
+                  <option value="">{lang === 'en' ? 'Select Specific Category' : 'Pumili ng Tiyak na Kategorya'}</option>
+                  <optgroup label="Food & Dining">
+                    <option>Restaurant / Eatery</option>
+                    <option>Cafe / Coffee Shop</option>
+                    <option>Bakery / Bakeshop</option>
+                    <option>Catering Services</option>
+                    <option>Food Kiosk / Cart</option>
+                    <option>Water Refilling Station</option>
+                  </optgroup>
+                  <optgroup label="Retail & Shops">
+                    <option>Sari-Sari Store</option>
+                    <option>Grocery / Supermarket</option>
+                    <option>Convenience Store</option>
+                    <option>Boutique / Clothing Store</option>
+                    <option>Hardware / Construction Supplies</option>
+                    <option>Pharmacy / Drugstore</option>
+                    <option>Auto Parts / Supply</option>
+                    <option>Agrivet Supply</option>
+                  </optgroup>
+                  <optgroup label="Services">
+                    <option>Salon / Barbershop / Spa</option>
+                    <option>Laundry Shop</option>
+                    <option>Car Wash / Auto Repair</option>
+                    <option>Internet Cafe / Computer Shop</option>
+                    <option>Print Shop / Advertising</option>
+                    <option>Logistics / Trucking</option>
+                    <option>Financial / Remittance Services</option>
+                  </optgroup>
+                  <optgroup label="Healthcare">
+                    <option>Clinic / Medical Office</option>
+                    <option>Dental Clinic</option>
+                    <option>Veterinary Clinic</option>
+                  </optgroup>
+                  <optgroup label="Real Estate & Hospitality">
+                    <option>Boarding House / Apartment</option>
+                    <option>Hotel / Resort</option>
+                    <option>Travel Agency</option>
+                  </optgroup>
+                  <optgroup label="Industrial & Others">
+                    <option>Manufacturing / Plant</option>
+                    <option>Junk Shop</option>
+                    <option>Gym / Fitness Center</option>
+                    <option>Others (Please specify in description)</option>
+                  </optgroup>
+                </select>
+                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>{text.bCat}</label>
+              </div>
+
+              <div className="form-group mb-4">
+                <textarea className="form-control" name="business_description" value={formData.business_description || ''} onChange={handleChange} placeholder=" " style={{ height: '80px', paddingTop: '1rem', resize: 'none' }} />
+                <label className="form-label" style={{ top: '0.5rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>
+                  {lang === 'en' ? 'Brief Business Description / Activities' : 'Maikling Deskripsyon ng Negosyo'}
+                </label>
               </div>
 
               <div className="form-group mb-4">
@@ -229,6 +295,17 @@ const Onboarding = () => {
                   <option value="Renewal">{lang === 'en' ? 'Existing Business (Renewal)' : 'Umiiral na Negosyo (Renewal)'}</option>
                 </select>
                 <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>{text.bAppType}</label>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <input className="form-control" name="owner_name" value={formData.owner_name} onChange={handleChange} placeholder=" " />
+                  <label className="form-label">{lang === 'en' ? 'Owner / Proprietor Name' : 'Pangalan ng May-ari'}</label>
+                </div>
+                <div className="form-group">
+                  <input className="form-control" name="contact_number" value={formData.contact_number} onChange={handleChange} placeholder=" " />
+                  <label className="form-label">{lang === 'en' ? 'Contact Number' : 'Numero ng Telepono'}</label>
+                </div>
               </div>
             </div>
           )}
@@ -239,8 +316,29 @@ const Onboarding = () => {
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{text.s2desc}</p>
               
               <div className="form-group mb-4">
+                <select className="form-control" style={{ paddingTop: '0.75rem' }} name="barangay" value={formData.barangay} onChange={handleChange}>
+                  <option value="">{lang === 'en' ? 'Select Barangay' : 'Pumili ng Barangay'}</option>
+                  <option>Barangay Banica</option><option>Barangay Bolo</option><option>Barangay Culajao</option>
+                  <option>Barangay Culasi</option><option>Barangay Dayao</option><option>Barangay Dinginan</option>
+                  <option>Barangay Dumolog</option><option>Barangay Inzo Arnaldo Village</option><option>Barangay Jumaguicjic</option>
+                  <option>Barangay Lanot</option><option>Barangay Lawaan</option><option>Barangay Libas</option>
+                  <option>Barangay Linao</option><option>Barangay Loog</option><option>Barangay Milibili</option>
+                  <option>Barangay Pani-an</option><option>Barangay Poblacion Ilawod</option><option>Barangay Poblacion Ilaya</option>
+                  <option>Barangay Quipot</option><option>Barangay Tico</option><option>Others</option>
+                </select>
+                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>{lang === 'en' ? 'Barangay' : 'Barangay'}</label>
+              </div>
+
+              <div className="form-group mb-4">
                 <input className="form-control" name="address" value={formData.address} onChange={handleChange} placeholder=" " />
                 <label className="form-label">{text.bAddress}</label>
+              </div>
+
+              <div className="form-group mb-4">
+                <input type="date" className="form-control" name="date_established" value={formData.date_established} onChange={handleChange} placeholder=" " style={{ paddingTop: '0.75rem' }} />
+                <label className="form-label" style={{ top: '0.4rem', fontSize: '0.75rem', color: 'var(--primary-green)' }}>
+                  {lang === 'en' ? 'Date Business Started / Established' : 'Petsa ng Pagsisimula ng Negosyo'}
+                </label>
               </div>
             </div>
           )}
