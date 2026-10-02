@@ -13,21 +13,28 @@ const getDashboardStats = async (req, res) => {
         const role = req.user.role;
 
         // ============================================================
-        // LGU ADMIN / SYSTEM ADMIN — municipal-wide stats
+        // LGU ADMIN / SYSTEM ADMIN � preparation system stats only
         // ============================================================
         if (role === 'lgu_admin' || role === 'system_admin') {
+            // Total registered MSMEs
             const [[{ total_businesses }]] = await db.query('SELECT COUNT(*) as total_businesses FROM businesses');
-            const [[{ total_permits }]] = await db.query('SELECT COUNT(*) as total_permits FROM permits');
-            const [[{ pending }]] = await db.query("SELECT COUNT(*) as pending FROM permits WHERE status = 'Pending'");
-            const [[{ approved }]] = await db.query("SELECT COUNT(*) as approved FROM permits WHERE status = 'Approved'");
-            const [[{ rejected }]] = await db.query("SELECT COUNT(*) as rejected FROM permits WHERE status = 'Rejected'");
-            const [[{ expired }]] = await db.query("SELECT COUNT(*) as expired FROM permits WHERE status = 'Expired' OR (status = 'Approved' AND expiration_date < CURDATE())");
-            const [[{ expiring }]] = await db.query("SELECT COUNT(*) as expiring FROM permits WHERE status = 'Approved' AND expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)");
 
-            // Compliance stats using business_requirements
+            // Pre-assessment counts (applications table using preparation statuses)
+            const [[{ pending_pre_assessments }]] = await db.query("SELECT COUNT(*) as pending_pre_assessments FROM applications WHERE status IN ('SUBMITTED','UNDER_REVIEW')");
+            const [[{ verified_pre_assessments }]] = await db.query("SELECT COUNT(*) as verified_pre_assessments FROM applications WHERE status = 'APPROVED'");
+            const [[{ correction_requests }]] = await db.query("SELECT COUNT(*) as correction_requests FROM applications WHERE status IN ('REJECTED','NEEDS_CORRECTION')");
+
+            // Readiness/compliance data from business_requirements
             const [[{ total_reqs }]] = await db.query('SELECT COUNT(*) as total_reqs FROM business_requirements');
             const [[{ missing_reqs }]] = await db.query("SELECT COUNT(*) as missing_reqs FROM business_requirements WHERE status = 'Missing'");
-            const compliance_rate = total_reqs > 0 ? Math.round(((total_reqs - missing_reqs) / total_reqs) * 100) : 0;
+            
+            // Average readiness % � only for businesses that have at least one assessment
+            const [[{ assessed_count }]] = await db.query('SELECT COUNT(DISTINCT business_id) as assessed_count FROM assessments');
+            let avg_readiness_pct = null;
+            if (assessed_count > 0 && total_reqs > 0) {
+                const ready_reqs = total_reqs - missing_reqs;
+                avg_readiness_pct = Math.round((ready_reqs / total_reqs) * 100);
+            }
 
             // Top missing requirements
             const [top_missing] = await db.query(`
@@ -40,72 +47,60 @@ const getDashboardStats = async (req, res) => {
                 LIMIT 5
             `);
 
-            // Recent applications
+            // Recent pre-assessment submissions
             const [recent_applications] = await db.query(`
-                SELECT p.*, b.business_name
-                FROM permits p
-                JOIN businesses b ON p.business_id = b.id
-                ORDER BY p.created_at DESC LIMIT 8
+                SELECT a.id, a.application_number, a.status, a.created_at,
+                       b.business_name, b.business_type
+                FROM applications a
+                JOIN businesses b ON a.business_id = b.id
+                ORDER BY a.created_at DESC LIMIT 8
             `);
 
             return res.json({
                 role: 'admin',
-                total_businesses, total_permits,
-                pending_applications: pending,
-                approved_applications: approved,
-                rejected_applications: rejected,
-                expired_permits: expired,
-                expiring_soon: expiring,
-                compliance_rate,
+                total_businesses,
+                pending_pre_assessments,
+                verified_pre_assessments,
+                correction_requests,
                 total_requirements: total_reqs,
                 missing_requirements: missing_reqs,
+                avg_readiness_pct,
+                assessed_businesses: assessed_count,
                 top_missing_requirements: top_missing,
                 recent_applications
             });
         }
 
         // ============================================================
-        // BUSINESS OWNER — personal stats
+        // BUSINESS OWNER � personal stats
         // ============================================================
         const businessIds = await getUserBusinessIds(req.user.id);
 
         if (businessIds.length === 0) {
             return res.json({
                 role: 'business_owner',
-                total_permits: 0, active_permits: 0, expiring_soon: 0, expired_permits: 0,
-                total_businesses: 0, pending_applications: 0, rejected_applications: 0,
-                compliance_score: 0, missing_requirements: 0, estimated_total: 0,
-                next_expiration: null, days_to_expiration: null, businesses: []
+                total_businesses: 0, 
+                compliance_score: 0, 
+                total_requirements: 0,
+                ready_requirements: 0,
+                missing_requirements: 0, 
+                assessment_completed: false,
+                businesses: []
             });
         }
 
         const placeholders = businessIds.map(() => '?').join(',');
 
-        const [[{ total }]] = await db.query(`SELECT COUNT(*) as total FROM permits WHERE business_id IN (${placeholders})`, businessIds);
-        const [[{ active }]] = await db.query(`SELECT COUNT(*) as active FROM permits WHERE business_id IN (${placeholders}) AND status = 'Approved' AND expiration_date > CURDATE()`, businessIds);
-        const [[{ expiring }]] = await db.query(`SELECT COUNT(*) as expiring FROM permits WHERE business_id IN (${placeholders}) AND status = 'Approved' AND expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)`, businessIds);
-        const [[{ expired }]] = await db.query(`SELECT COUNT(*) as expired FROM permits WHERE business_id IN (${placeholders}) AND (status = 'Expired' OR expiration_date < CURDATE())`, businessIds);
-        const [[{ pending }]] = await db.query(`SELECT COUNT(*) as pending FROM permits WHERE business_id IN (${placeholders}) AND status = 'Pending'`, businessIds);
-        const [[{ rejected }]] = await db.query(`SELECT COUNT(*) as rejected FROM permits WHERE business_id IN (${placeholders}) AND status = 'Rejected'`, businessIds);
-
-        // Next expiration
-        const [nextExpiry] = await db.query(
-            `SELECT expiration_date FROM permits WHERE business_id IN (${placeholders}) AND status = 'Approved' AND expiration_date >= CURDATE() ORDER BY expiration_date ASC LIMIT 1`,
-            businessIds
-        );
-        const next_expiration = nextExpiry.length > 0 ? nextExpiry[0].expiration_date : null;
-        const days_to_expiration = next_expiration
-            ? Math.ceil((new Date(next_expiration) - new Date()) / (1000 * 60 * 60 * 24))
-            : null;
-
-        // Compliance
+        // Compliance (Readiness)
         const [[{ total_reqs }]] = await db.query(`SELECT COUNT(*) as total_reqs FROM business_requirements WHERE business_id IN (${placeholders})`, businessIds);
         const [[{ missing_reqs }]] = await db.query(`SELECT COUNT(*) as missing_reqs FROM business_requirements WHERE business_id IN (${placeholders}) AND status = 'Missing'`, businessIds);
-        const compliance_score = total_reqs > 0 ? Math.round(((total_reqs - missing_reqs) / total_reqs) * 100) : 0;
+        
+        const ready_reqs = total_reqs - missing_reqs;
+        const compliance_score = total_reqs > 0 ? Math.round((ready_reqs / total_reqs) * 100) : 0;
 
-        // Estimate total from latest assessment
-        const [assessments] = await db.query(
-            `SELECT compliance_score FROM assessments WHERE business_id IN (${placeholders}) ORDER BY created_at DESC LIMIT 1`,
+        // Has assessment?
+        const [[{ assessment_count }]] = await db.query(
+            `SELECT COUNT(*) as assessment_count FROM assessments WHERE business_id IN (${placeholders})`,
             businessIds
         );
 
@@ -114,21 +109,16 @@ const getDashboardStats = async (req, res) => {
 
         return res.json({
             role: 'business_owner',
-            total_permits: total,
-            active_permits: active,
-            expiring_soon: expiring,
-            expired_permits: expired,
-            pending_applications: pending,
-            rejected_applications: rejected,
             total_businesses: businessIds.length,
             compliance_score,
+            total_requirements: total_reqs,
+            ready_requirements: ready_reqs,
             missing_requirements: missing_reqs,
-            next_expiration,
-            days_to_expiration,
+            assessment_completed: assessment_count > 0,
             businesses
         });
 
-    } catch (error) {
+} catch (error) {
         console.error('Dashboard Error:', error);
         console.error('Server error:', error);
         res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });

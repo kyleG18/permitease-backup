@@ -10,6 +10,30 @@ const Documents = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
+
+  const handleDownload = async (docId, docName) => {
+    try {
+      const res = await fetch(`${API}/documents/download/${docId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        alert('Failed to download document.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docName || 'document.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Failed to download document.');
+    }
+  };
+
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ business_id: '', document_name: '', expiration_date: '' });
   const [file, setFile] = useState(null);
@@ -98,10 +122,10 @@ const Documents = () => {
                   {doc.expiration_date && <p>Expires: {new Date(doc.expiration_date).toLocaleDateString()}</p>}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <a href={`http://localhost:5000/uploads/${doc.file_path}`} target="_blank" rel="noreferrer"
+                  <button onClick={(e) => { e.preventDefault(); handleDownload(doc.id, doc.document_name); }}
                     className="btn btn-outline" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', textAlign: 'center' }}>
                     <Download size={14} /> View
-                  </a>
+                    </button>
                   <button className="btn" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', background: 'var(--status-expired-bg)', color: 'var(--danger)', border: 'none' }} onClick={() => handleDelete(doc.id)}>
                     <Trash2 size={14} /> Delete
                   </button>

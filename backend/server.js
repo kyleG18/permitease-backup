@@ -10,11 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Sensitive documents are protected. Only Knowledge Base files (public FAQs/Guides) are statically served.
+app.use('/uploads/knowledge', express.static(path.join(__dirname, 'uploads/knowledge')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/locations', require('./routes/locationRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/businesses', require('./routes/businessRoutes'));
 app.use('/api/requirements', require('./routes/requirementRoutes'));

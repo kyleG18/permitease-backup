@@ -98,7 +98,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
-            { name: 'Issued Permits', path: '/admin/permits', icon: Shield },
+            { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
             { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }
           ]
         },
@@ -124,7 +124,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
-            { name: 'Issued Permits', path: '/admin/permits', icon: Shield },
+            { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
             { name: 'Business Profiles', path: '/profile', icon: Building2 },
             { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }
           ]

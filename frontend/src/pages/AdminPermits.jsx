@@ -75,8 +75,8 @@ export default function AdminPermits() {
   return (
     <div className="animate-fade-in" style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>Issued Permits</h1>
-        <p style={{ color: 'var(--text-muted)', marginTop: '0.35rem', fontSize: '0.9rem' }}>Municipality-wide view of all issued business permits.</p>
+        <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>Preparation Records</h1>
+        <p style={{ color: 'var(--text-muted)', marginTop: '0.35rem', fontSize: '0.9rem' }}>BPLO-verified preparation submission summaries. These are not official issued permits.</p>
       </div>
 
       {/* Summary Cards */}
@@ -138,7 +138,7 @@ export default function AdminPermits() {
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     {p.pdf_path && (
                       <button onClick={() => handleDownload(p.id, p.permit_number)}
-                        title="Download PDF"
+                        title="Download Preparation Summary"
                         style={{ padding: '0.35rem 0.6rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Download size={14} color="var(--text-dark)" />
                       </button>

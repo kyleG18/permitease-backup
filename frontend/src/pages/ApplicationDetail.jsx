@@ -7,15 +7,15 @@ import FeeAssessmentCard from '../components/FeeAssessmentCard';
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const STATUS_CONFIG = {
-  DRAFT:            { label: 'Draft',              color: '#475569', bg: '#F1F5F9', dot: '#94A3B8' },
-  PREPARED:         { label: 'Prepared',           color: '#1E40AF', bg: '#DBEAFE', dot: '#3B82F6' },
-  SUBMITTED:        { label: 'Submitted to BPLO',  color: '#1E3A8A', bg: '#EFF6FF', dot: '#2563EB' },
-  UNDER_REVIEW:     { label: 'Under Review',       color: '#92400E', bg: '#FEF3C7', dot: '#D97706' },
-  NEEDS_CORRECTION: { label: 'For Compliance',     color: '#9A3412', bg: '#FFEDD5', dot: '#EA580C' },
-  APPROVED:         { label: 'Approved',           color: '#166534', bg: '#DCFCE7', dot: '#22C55E' },
-  REJECTED:         { label: 'Rejected',           color: '#991B1B', bg: '#FEE2E2', dot: '#EF4444' },
-  CANCELLED:        { label: 'Cancelled',          color: '#475569', bg: '#F1F5F9', dot: '#94A3B8' },
-  COMPLETED:        { label: 'Completed',          color: '#14532D', bg: '#F0FDF4', dot: '#16A34A' }
+  DRAFT:            { label: 'Draft',                    color: '#475569', bg: '#F1F5F9', dot: '#94A3B8' },
+  PREPARED:         { label: 'Prepared',                 color: '#1E40AF', bg: '#DBEAFE', dot: '#3B82F6' },
+  SUBMITTED:        { label: 'Submitted to BPLO',        color: '#1E3A8A', bg: '#EFF6FF', dot: '#2563EB' },
+  UNDER_REVIEW:     { label: 'Under Review',             color: '#92400E', bg: '#FEF3C7', dot: '#D97706' },
+  NEEDS_CORRECTION: { label: 'For Compliance',           color: '#9A3412', bg: '#FFEDD5', dot: '#EA580C' },
+  APPROVED:         { label: 'Preparation Verified',     color: '#166534', bg: '#DCFCE7', dot: '#22C55E' },
+  REJECTED:         { label: 'Corrections Requested',    color: '#991B1B', bg: '#FEE2E2', dot: '#EF4444' },
+  CANCELLED:        { label: 'Cancelled',                color: '#475569', bg: '#F1F5F9', dot: '#94A3B8' },
+  COMPLETED:        { label: 'Completed',                color: '#14532D', bg: '#F0FDF4', dot: '#16A34A' }
 };
 
 const StatusBadge = ({ status }) => {
@@ -42,6 +42,29 @@ export default function ApplicationDetail() {
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const handleDownload = async (docId, docName) => {
+    try {
+      const res = await fetch(`${API}/documents/download/${docId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        alert('Failed to download document.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docName || 'document.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Failed to download document.');
+    }
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [confirmed, setConfirmed] = useState(false);
@@ -181,25 +204,25 @@ export default function ApplicationDetail() {
   
   // Timeline Logic
   const timelineSteps = [
-    { id: 'prep', label: 'Preparation', desc: 'Application information completed', isDone: true, isCurrent: app.status === 'DRAFT' },
+    { id: 'prep', label: 'Preparation', desc: 'Business information completed', isDone: true, isCurrent: app.status === 'DRAFT' },
     { id: 'ready', label: 'Ready for BPLO Submission', desc: 'Requirements prepared', isDone: app.status !== 'DRAFT', isCurrent: false },
     { id: 'submit', label: 'Submitted to BPLO', desc: 'Physical documents submitted', isDone: ['UNDER_REVIEW', 'NEEDS_CORRECTION', 'APPROVED', 'COMPLETED', 'REJECTED'].includes(app.status), isCurrent: app.status === 'SUBMITTED' },
-    { id: 'review', label: 'Under Review', desc: 'Awaiting official BPLO review', isDone: ['APPROVED', 'COMPLETED', 'REJECTED'].includes(app.status), isCurrent: app.status === 'UNDER_REVIEW' },
+    { id: 'review', label: 'Under Review', desc: 'Awaiting BPLO pre-assessment review', isDone: ['APPROVED', 'COMPLETED', 'REJECTED'].includes(app.status), isCurrent: app.status === 'UNDER_REVIEW' },
   ];
   if (app.status === 'NEEDS_CORRECTION') {
-    timelineSteps.push({ id: 'compliance', label: 'For Compliance', desc: 'LGU requested corrections', isDone: false, isCurrent: true, color: '#EA580C' });
+    timelineSteps.push({ id: 'compliance', label: 'Corrections Requested', desc: 'BPLO requested preparation corrections', isDone: false, isCurrent: true, color: '#EA580C' });
   }
   if (['APPROVED', 'COMPLETED', 'REJECTED'].includes(app.status)) {
     timelineSteps.push({ 
       id: 'decision', 
-      label: app.status === 'REJECTED' ? 'Rejected' : app.status === 'APPROVED' ? 'Approved' : 'Completed', 
-      desc: app.status === 'REJECTED' ? 'Application denied' : 'Permit issued', 
+      label: app.status === 'REJECTED' ? 'Corrections Requested' : 'Preparation Verified', 
+      desc: app.status === 'REJECTED' ? 'Preparation corrections requested by BPLO' : 'Preparation verified by BPLO — proceed to official BPLO office', 
       isDone: true, 
       isCurrent: true,
       color: app.status === 'REJECTED' ? '#EF4444' : '#22C55E' 
     });
   } else {
-    timelineSteps.push({ id: 'approved', label: 'Approved', desc: 'Official permit issuance', isDone: false, isCurrent: false });
+    timelineSteps.push({ id: 'verified', label: 'Preparation Verified', desc: 'Proceed to official BPLO processing', isDone: false, isCurrent: false });
   }
 
   return (
@@ -303,7 +326,7 @@ export default function ApplicationDetail() {
                           {new Date(doc.upload_date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </td>
                         <td style={{ padding: '1rem 1.25rem' }}>
-                          <a href={`http://localhost:5000/uploads/${doc.file_path}`} target="_blank" rel="noreferrer" style={{ fontSize: '13px', fontWeight: '600', color: 'var(--primary-green)', textDecoration: 'none' }}>View</a>
+                          <button onClick={(e) => { e.preventDefault(); handleDownload(doc.id, doc.document_name); }} style={{ fontSize: '13px', fontWeight: '600', color: 'var(--primary-green)', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View</button>
                         </td>
                       </tr>
                     ))}

@@ -9,13 +9,15 @@ const getNotificationIcon = (type, status) => {
   const isUnread = status === 'Unread';
   const color = isUnread ? '#fff' : 'var(--text-muted)';
   
-  if (type === 'APPLICATION_APPROVED' || type === 'PERMIT_ISSUED') {
+  // Preparation Verified (includes legacy APPLICATION_APPROVED / PERMIT_ISSUED)
+  if (type === 'APPLICATION_APPROVED' || type === 'PERMIT_ISSUED' || type === 'PREPARATION_VERIFIED') {
     return <CheckCircle size={18} color={color} />;
   }
-  if (type === 'APPLICATION_REJECTED' || type === 'PERMIT_EXPIRED') {
+  // Corrections Requested (includes legacy APPLICATION_REJECTED)
+  if (type === 'APPLICATION_REJECTED' || type === 'PERMIT_EXPIRED' || type === 'CORRECTION_REQUESTED' || type === 'CORRECTIONS_REQUESTED') {
     return <AlertTriangle size={18} color={color} />;
   }
-  if (type === 'CORRECTION_REQUESTED' || type === 'RENEWAL_REMINDER') {
+  if (type === 'RENEWAL_REMINDER') {
     return <Clock size={18} color={color} />;
   }
   return <Info size={18} color={color} />;

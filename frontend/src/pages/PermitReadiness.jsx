@@ -20,7 +20,7 @@ export default function PermitReadiness() {
   // Requirement state
   const [assessment, setAssessment] = useState(null);
   const [requirements, setRequirements] = useState([]);
-  const [reqStatus, setReqStatus] = useState({}); // { reqId: 'HAVE' | 'NEED' | 'UNCHECKED' }
+   // { reqId: 'HAVE' | 'NEED' | 'UNCHECKED' }
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -37,65 +37,35 @@ export default function PermitReadiness() {
       .catch(console.error);
   }, []);
 
+  
   const loadAssessmentAndReqs = async () => {
     if (!selectedBizId) return;
     setLoading(true);
     try {
-      // Get assessments to see if this business has one
+      // 1. Get assessment existence
       const r1 = await fetch(`${API}/assessments`, { headers });
       const assessmentsData = await r1.json();
-      
       const bizAssessments = Array.isArray(assessmentsData) ? assessmentsData.filter(a => String(a.business_id) === String(selectedBizId)) : [];
       const latestAssessment = bizAssessments.length > 0 ? bizAssessments[0] : null;
       
       if (latestAssessment) {
-        let parsed = latestAssessment.assessment_result;
-        if (typeof parsed === 'string') {
-          try { parsed = JSON.parse(parsed); } catch(e) {}
-        }
-        setAssessment({ ...latestAssessment, parsed });
+        setAssessment(latestAssessment);
 
-        // We will combine official requirements and AI recommendations
-        let combinedReqs = [];
-        if (parsed?.official_assessment) {
-          combinedReqs = [...parsed.official_assessment];
-        }
-        
-        // Add AI recommendations that aren't already in official
-        if (parsed?.ai_assessment?.recommended_permits) {
-          parsed.ai_assessment.recommended_permits.forEach(rec => {
-            if (!combinedReqs.some(r => r.permit_name === rec.permit_name)) {
-              combinedReqs.push({
-                permit_name: rec.permit_name,
-                description: rec.reason,
-                is_ai_recommended: true
-              });
-            }
-          });
-        }
-        
-        // Assign a consistent ID for tracking status
-        combinedReqs = combinedReqs.map((r, idx) => ({ ...r, id: `req-${idx}` }));
-        setRequirements(combinedReqs);
+        // 2. Fetch authoritative checklist from DB
+        let r2 = await fetch(`${API}/compliance/business/${selectedBizId}`, { headers });
+        let complianceData = await r2.json();
 
-        // Load saved checklist status
-        try {
-          const saved = localStorage.getItem(`readiness_${user.id}_${selectedBizId}`);
-          if (saved) {
-            setReqStatus(JSON.parse(saved));
-          } else {
-            // Default everything to UNCHECKED
-            const defaultStatus = {};
-            combinedReqs.forEach(r => { defaultStatus[r.id] = 'UNCHECKED'; });
-            setReqStatus(defaultStatus);
-          }
-        } catch (e) {
-          console.error("Localstorage error", e);
+        // 3. Fallback: if empty, force evaluation
+        if (!complianceData.checklist || complianceData.checklist.length === 0) {
+            await fetch(`${API}/compliance/evaluate/${selectedBizId}`, { method: 'POST', headers });
+            r2 = await fetch(`${API}/compliance/business/${selectedBizId}`, { headers });
+            complianceData = await r2.json();
         }
+
+        setRequirements(complianceData.checklist || []);
       } else {
         setAssessment(null);
         setRequirements([]);
-        setReqStatus({});
       }
     } catch (e) {
       console.error(e);
@@ -108,11 +78,27 @@ export default function PermitReadiness() {
     loadAssessmentAndReqs();
   }, [selectedBizId]);
 
-  const updateReqStatus = (id, status) => {
-    const updated = { ...reqStatus, [id]: status };
-    setReqStatus(updated);
-    if (user && user.id && selectedBizId) {
-      localStorage.setItem(`readiness_${user.id}_${selectedBizId}`, JSON.stringify(updated));
+  const updateReqStatus = async (requirement_id, newStatus) => {
+    try {
+        const res = await fetch(`${API}/compliance/business/${selectedBizId}/requirement/${requirement_id}`, {
+            method: 'PUT',
+            headers: {
+                ...headers,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+            // Update local state to reflect DB immediately
+            setRequirements(prev => prev.map(r => 
+                r.requirement_id === requirement_id ? { ...r, status: newStatus } : r
+            ));
+        } else {
+            alert('Failed to update requirement status.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('An error occurred while updating status.');
     }
   };
 
@@ -123,15 +109,16 @@ export default function PermitReadiness() {
     let need = 0;
     let unchecked = 0;
     requirements.forEach(r => {
-      const s = reqStatus[r.id];
-      if (s === 'HAVE') have++;
-      else if (s === 'NEED') need++;
+      const s = r.status;
+      if (s === 'Submitted' || s === 'Approved') have++;
+      else if (s === 'Missing') need++;
       else unchecked++;
     });
     const total = requirements.length;
     const percentage = total > 0 ? Math.round((have / total) * 100) : 0;
     return { have, need, unchecked, total, percentage };
-  }, [requirements, reqStatus]);
+  }, [requirements]);
+
 
   if (businesses.length === 0 && !loading) {
     return (
@@ -275,9 +262,9 @@ export default function PermitReadiness() {
             <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>REQUIRED DOCUMENTS</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {requirements.map((req) => {
-                const s = reqStatus[req.id];
-                const isHave = s === 'HAVE';
-                const isNeed = s === 'NEED';
+                const s = req.status;
+                const isHave = s === 'Submitted' || s === 'Approved';
+                const isNeed = s === 'Missing';
                 
                 return (
                   <div key={req.id} style={{ 
@@ -302,17 +289,17 @@ export default function PermitReadiness() {
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       {!isHave && (
-                        <button onClick={() => updateReqStatus(req.id, 'HAVE')} style={{ padding: '0.5rem 1rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <button onClick={() => updateReqStatus(req.requirement_id, 'Submitted')} style={{ padding: '0.5rem 1rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                           I Have This
                         </button>
                       )}
                       {!isNeed && (
-                        <button onClick={() => updateReqStatus(req.id, 'NEED')} style={{ padding: '0.5rem 1rem', backgroundColor: '#FFF7ED', color: '#9A3412', border: '1px solid #FED7AA', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <button onClick={() => updateReqStatus(req.requirement_id, 'Missing')} style={{ padding: '0.5rem 1rem', backgroundColor: '#FFF7ED', color: '#9A3412', border: '1px solid #FED7AA', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                           I Still Need This
                         </button>
                       )}
                       {(isHave || isNeed) && (
-                        <button onClick={() => updateReqStatus(req.id, 'UNCHECKED')} aria-label="Reset status" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#94A3B8', border: 'none', cursor: 'pointer' }}>
+                        <button onClick={() => updateReqStatus(req.requirement_id, 'Missing')} aria-label="Reset status" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#94A3B8', border: 'none', cursor: 'pointer' }}>
                           <X size={16} />
                         </button>
                       )}

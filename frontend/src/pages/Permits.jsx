@@ -37,7 +37,7 @@ export default function Permits() {
     fetch(`${API}/permits`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => {
-        // Filter only Approved permits (the officially issued ones)
+        // Filter only Approved/Verified preparations
         const issued = Array.isArray(data) ? data.filter(p => p.status === 'Approved') : [];
         setPermits(issued);
         setLoading(false);
@@ -77,16 +77,16 @@ export default function Permits() {
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>My Permits</h1>
         <p style={{ color: 'var(--text-muted)', marginTop: '0.35rem', fontSize: '0.9rem' }}>
-          Officially issued business permits for your registered businesses.
+          Preparation submissions verified by the BPLO. Note: This is not an official permit record. Official permits are issued by the BPLO after physical processing.
         </p>
       </div>
 
       {permits.length === 0 ? (
         <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '3rem', textAlign: 'center' }}>
           <FileText size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-          <h3 style={{ color: 'var(--text-dark)', marginBottom: '0.5rem' }}>No Issued Permits</h3>
+          <h3 style={{ color: 'var(--text-dark)', marginBottom: '0.5rem' }}>No Verified Submissions Yet</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-            Permits are issued once your application is approved by the LGU.
+            Your preparation submission will appear here once the BPLO marks it as Verified. Official permits are processed at the physical BPLO office.
           </p>
           <Link to="/applications" style={{ display: 'inline-block', backgroundColor: 'var(--primary-green)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}>
             View Applications
@@ -135,7 +135,7 @@ export default function Permits() {
                   {permit.pdf_path && (
                     <button onClick={() => handleDownload(permit.id, permit.permit_number)}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.1rem', borderRadius: 'var(--radius-sm)', border: 'none', backgroundColor: 'var(--primary-green)', color: 'white', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}>
-                      <Download size={15} /> Download PDF
+                      <Download size={15} /> Download Preparation Summary
                     </button>
                   )}
 

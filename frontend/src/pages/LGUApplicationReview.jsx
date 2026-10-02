@@ -11,8 +11,8 @@ const STATUS_CONFIG = {
   SUBMITTED:        { label: 'Submitted',        color: '#2563EB', bg: '#DBEAFE' },
   UNDER_REVIEW:     { label: 'Under Review',     color: '#D97706', bg: '#FEF3C7' },
   NEEDS_CORRECTION: { label: 'Needs Correction', color: '#DC2626', bg: '#FEE2E2' },
-  APPROVED:         { label: 'Approved',         color: '#16A34A', bg: '#DCFCE7' },
-  REJECTED:         { label: 'Rejected',         color: '#991B1B', bg: '#FEE2E2' },
+  APPROVED:         { label: 'Verified',             color: '#16A34A', bg: '#DCFCE7' },
+  REJECTED:         { label: 'Corrections Requested', color: '#991B1B', bg: '#FEE2E2' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -59,7 +59,32 @@ export default function LGUApplicationReview() {
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleDownload = async (docId, docName) => {
+    try {
+      const res = await fetch(`${API}/documents/download/${docId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        alert('Failed to download document.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docName || 'document.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Failed to download document.');
+    }
+  };
+
   const [actionLoading, setActionLoading] = useState(false);
+  const [resolvedLocation, setResolvedLocation] = useState(null);
   const [modal, setModal] = useState(null); // 'review' | 'correction' | 'approve' | 'reject'
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -67,7 +92,22 @@ export default function LGUApplicationReview() {
     setLoading(true);
     fetch(`${API}/applications/${id}`, { headers })
       .then(r => r.json())
-      .then(data => { if (data.message && !data.id) { setError(data.message); } else { setApp(data); } setLoading(false); })
+      .then(async data => { 
+          if (data.message && !data.id) { 
+            setError(data.message); 
+            setLoading(false); 
+          } else { 
+            setApp(data); 
+            if (data.island_group_id) {
+                try {
+                  const locRes = await fetch(`${API}/locations/resolve?islandGroup=${data.island_group_id}&region=${data.region_id}&province=${data.province_id || ''}&city=${data.city_municipality_id}&barangay=${data.barangay_id}`);
+                  const locData = await locRes.json();
+                  setResolvedLocation(locData);
+                } catch(e){}
+            }
+            setLoading(false); 
+          } 
+        })
       .catch(() => { setError('Unable to load application.'); setLoading(false); });
   };
 
@@ -109,6 +149,10 @@ export default function LGUApplicationReview() {
     if (['APPROVED', 'REJECTED'].includes(app.status)) return { step: 4 };
     return { step: 1 };
   };
+  const totalReqs = app.requirements?.length || 0;
+  const readyReqs = app.requirements?.filter(r => ['Submitted', 'Approved'].includes(r.req_status)).length || 0;
+  const readScore = totalReqs > 0 ? Math.round((readyReqs / totalReqs) * 100) : 0;
+  const readColor = readScore === 100 ? '#16A34A' : '#F59E0B';
   const { step } = getStepperState();
 
   const formatDate = (date) => date ? date.toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
@@ -124,15 +168,15 @@ export default function LGUApplicationReview() {
         <ConfirmModal title="Request Correction" description="Describe what the business owner needs to fix or provide." inputLabel="Correction Notes" inputRequired confirmText="Request Correction" confirmColor="#D97706" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={(note) => doAction('request-correction', { correction_notes: note })} />
       )}
       {modal === 'approve' && (
-        <ConfirmModal title="Approve Application" description={`Confirm approval of application ${app.application_number} for ${app.business_name}.`} confirmText="Approve" confirmColor="#16A34A" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={() => doAction('approve')} />
+        <ConfirmModal title="Mark as Verified" description={`Mark preparation submission ${app.application_number} for ${app.business_name} as Verified. This confirms the business owner's preparation appears complete. This does NOT constitute official permit approval or issuance by the BPLO.`} confirmText="Mark as Verified" confirmColor="#16A34A" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={() => doAction('approve')} />
       )}
       {modal === 'reject' && (
-        <ConfirmModal title="Reject Application" description="This action cannot be easily undone. Please provide a clear rejection reason for the business owner." inputLabel="Rejection Reason" inputRequired confirmText="Reject Application" confirmColor="#DC2626" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={(reason) => doAction('reject', { rejection_reason: reason })} />
+        <ConfirmModal title="Request Preparation Corrections" description="Describe what the business owner needs to correct or re-submit before their preparation can be verified." inputLabel="Correction Notes" inputRequired confirmText="Request Corrections" confirmColor="#DC2626" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={(reason) => doAction('reject', { rejection_reason: reason })} />
       )}
 
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-        <Link to="/admin/applications" style={{ color: 'var(--primary-green)', textDecoration: 'none' }}>Applications</Link>
+        <Link to="/admin/applications" style={{ color: 'var(--primary-green)', textDecoration: 'none' }}>Pre-Assessments</Link>
         <ChevronRight size={14} />
         <span>{app.application_number}</span>
       </div>
@@ -140,14 +184,14 @@ export default function LGUApplicationReview() {
       {/* STEP 10 - LGU Review Summary */}
       <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Application</div>
+          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Pre-Assessment Ref.</div>
           <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-green)', fontFamily: 'monospace', marginBottom: '0.5rem' }}>{app.application_number}</div>
           <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.25rem', color: 'var(--text-dark)' }}>{app.business_name}</h1>
-          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal'}</div>
+          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{app.application_type === 'NEW' ? 'New Business Permit Preparation' : 'Renewal Preparation'}</div>
         </div>
         <div style={{ display: 'flex', gap: '2rem', textAlign: 'right' }}>
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Current Status</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Preparation Status</div>
             <StatusBadge status={app.status} />
           </div>
           <div>
@@ -170,16 +214,16 @@ export default function LGUApplicationReview() {
               <RotateCcw size={16} /> Request Correction
             </button>
             <button onClick={() => setModal('approve')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
-              <CheckCircle size={16} /> Approve
+              <CheckCircle size={16} /> Mark as Verified
             </button>
             <button onClick={() => setModal('reject')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#DC2626', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
-              <XCircle size={16} /> Reject
+              <XCircle size={16} /> Request Corrections
             </button>
           </>
         )}
         {app.status === 'APPROVED' && (
           <Link to="/admin/permits" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', textDecoration: 'none', fontSize: '0.9rem' }}>
-            <Shield size={16} /> View Issued Permit
+            <Shield size={16} /> View Verification Record
           </Link>
         )}
       </div>
@@ -192,29 +236,52 @@ export default function LGUApplicationReview() {
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={18} color="var(--primary-green)" /> Business Information</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-              {[
+                            {[
                 { label: 'Business Name', value: app.business_name },
-                { label: 'Business Type', value: app.business_type },
-                { label: 'Industry', value: app.industry_category },
+                { label: 'Business Category', value: app.business_type },
+                { label: 'Ownership Type', value: app.ownership_type || '�' },
+                { label: 'Primary Products', value: app.primary_products || '�' },
+                { label: 'Premises Type', value: app.premises_type || '�' },
                 { label: 'Address', value: app.address },
+                { label: 'Location', value: resolvedLocation ? `${resolvedLocation.barangay}, ${resolvedLocation.city}
+${resolvedLocation.province ? resolvedLocation.province + ', ' : ''}${resolvedLocation.region}` : 'Loading...' },
                 { label: 'Owner', value: app.owner_name },
-                { label: 'Email', value: app.owner_email },
-                { label: 'Contact', value: app.owner_contact || '—' },
+                { label: 'Contact', value: app.owner_contact || '�' },
                 { label: 'Employees', value: app.employees },
-                { label: 'Capitalization', value: app.capitalization ? `₱${Number(app.capitalization).toLocaleString()}` : '—' },
-                { label: 'Gross Sales', value: app.gross_sales ? `₱${Number(app.gross_sales).toLocaleString()}` : '—' },
+                { label: 'Capitalization', value: app.capitalization ? `?${Number(app.capitalization).toLocaleString()}` : '�' },
+                { label: 'Gross Sales', value: app.gross_sales ? `?${Number(app.gross_sales).toLocaleString()}` : '�' },
               ].map(f => (
                 <div key={f.label}>
                   <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{f.label}</div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-dark)' }}>{f.value}</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-dark)', whiteSpace: 'pre-line' }}>{f.value}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Requirements */}
+                    {/* Permit Readiness Score */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FileText size={18} color="var(--primary-green)" /> Requirements</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--government-navy)' }}>
+                <Shield size={18} /> Permit Readiness
+              </h3>
+              <span style={{ fontWeight: '700', fontSize: '1.25rem', color: readColor }}>{readScore}%</span>
+            </div>
+            
+            {totalReqs > 0 ? (
+              <>
+                <div style={{ backgroundColor: '#F1F5F9', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                  <div style={{ backgroundColor: readColor, height: '100%', width: `${readScore}%`, transition: 'width 0.3s' }}></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                  <span>{readyReqs} Ready</span>
+                  <span>{totalReqs - readyReqs} Still Needed</span>
+                  <span>{totalReqs} Total</span>
+                </div>
+              </>
+            ) : null}
+
+            <h3 style={{ margin: '0 0 1rem', fontSize: '0.9rem', color: 'var(--text-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Checklist</h3>
             {app.requirements.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No requirements linked to this business yet.</p>
             ) : (
@@ -224,8 +291,8 @@ export default function LGUApplicationReview() {
                   return (
                     <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', backgroundColor: done ? '#F0FDF4' : '#FFF7ED', borderRadius: 'var(--radius-sm)', border: `1px solid ${done ? '#BBF7D0' : '#FED7AA'}` }}>
                       {done ? <CheckCircle size={18} color="#16A34A" /> : <AlertCircle size={18} color="#F59E0B" />}
-                      <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: '500' }}>{req.permit_name}</span>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color: done ? '#16A34A' : '#D97706' }}>{done ? 'Submitted' : 'Missing'}</span>
+                      <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-dark)' }}>{req.permit_name}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color: done ? '#16A34A' : '#D97706' }}>{done ? 'Ready' : 'Missing'}</span>
                     </div>
                   );
                 })}
@@ -246,7 +313,7 @@ export default function LGUApplicationReview() {
                       <FileText size={16} color="var(--primary-green)" />
                       <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{doc.document_name}</span>
                     </div>
-                    <a href={`http://localhost:5000/uploads/${doc.file_path}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.82rem', color: 'var(--primary-green)', textDecoration: 'none', fontWeight: '600' }}>View File</a>
+                    <button onClick={(e) => { e.preventDefault(); handleDownload(doc.id, doc.document_name); }} style={{ fontSize: '0.82rem', color: 'var(--primary-green)', textDecoration: 'none', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View File</button>
                   </div>
                 ))}
               </div>

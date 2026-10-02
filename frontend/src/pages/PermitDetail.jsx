@@ -116,7 +116,7 @@ export default function PermitDetail() {
             <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: '700', color: 'var(--primary-green)', letterSpacing: '0.08em' }}>{permit.verification_code}</div>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-            Share or scan this code to verify this permit is authentic. The public verification page does not require login.
+            This is an internal PermitEase reference code for tracking this preparation record. It does not represent an official municipal permit verification code.
           </p>
           <Link to={`/verify-permit/${permit.verification_code}`} target="_blank"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', color: 'var(--text-dark)', fontSize: '0.875rem', fontWeight: '600', textDecoration: 'none' }}>
@@ -130,7 +130,7 @@ export default function PermitDetail() {
         {permit.pdf_path && (
           <button onClick={handleDownload}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: 'none', backgroundColor: 'var(--primary-green)', color: 'white', fontSize: '0.9rem', fontWeight: '600', cursor: 'pointer' }}>
-            <Download size={17} /> Download PDF
+            <Download size={17} /> Download Preparation Summary
           </button>
         )}
         <button onClick={() => navigate('/permits')}

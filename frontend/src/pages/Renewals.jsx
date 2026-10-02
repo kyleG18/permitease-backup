@@ -57,7 +57,7 @@ const Renewals = () => {
         <div className="card" onClick={() => setActiveFilter('ALL')} style={{ cursor: 'pointer', borderBottom: activeFilter === 'ALL' ? '3px solid var(--primary-green)' : '3px solid transparent', padding: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <FileText size={20} color="var(--primary-green)" />
-            <h4 style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Total Permits</h4>
+            <h4 style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Total Submissions</h4>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--text-dark)' }}>{data.summary.totalPermits || 0}</div>
         </div>

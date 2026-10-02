@@ -8,10 +8,11 @@ const createAssessment = async (req, res) => {
     try {
         const { business_description, business_id } = req.body;
 
-        let descriptionToUse = business_description;
+        let bizObject = null;       // full business row — passed to AI for PSGC & new-field checks
+        let descriptionToUse = business_description;  // fallback for manual text entry
         let resolvedBusinessId = business_id || null;
 
-        // If a business_id was provided, fetch the profile and build description automatically
+        // If a business_id was provided, fetch the full profile
         if (business_id) {
             const [businesses] = await db.query(
                 'SELECT * FROM businesses WHERE id = ? AND user_id = ?',
@@ -21,37 +22,43 @@ const createAssessment = async (req, res) => {
                 return res.status(404).json({ message: 'Business profile not found.' });
             }
             const biz = businesses[0];
-            // Build a rich description from the actual business profile data
+            bizObject = { ...biz };
+
+            // Parse stored JSON fields
+            if (biz.business_characteristics && typeof biz.business_characteristics === 'string') {
+                try { bizObject.business_characteristics = JSON.parse(biz.business_characteristics); } catch(e) {}
+            }
+
+            // Build human-readable summary as supplementary context
             const parts = [
                 `Business name: ${biz.business_name}.`,
-                `Type of business: ${biz.business_type}.`,
-                `Industry/Category: ${biz.industry_category}.`,
-                biz.business_description ? `Description of activities: ${biz.business_description}.` : null,
-                biz.address ? `Located at: ${biz.address}.` : null,
-                biz.employees ? `Number of employees: ${biz.employees}.` : null,
+                `Type: ${biz.business_type}.`,
+                `Category: ${biz.industry_category}.`,
+                biz.ownership_type ? `Ownership: ${biz.ownership_type}.` : null,
+                biz.primary_products ? `Primary products/services: ${biz.primary_products}.` : null,
+                biz.business_description ? `Operations: ${biz.business_description}.` : null,
+                biz.premises_type ? `Premises: ${biz.premises_type}.` : null,
+                biz.employees ? `Employees: ${biz.employees}.` : null,
                 biz.floor_area ? `Floor area: ${biz.floor_area} sqm.` : null,
                 biz.capitalization ? `Capitalization: PHP ${Number(biz.capitalization).toLocaleString()}.` : null,
                 biz.gross_sales ? `Gross sales: PHP ${Number(biz.gross_sales).toLocaleString()}.` : null,
                 biz.business_status ? `Application type: ${biz.business_status}.` : null,
             ].filter(Boolean);
             descriptionToUse = parts.join(' ');
+            bizObject._textSummary = descriptionToUse;
         }
 
         if (!descriptionToUse || !descriptionToUse.trim()) {
             return res.status(400).json({ message: 'A business profile or description is required.' });
         }
 
-        if (descriptionToUse.length > 2000) {
-            descriptionToUse = descriptionToUse.substring(0, 2000);
-        }
-
         // 1. Fetch all configured permit requirements
-        const [allRequirements] = await db.query('SELECT permit_name, description, condition_field, condition_value, applicable_business_type, required_documents FROM permit_requirements');
+        const [allRequirements] = await db.query('SELECT id, permit_name, description, condition_field, condition_value, applicable_business_type, required_documents FROM permit_requirements');
 
         // 2. Call AI Service to classify and assess
         let aiResult;
         try {
-            aiResult = await generateStructuredAssessment(descriptionToUse, allRequirements);
+            aiResult = await generateStructuredAssessment(bizObject || descriptionToUse, allRequirements);
         } catch (aiError) {
             return res.status(503).json({ message: aiError.message });
         }
@@ -73,7 +80,7 @@ const createAssessment = async (req, res) => {
                 applicable = true;
             }
             if (applicable) {
-                officialRequirements.push({
+                officialRequirements.push({ requirement_id: reqRule.id,
                     permit_name: reqRule.permit_name,
                     description: reqRule.description,
                     required_documents: reqRule.required_documents
@@ -87,10 +94,28 @@ const createAssessment = async (req, res) => {
             official_assessment: officialRequirements
         };
 
+        
         const [inserted] = await db.query(
             'INSERT INTO assessments (user_id, business_id, assessment_result, compliance_score) VALUES (?, ?, ?, ?)',
             [req.user.id, resolvedBusinessId, JSON.stringify(assessmentPayload), 0]
         );
+
+        // Populate business_requirements for the UI
+        if (resolvedBusinessId && officialRequirements.length > 0) {
+            // First get existing to not overwrite status
+            const [existingReqs] = await db.query('SELECT requirement_id, status FROM business_requirements WHERE business_id = ?', [resolvedBusinessId]);
+            const existingMap = new Map(existingReqs.map(r => [r.requirement_id, r.status]));
+
+            for (const req of officialRequirements) {
+                if (!existingMap.has(req.requirement_id)) {
+                    await db.query(
+                        'INSERT INTO business_requirements (business_id, requirement_id, status) VALUES (?, ?, ?)',
+                        [resolvedBusinessId, req.requirement_id, 'Missing']
+                    );
+                }
+            }
+        }
+
 
         res.status(201).json({
             id: inserted.insertId,

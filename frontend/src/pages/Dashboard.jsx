@@ -146,12 +146,12 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
       {/* STATS */}
       <div className="db-stats">
         {[
-          { label: 'Businesses',    value: stats?.total_businesses,    icon: Building2,     color: 'var(--primary-green)',   to: '/profile',    link: 'View Business Details' },
-          { label: 'Total Permits', value: stats?.total_permits,       icon: FileText,      color: 'var(--government-navy)', to: '/readiness',  link: 'View Readiness' },
-          { label: 'Active Permits',value: stats?.active_permits,      icon: CheckCircle,   color: 'var(--success)',         to: '/readiness',  link: 'View Readiness' },
-          { label: 'Expiring Soon', value: stats?.expiring_soon,       icon: AlertTriangle, color: 'var(--warning)',         to: '/renewals',   link: 'View Renewals' },
-          { label: 'Expired',       value: stats?.expired_permits,     icon: XCircle,       color: 'var(--danger)',          to: '/renewals',   link: 'View Renewals' },
-          { label: 'Pending Review',value: stats?.pending_applications, icon: Clock,        color: 'var(--text-secondary)',  to: '/renewals',   link: 'View Renewals' },
+          { label: 'Businesses',        value: stats?.total_businesses,     icon: Building2,     color: 'var(--primary-green)',    to: '/profile',    link: 'View Details' },
+          { label: 'Readiness %',        value: stats?.compliance_score ? `${stats.compliance_score}%` : '0%', icon: ShieldCheck, color: stats?.compliance_score >= 80 ? 'var(--success)' : 'var(--warning)', to: '/readiness', link: 'View Readiness' },
+          { label: 'Total Reqs',         value: stats?.total_requirements || 0, icon: FileText,   color: 'var(--government-navy)', to: '/readiness',  link: 'View Requirements' },
+          { label: 'Ready',              value: stats?.ready_requirements  || 0, icon: CheckCircle, color: 'var(--success)',         to: '/readiness',  link: 'View Checklist' },
+          { label: 'Missing',            value: stats?.missing_requirements || 0, icon: AlertCircle, color: 'var(--danger)',         to: '/readiness',  link: 'Complete Now' },
+          { label: 'Assessment',         value: stats?.assessment_completed ? 'Done' : 'Pending', icon: BrainCircuit, color: stats?.assessment_completed ? 'var(--success)' : 'var(--text-secondary)', to: '/assessment', link: 'View Assessment' },
         ].map((item, idx) => (
           <div key={idx} className="card db-stat-card">
             <item.icon size={22} strokeWidth={1.75} style={{ color: item.color }} />
@@ -395,7 +395,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
     <div className="animate-fade-in">
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ color: 'var(--government-navy)', marginBottom: '0.35rem' }}>LGU Compliance Dashboard</h1>
+          <h1 style={{ color: 'var(--government-navy)', marginBottom: '0.35rem' }}>BPLO Preparation Support Dashboard</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Municipality of Roxas â€” Business Permit Management Overview</p>
         </div>
         <div style={{ 
@@ -409,24 +409,24 @@ const AdminDashboard = ({ user, stats, loading }) => {
 
       {/* Stat Cards */}
       <div className="stats-grid">
-        <StatCard icon={Building2}     label="Total Businesses"   value={loading ? '...' : stats?.total_businesses}       colorClass="navy" />
-        <StatCard icon={FileText}      label="Total Permits"      value={loading ? '...' : stats?.total_permits}          colorClass="gold" />
-        <StatCard icon={Clock}         label="Pending Review"     value={loading ? '...' : stats?.pending_applications}   colorClass="orange" />
-        <StatCard icon={CheckCircle}   label="Approved"           value={loading ? '...' : stats?.approved_applications}  colorClass="green" />
-        <StatCard icon={XCircle}       label="Rejected"           value={loading ? '...' : stats?.rejected_applications}  colorClass="red" />
-        <StatCard icon={AlertTriangle} label="Expiring (60 days)" value={loading ? '...' : stats?.expiring_soon}          colorClass="orange" />
+        <StatCard icon={Building2}     label="Registered MSMEs"       value={loading ? '...' : stats?.total_businesses}              colorClass="navy" />
+        <StatCard icon={ClipboardCheck} label="Pending Verification"   value={loading ? '...' : stats?.pending_pre_assessments}       colorClass="orange" />
+        <StatCard icon={CheckCircle}   label="Verified (This System)"  value={loading ? '...' : stats?.verified_pre_assessments}      colorClass="green" />
+        <StatCard icon={AlertTriangle} label="Avg. Readiness %"        value={loading ? '...' : (stats?.avg_readiness_pct != null ? `${stats.avg_readiness_pct}%` : 'N/A')} colorClass="gold" />
+        <StatCard icon={XCircle}       label="Correction Requests"     value={loading ? '...' : stats?.correction_requests}           colorClass="red" />
+        <StatCard icon={FileText}      label="Total Requirements"      value={loading ? '...' : stats?.total_requirements}            colorClass="navy" />
       </div>
 
       <div className="dashboard-grid">
         {/* Left */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-          {/* Municipal Compliance Rate */}
+          {/* Municipal Preparation Readiness */}
           <div className="card">
             <div className="card-header" style={{ marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: 'none' }}>
               <h3 style={{ margin: 0, color: 'var(--government-navy)' }}>Municipal Compliance Rate</h3>
             </div>
-            <ScoreBar score={stats?.compliance_rate ?? 0} label="Overall Municipal Compliance" color={compColor} />
+            <ScoreBar score={stats?.compliance_rate ?? 0} label="Average Preparation Readiness" color={compColor} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
               <div style={{ backgroundColor: 'var(--success-light)', padding: '1.25rem 1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid #C3E6D1' }}>
                 <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--success)', lineHeight: 1 }}>{stats?.total_requirements ?? 0}</div>
@@ -442,7 +442,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
           {/* Recent Applications */}
           <div className="card">
             <div className="card-header">
-              <h3 style={{ margin: 0, color: 'var(--government-navy)' }}>Recent Applications</h3>
+              <h3 style={{ margin: 0, color: 'var(--government-navy)' }}>Recent Pre-Assessment Submissions</h3>
               <Link to="/admin/applications" className="btn btn-ghost btn-sm">View All <ChevronRight size={14} /></Link>
             </div>
             {stats?.recent_applications?.length === 0 ? (
@@ -452,7 +452,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 <table>
                   <thead>
                     <tr>
-                      {['Business', 'Permit', 'Date', 'Status'].map(h => <th key={h}>{h}</th>)}
+                      {['Business', 'Preparation Ref.', 'Date', 'Status'].map(h => <th key={h}>{h}</th>)}
                     </tr>
                   </thead>
                   <tbody>

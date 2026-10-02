@@ -180,6 +180,14 @@ export default function TaxEstimation() {
               <div style={{ fontSize: '15px', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>No estimate yet</div>
               <div style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.5' }}>Enter or review the required business information on the left to calculate your estimated local business tax.</div>
             </div>
+          ) : estimate.supportedLGU === false ? (
+            <div style={{ padding: '1.25rem', backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '8px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <AlertTriangle size={20} color="#92400E" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <div style={{ fontWeight: '600', color: '#92400E', marginBottom: '0.25rem', fontSize: '14px' }}>Estimation Unavailable for This Location</div>
+                <div style={{ fontSize: '13px', color: '#78350F', lineHeight: '1.5' }}>{estimate.summary}</div>
+              </div>
+            </div>
           ) : (
             <>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem', marginBottom: '0.5rem' }}>
@@ -220,7 +228,7 @@ export default function TaxEstimation() {
       </div>
 
       {/* CALCULATION BREAKDOWN */}
-      {estimate && lbtList.length > 0 && (
+      {estimate && estimate.supportedLGU !== false && lbtList.length > 0 && (
         <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '2rem' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--government-navy)', margin: 0 }}>Calculation Breakdown</h3>

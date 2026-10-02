@@ -8,7 +8,7 @@ router.route('/')
     .post(protect, requireRole(['lgu_admin', 'system_admin']), createRequirement);
 
 router.route('/:id')
-    .get(getRequirement)
+    .get(protect, getRequirement)
     .put(protect, requireRole(['lgu_admin', 'system_admin']), updateRequirement)
     .delete(protect, requireRole(['lgu_admin', 'system_admin']), deleteRequirement);
 

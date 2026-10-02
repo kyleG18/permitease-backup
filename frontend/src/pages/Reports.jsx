@@ -50,7 +50,7 @@ const Reports = () => {
             <CheckSquare size={24} />
           </div>
           <div>
-            <p className="text-muted m-0" style={{ fontSize: '0.875rem' }}>Active Permits</p>
+            <p className="text-muted m-0" style={{ fontSize: '0.875rem' }}>Verified Submissions</p>
             <h3 className="m-0" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.overview.active_permits}</h3>
           </div>
         </div>
@@ -60,7 +60,7 @@ const Reports = () => {
             <Activity size={24} />
           </div>
           <div>
-            <p className="text-muted m-0" style={{ fontSize: '0.875rem' }}>Expired Permits</p>
+            <p className="text-muted m-0" style={{ fontSize: '0.875rem' }}>Expired Submissions</p>
             <h3 className="m-0" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.overview.expired_permits}</h3>
           </div>
         </div>

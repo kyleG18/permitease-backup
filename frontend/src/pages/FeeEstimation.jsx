@@ -182,7 +182,7 @@ export default function FeeEstimation() {
       </div>
 
       {/* CALCULATION BREAKDOWN */}
-      {estimate && feeList.length > 0 && (
+      {estimate && estimate.supportedLGU !== false && feeList.length > 0 && (
         <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '2rem' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--government-navy)', margin: 0 }}>Fee Breakdown</h3>

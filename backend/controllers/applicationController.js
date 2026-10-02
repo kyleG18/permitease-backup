@@ -78,6 +78,8 @@ const getApplicationById = async (req, res) => {
                     b.business_name, b.business_type, b.industry_category, b.address,
                     b.employees, b.business_status, b.date_established,
                     b.capitalization, b.gross_sales, b.floor_area,
+                    b.ownership_type, b.primary_products, b.premises_type, b.business_characteristics,
+                    b.island_group_id, b.region_id, b.province_id, b.city_municipality_id, b.barangay_id,
                     u.full_name AS owner_name, u.email AS owner_email, u.contact_number AS owner_contact,
                     r.full_name AS reviewer_name
              FROM applications a
@@ -484,7 +486,7 @@ const approveApplication = async (req, res) => {
         const [existingPermits] = await conn.query('SELECT id, verification_code FROM permits WHERE application_id = ?', [app.id]);
         if (existingPermits.length > 0 && app.status === 'APPROVED') {
             await conn.rollback();
-            return res.status(200).json({ message: 'Application is already approved and permit exists.', status: 'APPROVED' });
+            return res.status(200).json({ message: 'This preparation submission has already been marked as Verified.', status: 'APPROVED' });
         }
 
         if (app.status !== 'UNDER_REVIEW') {
@@ -509,11 +511,12 @@ const approveApplication = async (req, res) => {
         const expirationDate = `${currentYear}-12-31`;
         const issueDate = new Date().toISOString().split('T')[0];
 
-        // Generate permit number
-        const permitNumber = `PMT-${currentYear}-${String(app.id).padStart(5, '0')}`;
-        const permitName = app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal Business Permit';
+        // Internal reference for DB / file naming only — NOT displayed as an official permit number
+        const internalRef = permitGenerator.generateInternalRefCode();
+        const permitNumber = `PE-${currentYear}-${String(app.id).padStart(5, '0')}`;
+        const permitName = app.application_type === 'NEW' ? 'New Business Permit Preparation Summary' : 'Renewal Preparation Summary';
 
-        // Generate unique verification code
+        // Internal code for DB uniqueness (used for file-naming, not as an official permit number)
         let verificationCode = permitGenerator.generateVerificationCode();
         let isUnique = false;
         while (!isUnique) {
@@ -525,19 +528,24 @@ const approveApplication = async (req, res) => {
             }
         }
 
-        // Generate PDF
+        // Load checklist for the preparation summary
+        const [checklist] = await conn.query(
+            `SELECT br.status, pr.permit_name FROM business_requirements br
+             JOIN permit_requirements pr ON br.requirement_id = pr.id
+             WHERE br.business_id = ?`,
+            [app.business_id]
+        );
+
+        // Generate Preparation Summary PDF (not an official permit)
         const permitData = {
-            permit_number: permitNumber,
-            application_number: app.application_number,
             business_name: app.business_name,
             owner_name: app.owner_name,
             business_type: app.business_type,
             industry_category: app.industry_category || 'N/A',
             address: app.address,
             permit_type: app.application_type,
-            issue_date: issueDate,
-            expiration_date: expirationDate,
-            verification_code: verificationCode
+            assessment_date: new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }),
+            checklist: checklist
         };
 
         try {
@@ -545,13 +553,14 @@ const approveApplication = async (req, res) => {
         } catch (pdfError) {
             console.error('PDF Generation Error:', pdfError);
             await conn.rollback();
-            return res.status(500).json({ message: 'Failed to generate permit document. Approval aborted.' });
+            return res.status(500).json({ message: 'Failed to generate preparation summary document. Verification aborted.' });
         }
 
-        // Finalize PDF path
-        const finalPdfPath = permitGenerator.finalizePermitDocument(tempPdfPath, permitNumber);
+        // Finalize PDF path using internal ref
+        const finalPdfPath = permitGenerator.finalizePermitDocument(tempPdfPath, internalRef);
 
-        // Insert Permit
+        // Insert Permit record — status 'Verified' indicates BPLO has reviewed the preparation submission
+        // This is NOT an official permit issuance
         await conn.query(
             `INSERT INTO permits (business_id, application_id, permit_name, permit_number, issue_date, expiration_date, status, verification_code, pdf_path)
              VALUES (?, ?, ?, ?, ?, ?, 'Approved', ?, ?)`,
@@ -560,7 +569,7 @@ const approveApplication = async (req, res) => {
 
         await conn.commit();
 
-        // Fire-and-forget rich notifications for APPROVED + PERMIT ISSUED
+        // Fire-and-forget notification: preparation marked as Verified by BPLO
         const [ownerRowsApprove] = await db.query(
             'SELECT u.id, u.email, u.full_name, b.business_name FROM users u JOIN businesses b ON b.user_id = u.id WHERE u.id = ? LIMIT 1',
             [app.user_id]
@@ -584,12 +593,12 @@ const approveApplication = async (req, res) => {
             }
         }
 
-        res.json({ message: 'Application approved and permit generated.', status: 'APPROVED' });
+        res.json({ message: 'Preparation submission marked as Verified. BPLO processing must still be completed officially.', status: 'APPROVED' });
     } catch (error) {
         await conn.rollback();
         if (tempPdfPath) permitGenerator.cleanupTempFile(tempPdfPath);
         console.error(error);
-        res.status(500).json({ message: 'Unable to approve application. Please try again.' });
+        res.status(500).json({ message: 'Unable to mark as Verified. Please try again.' });
     } finally {
         conn.release();
     }
@@ -649,7 +658,7 @@ const rejectApplication = async (req, res) => {
     } catch (error) {
         await conn.rollback();
         console.error(error);
-        res.status(500).json({ message: 'Unable to reject application. Please try again.' });
+        res.status(500).json({ message: 'Unable to request corrections. Please try again.' });
     } finally {
         conn.release();
     }

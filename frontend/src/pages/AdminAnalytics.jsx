@@ -132,9 +132,9 @@ export default function AdminAnalytics() {
             <h4 style={{ marginBottom: '1rem', color: 'var(--text-dark)', borderBottom: '2px solid var(--border-light)', paddingBottom: '0.5rem' }}>Current Municipal Status (Snapshot)</h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                 <StatCard title="Total Businesses" value={overview?.totalBusinesses} icon={<Building2 size={24} />} colorClass="primary" />
-                <StatCard title="Active Permits" value={overview?.activePermits} icon={<CheckCircle size={24} />} colorClass="success" />
+                <StatCard title="Verified Submissions" value={overview?.activePermits} icon={<CheckCircle size={24} />} colorClass="success" />
                 <StatCard title="Expiring Soon" value={overview?.expiringSoonPermits} icon={<Clock size={24} />} colorClass="warning" subtitle="<= 60 days remaining" />
-                <StatCard title="Expired Permits" value={overview?.expiredPermits} icon={<AlertTriangle size={24} />} colorClass="danger" />
+                <StatCard title="Expired Submissions" value={overview?.expiredPermits} icon={<AlertTriangle size={24} />} colorClass="danger" />
             </div>
 
             {/* Selected Period Row */}
