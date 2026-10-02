@@ -346,7 +346,7 @@ const Landing = () => {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer id="about" style={{ backgroundColor: '#1E3A8A', color: 'white', padding: '2.5rem 5%' }}>
+      <footer id="about" style={{ backgroundColor: '#16A34A', color: 'white', padding: '2.5rem 5%' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="footer-inner" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.75rem', marginBottom: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
