@@ -1,8 +1,8 @@
 const Groq = require('groq-sdk');
-require('dotenv').config();
+require('dotenv').config()
 
 // The user can override this in .env. Fallback to the current production model.
-const DEFAULT_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+const getModel = () => process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'; // process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
 /**
  * Initialize Groq client securely. Returns null if API key is missing.
@@ -87,7 +87,7 @@ You MUST respond ONLY with valid JSON exactly matching this structure, with no m
 
     try {
         const completion = await groq.chat.completions.create({
-            model: DEFAULT_MODEL,
+            model: getModel(),
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
             max_tokens: 4096
@@ -176,7 +176,7 @@ Instructions:
 
     try {
         const completion = await groq.chat.completions.create({
-            model: DEFAULT_MODEL,
+            model: getModel(),
             messages: fullMessages,
             temperature: 0.3,
             max_tokens: 4096
@@ -271,7 +271,7 @@ INSTRUCTIONS:
 
     try {
         const completion = await groq.chat.completions.create({
-            model: DEFAULT_MODEL,
+            model: getModel(),
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
             max_tokens: 4096
