@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, RefreshCw, ListChecks, Coins, ShieldCheck, Landmark, User, BarChart3, CheckCircle, ArrowRight, Menu, X } from 'lucide-react';
+import Footer from '../components/Footer';
 
 const Landing = () => {
   const [showModal, setShowModal] = useState(false);
@@ -43,16 +44,6 @@ const Landing = () => {
           flex-wrap: nowrap;
         }
         .step-arrow { display: flex; }
-
-        /* Footer layout */
-        .footer-inner {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 1.5rem;
-        }
-        .footer-links { display: flex; gap: 2rem; align-items: center; }
 
         /* Hero gradient — desktop: left-to-right fade */
         .hero-gradient {
@@ -140,11 +131,6 @@ const Landing = () => {
             gap: 1.5rem;
           }
           .step-arrow { display: none; }
-
-          /* Footer */
-          .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-          .footer-links { flex-direction: row; gap: 1.5rem; }
-          .footer-tagline { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -323,8 +309,8 @@ const Landing = () => {
               { num: '03', icon: <BarChart3 size={22} />, title: 'Track Readiness', desc: 'Monitor your compliance status and get AI-powered insights.' },
               { num: '04', icon: <CheckCircle size={22} />, title: 'Get Your Summary', desc: 'View your preparation summary and estimated fees.' },
             ].map((step, i, arr) => (
-              <>
-                <div key={step.num} style={{ flex: '1', minWidth: '160px' }}>
+              <div key={step.num} style={{ display: 'contents' }}>
+                <div style={{ flex: '1', minWidth: '160px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#1E3A8A', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '0.85rem', flexShrink: 0 }}>{step.num}</div>
                     <div style={{ width: '46px', height: '46px', borderRadius: '50%', backgroundColor: '#F1F5F9', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -335,64 +321,51 @@ const Landing = () => {
                   <p style={{ color: '#475569', margin: 0, fontSize: '0.9rem', lineHeight: 1.55 }}>{step.desc}</p>
                 </div>
                 {i < arr.length - 1 && (
-                  <div key={`arrow-${i}`} className="step-arrow" style={{ alignItems: 'center', paddingTop: '20px', flexShrink: 0 }}>
+                  <div className="step-arrow" style={{ alignItems: 'center', paddingTop: '20px', flexShrink: 0 }}>
                     <ArrowRight size={22} color="#CBD5E1" />
                   </div>
                 )}
-              </>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer id="about" style={{ backgroundColor: '#16A34A', color: 'white', padding: '2.5rem 5%' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="footer-inner" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.75rem', marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <img src="/images/roxas-seal.png" alt="Roxas Seal" style={{ width: '52px', height: '52px', backgroundColor: 'white', borderRadius: '50%', padding: '2px', flexShrink: 0 }} />
-              <div>
-                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.4 }}>Republic of the Philippines<br />Province of Oriental Mindoro</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>Municipality of Roxas</div>
-              </div>
-            </div>
-
-            <div className="footer-links">
-              <a href="#" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500' }}>Home</a>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
-              <a href="#services" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.9rem' }}>Services</a>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
-              <a href="#how-it-works" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.9rem' }}>About</a>
-            </div>
-
-            <div className="footer-tagline" style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', textAlign: 'right', lineHeight: 1.5 }}>
-              Roxas: A Municipality<br />of Progress and Opportunity
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem' }}>
-            &copy; {new Date().getFullYear()} Municipality of Roxas. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* ── AUTH MODAL ── */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
           <div className="card animate-slide-up" style={{ width: '100%', maxWidth: '420px', textAlign: 'center', padding: '2.5rem', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
-            <h2 style={{ color: '#1E3A8A', marginBottom: '0.5rem', fontWeight: '800', fontSize: '1.4rem' }}>Welcome to PermitEase</h2>
+            <h2 style={{ color: '#166534', marginBottom: '0.5rem', fontWeight: '800', fontSize: '1.4rem' }}>Welcome to PermitEase</h2>
             <p style={{ color: '#64748B', marginBottom: '2rem', fontSize: '0.95rem' }}>Please log in or register to continue.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <button onClick={() => navigate('/login')} style={{ padding: '1rem', backgroundColor: '#1E3A8A', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }}>
+              <button 
+                onClick={() => navigate('/login')} 
+                style={{ padding: '1rem', backgroundColor: '#16A34A', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803D'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16A34A'}
+              >
                 Log In to Existing Account
               </button>
-              <button onClick={() => navigate('/register')} style={{ padding: '1rem', backgroundColor: 'transparent', color: '#1E3A8A', border: '1.5px solid #1E3A8A', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }}>
+              <button 
+                onClick={() => navigate('/register')} 
+                style={{ padding: '1rem', backgroundColor: 'transparent', color: '#16A34A', border: '1.5px solid #16A34A', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+              >
                 Register New Business
               </button>
             </div>
 
-            <button onClick={() => setShowModal(false)} style={{ marginTop: '1.5rem', background: 'none', border: 'none', color: '#94A3B8', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}>
+            <button 
+              onClick={() => setShowModal(false)} 
+              style={{ marginTop: '1.5rem', background: 'none', border: 'none', color: '#94A3B8', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#16A34A'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}
+            >
               Cancel
             </button>
           </div>

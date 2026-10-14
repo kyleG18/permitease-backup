@@ -1,0 +1,227 @@
+Table: application_history
+  - id (int) [PK]
+  - application_id (int) [FK]
+  - actor_user_id (int) [FK]
+  - action (varchar(255))
+  - old_status (varchar(50))
+  - new_status (varchar(50))
+  - remarks (text)
+  - created_at (timestamp)
+  Foreign Keys:
+    - application_id -> applications(id)
+    - actor_user_id -> users(id)
+
+Table: applications
+  - id (int) [PK]
+  - application_number (varchar(100))
+  - user_id (int) [FK]
+  - business_id (int) [FK]
+  - application_type (enum('NEW','RENEWAL'))
+  - status (enum('DRAFT','SUBMITTED','UNDER_REVIEW','NEEDS_CORRECTION','APPROVED','REJECTED','CANCELLED'))
+  - submitted_at (timestamp)
+  - reviewed_at (timestamp)
+  - reviewed_by (int) [FK]
+  - rejection_reason (text)
+  - correction_notes (text)
+  - created_at (timestamp)
+  - updated_at (timestamp)
+  Foreign Keys:
+    - user_id -> users(id)
+    - business_id -> businesses(id)
+    - reviewed_by -> users(id)
+
+Table: assessments
+  - id (int) [PK]
+  - user_id (int) [FK]
+  - business_id (int) [FK]
+  - assessment_result (text)
+  - created_at (timestamp)
+  - compliance_score (int)
+  - readiness_score (int)
+  Foreign Keys:
+    - user_id -> users(id)
+    - business_id -> businesses(id)
+
+Table: audit_logs
+  - id (int) [PK]
+  - user_id (int) [FK]
+  - user_name (varchar(255))
+  - user_role (varchar(50))
+  - action (varchar(255))
+  - details (text)
+  - ip_address (varchar(50))
+  - created_at (timestamp)
+  Foreign Keys:
+    - user_id -> users(id)
+
+Table: business_requirements
+  - id (int) [PK]
+  - business_id (int) [FK]
+  - requirement_id (int) [FK]
+  - document_id (int) [FK]
+  - status (enum('Missing','Submitted','Approved','Rejected','Expired'))
+  - remarks (text)
+  - created_at (timestamp)
+  - updated_at (timestamp)
+  Foreign Keys:
+    - business_id -> businesses(id)
+    - requirement_id -> permit_requirements(id)
+    - document_id -> documents(id)
+
+Table: businesses
+  - id (int) [PK]
+  - user_id (int) [FK]
+  - business_name (varchar(255))
+  - business_type (varchar(100))
+  - industry_category (varchar(100))
+  - address (text)
+  - employees (int)
+  - business_status (enum('New Application','Renewal'))
+  - date_established (date)
+  - created_at (timestamp)
+  - capitalization (decimal(15,2))
+  - gross_sales (decimal(15,2))
+  - floor_area (decimal(10,2))
+  - owner_name (varchar(255))
+  - contact_number (varchar(100))
+  - barangay (varchar(100))
+  - business_description (text)
+  - ownership_type (varchar(100))
+  - primary_products (text)
+  - island_group_id (varchar(10))
+  - region_id (varchar(20))
+  - province_id (varchar(20))
+  - city_municipality_id (varchar(20))
+  - barangay_id (varchar(20))
+  - premises_type (varchar(100))
+  - business_characteristics (text)
+  Foreign Keys:
+    - user_id -> users(id)
+
+Table: chat_history
+  - id (int) [PK]
+  - user_id (int) [FK]
+  - question (text)
+  - response (text)
+  - created_at (timestamp)
+  Foreign Keys:
+    - user_id -> users(id)
+
+Table: documents
+  - id (int) [PK]
+  - business_id (int) [FK]
+  - document_name (varchar(255))
+  - file_path (varchar(255))
+  - upload_date (timestamp)
+  - expiration_date (date)
+  Foreign Keys:
+    - business_id -> businesses(id)
+
+Table: knowledge_base
+  - id (int) [PK]
+  - title (varchar(255))
+  - document_path (varchar(255))
+  - uploaded_at (timestamp)
+
+Table: notifications
+  - id (int) [PK]
+  - user_id (int) [FK]
+  - title (varchar(255))
+  - message (text)
+  - status (enum('Unread','Read'))
+  - created_at (timestamp)
+  - event_key (varchar(200))
+  - type (varchar(50))
+  - related_application_id (int)
+  - related_permit_id (int)
+  - email_sent (tinyint(1))
+  - email_sent_at (datetime)
+  Foreign Keys:
+    - user_id -> users(id)
+
+Table: permit_requirements
+  - id (int) [PK]
+  - permit_name (varchar(255))
+  - description (text)
+  - applicable_business_type (varchar(255))
+  - renewal_period (varchar(100))
+  - required_documents (text)
+  - created_at (timestamp)
+  - condition_field (varchar(100))
+  - condition_value (varchar(255))
+  - is_mandatory (tinyint(1))
+
+Table: permits
+  - id (int) [PK]
+  - business_id (int) [FK]
+  - permit_name (varchar(255))
+  - permit_number (varchar(100))
+  - issue_date (date)
+  - expiration_date (date)
+  - status (enum('Pending','Approved','Expired','Rejected'))
+  - remarks (text)
+  - created_at (timestamp)
+  - application_id (int)
+  - verification_code (varchar(100))
+  - pdf_path (varchar(255))
+  Foreign Keys:
+    - application_id -> applications(id)
+    - business_id -> businesses(id)
+
+Table: ph_barangays
+  - id (varchar(20)) [PK]
+  - name (varchar(200))
+  - city_municipality_id (varchar(20)) [FK]
+  Foreign Keys:
+    - city_municipality_id -> ph_cities_municipalities(id)
+
+Table: ph_cities_municipalities
+  - id (varchar(20)) [PK]
+  - name (varchar(200))
+  - type (enum('City','Municipality'))
+  - province_id (varchar(20)) [FK]
+  - region_id (varchar(20))
+  Foreign Keys:
+    - province_id -> ph_provinces(id)
+
+Table: ph_island_groups
+  - id (varchar(10)) [PK]
+  - name (varchar(100))
+
+Table: ph_provinces
+  - id (varchar(20)) [PK]
+  - name (varchar(200))
+  - region_id (varchar(20)) [FK]
+  Foreign Keys:
+    - region_id -> ph_regions(id)
+
+Table: ph_regions
+  - id (varchar(20)) [PK]
+  - name (varchar(200))
+  - island_group_id (varchar(10)) [FK]
+  Foreign Keys:
+    - island_group_id -> ph_island_groups(id)
+
+Table: tax_fee_rules
+  - id (int) [PK]
+  - name (varchar(255))
+  - description (text)
+  - category (varchar(100))
+  - basis (varchar(50))
+  - rate (decimal(10,4))
+  - fixed_amount (decimal(15,2))
+  - condition_field (varchar(100))
+  - condition_value (varchar(255))
+  - is_active (tinyint(1))
+  - created_at (timestamp)
+
+Table: users
+  - id (int) [PK]
+  - full_name (varchar(255))
+  - email (varchar(255))
+  - contact_number (varchar(50))
+  - password (varchar(255))
+  - role (enum('business_owner','lgu_admin','system_admin'))
+  - status (enum('active','inactive'))
+  - created_at (timestamp)
+

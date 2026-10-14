@@ -176,12 +176,16 @@ const BusinessProfile = () => {
         }
       } 
       else if (name === 'city_municipality_id') {
-        setFormData(prev => ({ ...prev, barangay_id: '' }));
+        setFormData(prev => ({ ...prev, barangay_id: '', barangay: '' }));
         setLocations(prev => ({ ...prev, barangays: [] }));
         if (value) {
           const res = await axios.get(`${API}/locations/barangays?cityMunicipalityId=${value}`);
           setLocations(prev => ({ ...prev, barangays: res.data }));
         }
+      }
+      else if (name === 'barangay_id') {
+        const found = locations.barangays.find(b => String(b.id) === String(value));
+        setFormData(prev => ({ ...prev, barangay_id: value, barangay: found ? found.name : '' }));
       }
     } catch (err) {
       console.error('Failed to load location data');

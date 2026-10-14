@@ -1513,3 +1513,78 @@ tbody td {
   .db-stats { grid-template-columns: 1fr 1fr; }
   .db-process-steps { grid-template-columns: 1fr; }
 }
+
+/* ==========================================================================
+   TAX & REGULATORY FEE ESTIMATION PRINT & RESPONSIVE STYLES
+   ========================================================================== */
+.estimation-page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.25rem 0 2rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.estimation-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .estimation-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media print {
+  /* Hide application shell elements */
+  .sidebar,
+  .app-sidebar,
+  .header,
+  .app-header,
+  .navbar,
+  nav,
+  .no-print,
+  button,
+  input,
+  select,
+  input[type="range"],
+  .tax-estimation-container header div.no-print,
+  .fee-estimation-container header div.no-print {
+    display: none !important;
+  }
+
+  body, html {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  .estimation-page-container,
+  .tax-estimation-container,
+  .fee-estimation-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-header {
+    display: block !important;
+  }
+
+  .estimation-grid {
+    display: block !important;
+  }
+
+  .estimation-grid > div {
+    margin-bottom: 1.5rem !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

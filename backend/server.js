@@ -31,6 +31,7 @@ app.use('/api/assessments', require('./routes/assessmentRoutes'));
 app.use('/api/compliance', require('./routes/complianceRoutes'));
 app.use('/api/reports', require('./routes/reportsRoutes'));
 app.use('/api/tax', require('./routes/taxRoutes'));
+app.use('/api/taxes', require('./routes/taxRoutes'));
 app.use('/api/readiness', require('./routes/readinessRoutes'));
 app.use('/api/renewals', require('./routes/renewalRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
