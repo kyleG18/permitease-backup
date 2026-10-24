@@ -19,6 +19,7 @@ const getGroqClient = () => {
  * Ensures the system never crashes even if external AI APIs are unreachable.
  */
 const generateRuleBasedAssessment = (biz) => {
+    biz = (typeof biz === 'object' && biz !== null) ? biz : { business_description: String(biz || '') };
     const text = (
         (biz.business_name || '') + ' ' +
         (biz.business_type || '') + ' ' +

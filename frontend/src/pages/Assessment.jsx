@@ -265,7 +265,9 @@ const Assessment = () => {
       if (err.response?.status === 429) {
         setError('Too many requests. Please try again in a moment.');
       } else {
-        setError(err.response?.data?.message || 'Assessment failed. Please try again.');
+        const detail = err.response?.data?.detail;
+        const msg = err.response?.data?.message;
+        setError(detail ? `Assessment error: ${detail}` : (msg || 'Assessment failed. Please try again.'));
       }
     } finally {
       setLoading(false);

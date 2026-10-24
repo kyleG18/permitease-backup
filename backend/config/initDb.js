@@ -338,6 +338,43 @@ const initDatabase = async () => {
             )
         `);
 
+        // 11b. Chat history table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                question TEXT NOT NULL,
+                response LONGTEXT NOT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+
+        // 11c. Knowledge base table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS knowledge_base (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                document_path VARCHAR(255) NOT NULL,
+                uploaded_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // 11d. Application history table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS application_history (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                application_id INT NOT NULL,
+                actor_user_id INT DEFAULT NULL,
+                action VARCHAR(255) NOT NULL,
+                old_status VARCHAR(50) DEFAULT NULL,
+                new_status VARCHAR(50) DEFAULT NULL,
+                remarks TEXT DEFAULT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
+            )
+        `);
+
         // 12. Barangays table
         await db.query(`
             CREATE TABLE IF NOT EXISTS ph_barangays (
@@ -397,6 +434,69 @@ const initDatabase = async () => {
             `);
             console.log('[DB Init] Seeded default municipal tax & fee rules.');
         }
+
+        // 17. Safe Schema Migrations (Ensures all columns & types exist in production / Railway)
+        const ensureColumn = async (table, column, definition) => {
+            try {
+                const [cols] = await db.query(`SHOW COLUMNS FROM \`${table}\` LIKE '${column}'`);
+                if (cols.length === 0) {
+                    await db.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+                    console.log(`[DB Migration] Added column ${column} to table ${table}`);
+                }
+            } catch (err) {
+                // Table might not exist or already migrated
+            }
+        };
+
+        const modifyColumn = async (table, column, definition) => {
+            try {
+                const [cols] = await db.query(`SHOW COLUMNS FROM \`${table}\` LIKE '${column}'`);
+                if (cols.length > 0) {
+                    await db.query(`ALTER TABLE \`${table}\` MODIFY COLUMN \`${column}\` ${definition}`);
+                }
+            } catch (err) {
+                // Ignore modification notices
+            }
+        };
+
+        // business_requirements: BPLO verification columns & expanded enum
+        await ensureColumn('business_requirements', 'bplo_status', "ENUM('AI Suggested', 'BPLO Verified', 'Not Required', 'Needs Review') NOT NULL DEFAULT 'AI Suggested'");
+        await ensureColumn('business_requirements', 'bplo_notes', "TEXT NULL");
+        await ensureColumn('business_requirements', 'bplo_verified_at', "TIMESTAMP NULL");
+        await ensureColumn('business_requirements', 'bplo_verified_by', "INT NULL");
+        await modifyColumn('business_requirements', 'status', "ENUM('Missing', 'Submitted', 'Approved', 'Rejected', 'Expired', 'Have', 'Not Required') DEFAULT 'Missing'");
+
+        // assessments: compliance and readiness scores & longtext payload
+        await ensureColumn('assessments', 'compliance_score', "INT DEFAULT 0");
+        await ensureColumn('assessments', 'readiness_score', "INT DEFAULT 0");
+        await modifyColumn('assessments', 'assessment_result', "LONGTEXT NULL");
+
+        // permit_requirements: conditional evaluation fields
+        await ensureColumn('permit_requirements', 'condition_field', "VARCHAR(100) DEFAULT 'always'");
+        await ensureColumn('permit_requirements', 'condition_value', "VARCHAR(255) DEFAULT ''");
+        await ensureColumn('permit_requirements', 'is_mandatory', "TINYINT(1) DEFAULT 1");
+        await ensureColumn('permit_requirements', 'required_documents', "TEXT NULL");
+
+        // businesses: extended registration & operation fields
+        await ensureColumn('businesses', 'email', "VARCHAR(255) NULL");
+        await ensureColumn('businesses', 'premises_type', "VARCHAR(100) NULL");
+        await ensureColumn('businesses', 'business_characteristics', "TEXT NULL");
+        await ensureColumn('businesses', 'ownership_type', "VARCHAR(100) NULL");
+        await ensureColumn('businesses', 'primary_products', "TEXT NULL");
+        await ensureColumn('businesses', 'capitalization', "DECIMAL(15,2) DEFAULT 0.00");
+        await ensureColumn('businesses', 'gross_sales', "DECIMAL(15,2) DEFAULT 0.00");
+        await ensureColumn('businesses', 'floor_area', "DECIMAL(10,2) DEFAULT 0.00");
+        await ensureColumn('businesses', 'business_status', "VARCHAR(100) DEFAULT 'New Application'");
+        await ensureColumn('businesses', 'city_municipality_id', "VARCHAR(20) DEFAULT '175212000'");
+
+        // permits: preparation and verification code links
+        await ensureColumn('permits', 'application_id', "INT UNIQUE DEFAULT NULL");
+        await ensureColumn('permits', 'verification_code', "VARCHAR(100) UNIQUE DEFAULT NULL");
+        await ensureColumn('permits', 'pdf_path', "VARCHAR(255) DEFAULT NULL");
+
+        // chat_history: ensure question and response can store large messages
+        await modifyColumn('chat_history', 'question', "TEXT NOT NULL");
+        await modifyColumn('chat_history', 'response', "LONGTEXT NOT NULL");
 
         console.log('[DB Init] Database health check & bootstrap completed successfully.');
     } catch (err) {

@@ -14,10 +14,13 @@ const createAssessment = async (req, res) => {
 
         // If a business_id was provided, fetch the full profile
         if (business_id) {
-            const [businesses] = await db.query(
-                'SELECT * FROM businesses WHERE id = ? AND user_id = ?',
-                [business_id, req.user.id]
-            );
+            let bizQuery = 'SELECT * FROM businesses WHERE id = ?';
+            let bizParams = [business_id];
+            if (req.user.role === 'business_owner') {
+                bizQuery += ' AND user_id = ?';
+                bizParams.push(req.user.id);
+            }
+            const [businesses] = await db.query(bizQuery, bizParams);
             if (businesses.length === 0) {
                 return res.status(404).json({ message: 'Business profile not found.' });
             }
@@ -181,8 +184,11 @@ const createAssessment = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[AssessmentController] createAssessment error:', error.message);
-        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
+        console.error('[AssessmentController] createAssessment error:', error);
+        res.status(500).json({ 
+            message: 'An internal server error occurred. Please try again later.',
+            detail: error.message 
+        });
     }
 };
 
