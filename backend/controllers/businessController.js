@@ -1,14 +1,19 @@
 const db = require('../config/db');
 
-// @desc    Get all businesses for the logged-in user
+// @desc    Get all businesses for the logged-in user (or all businesses if admin)
 // @route   GET /api/businesses
 // @access  Private
 const getBusinesses = async (req, res) => {
     try {
-        const [businesses] = await db.query(
-            'SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC',
-            [req.user.id]
-        );
+        let query = 'SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC';
+        let params = [req.user.id];
+
+        if (['lgu_admin', 'system_admin'].includes(req.user.role)) {
+            query = 'SELECT * FROM businesses ORDER BY created_at DESC';
+            params = [];
+        }
+
+        const [businesses] = await db.query(query, params);
         res.json(businesses);
     } catch (error) {
         console.error(error);
@@ -22,10 +27,15 @@ const getBusinesses = async (req, res) => {
 // @access  Private
 const getBusiness = async (req, res) => {
     try {
-        const [businesses] = await db.query(
-            'SELECT * FROM businesses WHERE id = ? AND user_id = ?',
-            [req.params.id, req.user.id]
-        );
+        let query = 'SELECT * FROM businesses WHERE id = ? AND user_id = ?';
+        let params = [req.params.id, req.user.id];
+
+        if (['lgu_admin', 'system_admin'].includes(req.user.role)) {
+            query = 'SELECT * FROM businesses WHERE id = ?';
+            params = [req.params.id];
+        }
+
+        const [businesses] = await db.query(query, params);
         if (businesses.length === 0) {
             return res.status(404).json({ message: 'Business not found' });
         }

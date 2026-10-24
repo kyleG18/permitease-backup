@@ -4,7 +4,8 @@ import axios from 'axios';
 import {
   FileText, CheckCircle, AlertTriangle, XCircle, Clock,
   Building2, ClipboardCheck, Receipt, BarChart2,
-  ShieldCheck, AlertCircle, ChevronRight, BrainCircuit, Calendar
+  ShieldCheck, AlertCircle, ChevronRight, BrainCircuit, Calendar,
+  TrendingUp, Bell, ArrowRight, Info, MapPin, Zap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -17,7 +18,7 @@ const StatCard = ({ icon: Icon, label, value, colorClass }) => (
     </div>
     <div className="stat-info">
       <h4>{label}</h4>
-      <div className="value">{value ?? 'â€”'}</div>
+      <div className="value">{value ?? '—'}</div>
     </div>
   </div>
 );
@@ -116,13 +117,120 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val || 0);
 
+  // KPI metric cards data
+  const kpiCards = [
+    {
+      icon: Building2,
+      label: 'My Businesses',
+      value: loading ? '…' : (stats?.total_businesses ?? 0),
+      sub: 'Registered profiles',
+      accent: 'var(--government-navy)',
+      accentBg: 'rgba(23,32,51,0.07)',
+      to: '/profile',
+    },
+    {
+      icon: ShieldCheck,
+      label: 'Permit Readiness',
+      value: loading ? '…' : `${stats?.compliance_score ?? 0}%`,
+      sub: readScore >= 80 ? 'On track' : readScore >= 50 ? 'In progress' : 'Needs attention',
+      accent: readScore >= 80 ? 'var(--success)' : readScore >= 50 ? 'var(--warning)' : 'var(--danger)',
+      accentBg: readScore >= 80 ? 'var(--success-light)' : readScore >= 50 ? 'var(--warning-light)' : 'var(--danger-light)',
+      to: '/applications',
+    },
+    {
+      icon: FileText,
+      label: 'Total Requirements',
+      value: loading ? '…' : (stats?.total_requirements ?? 0),
+      sub: 'Municipal checklist',
+      accent: 'var(--info)',
+      accentBg: 'var(--info-light)',
+      to: '/permits',
+    },
+    {
+      icon: CheckCircle,
+      label: 'BPLO Verified',
+      value: loading ? '…' : (stats?.bplo_verified_count ?? 0),
+      sub: 'Confirmed by officer',
+      accent: 'var(--success)',
+      accentBg: 'var(--success-light)',
+      to: '/permits',
+    },
+    {
+      icon: AlertCircle,
+      label: 'Missing Items',
+      value: loading ? '…' : (stats?.missing_requirements ?? 0),
+      sub: 'Action needed',
+      accent: 'var(--danger)',
+      accentBg: 'var(--danger-light)',
+      to: '/permits',
+    },
+    {
+      icon: BrainCircuit,
+      label: 'AI Assessment',
+      value: loading ? '…' : (stats?.assessment_completed ? 'Done' : 'Pending'),
+      sub: stats?.assessment_completed ? 'Clearances identified' : 'Not yet run',
+      accent: stats?.assessment_completed ? 'var(--success)' : 'var(--text-secondary)',
+      accentBg: stats?.assessment_completed ? 'var(--success-light)' : 'var(--border-light)',
+      to: '/assessment',
+    },
+  ];
+
+  // Quick action tiles
+  const quickActions = [
+    {
+      icon: ShieldCheck,
+      label: 'Verify Requirements',
+      desc: 'BPLO checklist, remarks & upload proofs',
+      to: '/permits',
+      primary: true,
+    },
+    {
+      icon: ClipboardCheck,
+      label: 'Prepare Application',
+      desc: 'Document readiness & Form BPLO-01',
+      to: '/applications',
+      primary: false,
+    },
+    {
+      icon: BrainCircuit,
+      label: 'AI Assessment',
+      desc: 'Identify permits with AI guidance',
+      to: '/assessment',
+      primary: false,
+    },
+    {
+      icon: Receipt,
+      label: 'Cost Estimation',
+      desc: 'Estimate local taxes & regulatory fees',
+      to: '/tax-estimation',
+      primary: false,
+    },
+  ];
+
+  const timelineSteps = [
+    { title: 'AI Assessment',      desc: 'Identify clearances for your business', done: !!stats?.assessment_completed, to: '/assessment' },
+    { title: 'Verify Requirements', desc: 'BPLO review & upload document proofs', done: (stats?.bplo_verified_count ?? 0) > 0 || (stats?.ready_requirements ?? 0) > 0, to: '/permits' },
+    { title: 'Cost Estimation',    desc: 'Estimate municipal taxes & fees',       done: !!estimate, to: '/tax-estimation' },
+    { title: 'Prepare Application', desc: 'Review Form BPLO-01 & readiness',      done: readScore >= 80, to: '/applications' },
+    { title: 'Submit at BOSS / eBPLS', desc: 'File at Municipal Hall or online', done: false, to: '/applications' },
+  ];
+
+  const stepsCompleted = timelineSteps.filter(s => s.done).length;
+  const progressPct = Math.round((stepsCompleted / timelineSteps.length) * 100);
+
+  const officialSteps = [
+    { num: 1, title: 'File',    desc: 'Submit application & supporting documents at BPLO.' },
+    { num: 2, title: 'Assess',  desc: 'LGU assesses applicable taxes, fees & other charges.' },
+    { num: 3, title: 'Payment', desc: 'Pay the officially assessed amounts.' },
+    { num: 4, title: 'Claim',   desc: 'Receive your business permit & other documents.' },
+  ];
+
   return (
     <div className="animate-fade-in db-msme">
 
-      {/* HERO SECTION */}
+      {/* ── HERO SECTION (untouched) ───────────────────────────────────────── */}
       <div className="db-hero">
         <div className="db-hero__overlay" aria-hidden="true" />
-        
         <div className="db-hero__inner">
           <div className="db-hero__header">
             <div>
@@ -135,7 +243,6 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
               {currentDate}
             </div>
           </div>
-
           <div className="db-hero__text">
             <div className="db-hero__city-title">Roxas City Business Permit</div>
             <div className="db-hero__tagline">Prepare. Comply. Grow.</div>
@@ -143,236 +250,292 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
         </div>
       </div>
 
-      {/* STATS */}
-      <div className="db-stats">
-        {[
-          { label: 'Businesses',        value: stats?.total_businesses,     icon: Building2,     color: 'var(--primary-green)',    to: '/profile',    link: 'View Details' },
-          { label: 'Readiness %',        value: stats?.compliance_score ? `${stats.compliance_score}%` : '0%', icon: ShieldCheck, color: stats?.compliance_score >= 80 ? 'var(--success)' : 'var(--warning)', to: '/readiness', link: 'View Readiness' },
-          { label: 'Total Reqs',         value: stats?.total_requirements || 0, icon: FileText,   color: 'var(--government-navy)', to: '/readiness',  link: 'View Requirements' },
-          { label: 'Ready',              value: stats?.ready_requirements  || 0, icon: CheckCircle, color: 'var(--success)',         to: '/readiness',  link: 'View Checklist' },
-          { label: 'Missing',            value: stats?.missing_requirements || 0, icon: AlertCircle, color: 'var(--danger)',         to: '/readiness',  link: 'Complete Now' },
-          { label: 'Assessment',         value: stats?.assessment_completed ? 'Done' : 'Pending', icon: BrainCircuit, color: stats?.assessment_completed ? 'var(--success)' : 'var(--text-secondary)', to: '/assessment', link: 'View Assessment' },
-        ].map((item, idx) => (
-          <div key={idx} className="card db-stat-card">
-            <item.icon size={22} strokeWidth={1.75} style={{ color: item.color }} />
-            <div className="db-stat-card__value">{loading ? '...' : (item.value ?? 0)}</div>
-            <div className="db-stat-card__label">{item.label}</div>
-            <Link to={item.to} className="db-stat-card__link">{item.link} &rarr;</Link>
-          </div>
+      {/* ── KPI METRIC CARDS ──────────────────────────────────────────────── */}
+      <div className="db-kpi-grid">
+        {kpiCards.map((card, idx) => (
+          <Link key={idx} to={card.to} className="db-kpi-card">
+            <div className="db-kpi-card__accent" style={{ backgroundColor: card.accent }} />
+            <div className="db-kpi-card__body">
+              <div className="db-kpi-card__icon" style={{ backgroundColor: card.accentBg, color: card.accent }}>
+                <card.icon size={18} strokeWidth={2} />
+              </div>
+              <div className="db-kpi-card__meta">
+                <div className="db-kpi-card__label">{card.label}</div>
+                <div className="db-kpi-card__value" style={{ color: card.accent }}>{card.value}</div>
+                <div className="db-kpi-card__sub">{card.sub}</div>
+              </div>
+            </div>
+          </Link>
         ))}
       </div>
 
-      {/* â”€â”€ READINESS + QUICK ACTIONS â”€â”€ */}
+      {/* ── READINESS + QUICK ACTIONS ─────────────────────────────────────── */}
       <div className="db-row">
 
-        {/* Permit Readiness */}
-        <div className="card db-readiness">
-          <div className="db-readiness__header">
-            <div className="db-readiness__title">
-              <ShieldCheck size={20} style={{ color: 'var(--government-navy)' }} />
-              <h2>Permit Readiness &mdash; {stats?.businesses?.[0]?.business_name || 'Your Business'}</h2>
+        {/* Permit Readiness — upgraded */}
+        <div className="card db-readiness-v2">
+          <div className="db-readiness-v2__header">
+            <div className="db-readiness-v2__title-row">
+              <div className="db-readiness-v2__icon-wrap">
+                <ShieldCheck size={20} strokeWidth={2} />
+              </div>
+              <div>
+                <h2 className="db-readiness-v2__title">Permit Readiness</h2>
+                <p className="db-readiness-v2__biz">{stats?.businesses?.[0]?.business_name || 'Your Business'}</p>
+              </div>
             </div>
             {readScore === 100 ? (
-              <span className="db-badge db-badge--green" style={{ fontSize: '0.8125rem' }}>Complete</span>
+              <span className="db-badge db-badge--green">&#10003; Complete</span>
             ) : (
-              <span className="db-badge db-badge--amber" style={{ fontSize: '0.8125rem' }}>In Progress</span>
+              <span className="db-badge db-badge--amber">In Progress</span>
             )}
           </div>
-          
-          <div className="db-progress-container">
-            <div className="db-progress-bar">
-              <div className="db-progress-bar__fill" style={{ width: `${readScore}%`, backgroundColor: readColor }} />
-            </div>
-            <div className="db-progress-text">
-              {reqHave} / {totalReqs || 0} pts
-            </div>
-          </div>
 
-          <div className="db-readiness__desc">
-            {readScore === 100 
-              ? "You have completed all required requirements for your business permit."
-              : "You are currently preparing your requirements. Keep going!"}
-          </div>
+          {/* Score ring area */}
+          <div className="db-readiness-v2__score-area">
+            <div className="db-score-ring-wrap">
+              <svg className="db-score-ring" viewBox="0 0 80 80" aria-hidden="true">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border-light)" strokeWidth="7" />
+                <circle
+                  cx="40" cy="40" r="34"
+                  fill="none"
+                  stroke={readColor}
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 34}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - readScore / 100)}`}
+                  transform="rotate(-90 40 40)"
+                  style={{ transition: 'stroke-dashoffset 0.9s ease' }}
+                />
+              </svg>
+              <div className="db-score-ring__label">
+                <span className="db-score-ring__pct" style={{ color: readColor }}>{readScore}%</span>
+                <span className="db-score-ring__sub">ready</span>
+              </div>
+            </div>
 
-          <div className="db-readiness__cta">
-            {readScore === 0 && !readiness ? (
-              <Link to="/assessment" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', borderColor: 'var(--border-medium)' }}>
-                Start AI Permit Assessment <ChevronRight size={16} />
-              </Link>
-            ) : (
-              <Link to="/readiness" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', borderColor: 'var(--border-medium)' }}>
-                View Requirements <ChevronRight size={16} />
-              </Link>
-            )}
+            <div className="db-readiness-v2__breakdown">
+              <div className="db-breakdown-item db-breakdown-item--ok">
+                <CheckCircle size={14} />
+                <span><strong>{reqHave}</strong> Met</span>
+              </div>
+              <div className="db-breakdown-item db-breakdown-item--warn">
+                <AlertCircle size={14} />
+                <span><strong>{reqNeed}</strong> Incomplete</span>
+              </div>
+              <div className="db-breakdown-item db-breakdown-item--muted">
+                <Clock size={14} />
+                <span><strong>{reqNotChecked}</strong> Unchecked</span>
+              </div>
+              {(stats?.bplo_verified_count ?? 0) > 0 && (
+                <div style={{ fontSize: '0.75rem', color: '#166534', backgroundColor: '#DCFCE7', padding: '0.25rem 0.6rem', borderRadius: '4px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: '0.25rem 0' }}>
+                  <ShieldCheck size={12} /> {stats.bplo_verified_count} BPLO Verified
+                </div>
+              )}
+              <p className="db-readiness-v2__desc">
+                {readScore === 100
+                  ? "All requirements are in order. You're ready to proceed."
+                  : 'Track and verify missing clearances with BPLO to reach 100% readiness.'}
+              </p>
+              <div style={{ marginTop: 'auto', paddingTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <Link to={readScore === 0 && !readiness ? '/assessment' : '/applications'} className="db-readiness-v2__cta-btn" style={{ flex: 1, minWidth: '130px', textAlign: 'center', justifyContent: 'center' }}>
+                  {readScore === 0 && !readiness ? 'Start AI Assessment' : 'Prepare Application'} <ArrowRight size={14} />
+                </Link>
+                <Link to="/permits" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', color: 'var(--text-dark)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'white' }}>
+                  <ShieldCheck size={14} color="var(--primary-green)" /> Verify
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-        {/* Quick Actions */}
-        <div className="card db-quick-actions">
-          <h2 className="db-quick-actions__title">Quick Actions</h2>
-          <div className="db-quick-actions__list">
-            <Link to="/readiness" className="db-quick-action db-quick-action--primary">
-              <span className="db-quick-action__left"><ClipboardCheck size={17}/> View Permit Readiness</span>
-              <ChevronRight size={15}/>
-            </Link>
-            <Link to="/assessment" className="db-quick-action">
-              <span className="db-quick-action__left"><BrainCircuit size={17}/> AI Permit Assessment</span>
-              <ChevronRight size={15}/>
-            </Link>
-            <Link to="/tax-estimation" className="db-quick-action">
-              <span className="db-quick-action__left"><Receipt size={17}/> Tax Estimation</span>
-              <ChevronRight size={15}/>
-            </Link>
-            <Link to="/fee-estimation" className="db-quick-action">
-              <span className="db-quick-action__left"><Receipt size={17}/> Fee Estimation</span>
-              <ChevronRight size={15}/>
-            </Link>
+
+        {/* Quick Actions — tile grid */}
+        <div className="card db-quick-actions-v2">
+          <div className="db-quick-actions-v2__header">
+            <Zap size={17} strokeWidth={2} style={{ color: 'var(--primary-green)' }} />
+            <h2 className="db-quick-actions-v2__title">Quick Actions</h2>
+          </div>
+          <div className="db-quick-actions-v2__grid">
+            {quickActions.map((action, idx) => (
+              <Link key={idx} to={action.to} className={`db-qa-tile${action.primary ? ' db-qa-tile--primary' : ''}`}>
+                <div className="db-qa-tile__icon">
+                  <action.icon size={20} strokeWidth={1.75} />
+                </div>
+                <div className="db-qa-tile__label">{action.label}</div>
+                <div className="db-qa-tile__desc">{action.desc}</div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* â”€â”€ PREPARATION PROGRESS + ESTIMATED COST â”€â”€ */}
+      {/* ── PREPARATION PROGRESS + ESTIMATED COST ─────────────────────────── */}
       <div className="db-row">
 
         {/* Preparation Progress */}
-        <div className="card db-progress-section">
+        <div className="card db-progress-v2">
           <div className="db-section-title">
-            <BarChart2 size={20} style={{ color: 'var(--primary-green)' }} />
-            <h2>Permit Preparation Progress</h2>
-            <Link to="/readiness" className="db-section-link">View Details <ChevronRight size={13}/></Link>
+            <TrendingUp size={18} style={{ color: 'var(--primary-green)' }} />
+            <h2>Permit Preparation Journey</h2>
+            <Link to="/assessment" className="db-section-link">Details <ChevronRight size={13} /></Link>
           </div>
 
-          {/* Horizontal timeline â€” collapses to vertical on mobile via CSS */}
-          <div className="db-timeline">
-            <div className="db-timeline__track">
-              <div className="db-timeline__fill" style={{
-                width: step2Done ? '80%' : step1Done ? '20%' : '0%'
-              }} />
-            </div>
-            {[
-              { title: 'AI Assessment',       desc: 'Identify requirements',  done: step1Done },
-              { title: 'Permit Readiness',    desc: 'Check what you have',    done: step2Done },
-              { title: 'Cost Estimation',     desc: 'Estimate taxes & fees',  done: step3Done },
-              { title: 'Download Form',       desc: 'Prepare documents',      done: step4Done },
-              { title: 'BPLO Processing',     desc: 'Official assessment',    done: false     },
-            ].map((step, i) => (
-              <div key={i} className="db-timeline__step">
-                <div className={`db-timeline__dot${step.done ? ' db-timeline__dot--done' : ''}`}>
-                  {step.done ? <CheckCircle size={16}/> : <span>{i + 1}</span>}
+          {/* Progress bar summary */}
+          <div className="db-journey-summary">
+            <span className="db-journey-summary__text">{stepsCompleted} of {timelineSteps.length} steps complete</span>
+            <span className="db-journey-summary__pct" style={{ color: progressPct === 100 ? 'var(--success)' : 'var(--warning)' }}>{progressPct}%</span>
+          </div>
+          <div className="db-journey-bar">
+            <div className="db-journey-bar__fill" style={{ width: `${progressPct}%` }} />
+          </div>
+
+          {/* Step list */}
+          <div className="db-step-list">
+            {timelineSteps.map((step, i) => (
+              <Link key={i} to={step.to || '/assessment'} style={{ textDecoration: 'none', color: 'inherit' }} className={`db-step-item${step.done ? ' db-step-item--done' : ''}`}>
+                <div className="db-step-item__dot">
+                  {step.done ? <CheckCircle size={14} /> : <span>{i + 1}</span>}
                 </div>
-                <div className="db-timeline__label">{step.title}</div>
-                <div className="db-timeline__desc">{step.desc}</div>
-              </div>
+                <div className="db-step-item__connector" aria-hidden="true" />
+                <div className="db-step-item__content">
+                  <div className="db-step-item__title">{step.title}</div>
+                  <div className="db-step-item__desc">{step.desc}</div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
 
         {/* Estimated Cost */}
-        <div className="card db-cost-card">
+        <div className="card db-cost-v2">
           <div className="db-section-title">
-            <Receipt size={20} style={{ color: 'var(--primary-green)' }} />
-            <h2>Estimated Preparation Cost</h2>
-            <Link to="/tax-estimation" className="db-section-link">View Details <ChevronRight size={13}/></Link>
+            <Receipt size={18} style={{ color: 'var(--primary-green)' }} />
+            <h2>Estimated Permit Cost</h2>
+            <Link to="/tax-estimation" className="db-section-link">Details <ChevronRight size={13} /></Link>
           </div>
 
-          <div className="db-cost-rows">
-            <div className="db-cost-row">
-              <span>Local Business Tax</span>
-              <span className={hasUnassessedTax ? 'db-cost-row__assessed' : ''}>
-                {estimate ? (hasUnassessedTax ? 'To Be Assessed' : formatCurrency(taxTotal)) : 'Not estimated yet'}
+          <div className="db-cost-v2__rows">
+            <div className="db-cost-v2__row">
+              <div className="db-cost-v2__row-label">
+                <span className="db-cost-v2__dot" style={{ backgroundColor: 'var(--government-navy)' }} />
+                Local Business Tax
+              </div>
+              <span className={`db-cost-v2__amount${hasUnassessedTax ? ' db-cost-v2__amount--assessed' : ''}`}>
+                {estimate ? (hasUnassessedTax ? 'To Be Assessed' : formatCurrency(taxTotal)) : '—'}
               </span>
             </div>
-            <div className="db-cost-row">
-              <span>Regulatory Fees</span>
-              <span className={hasUnassessedFee ? 'db-cost-row__assessed' : ''}>
-                {estimate ? (hasUnassessedFee ? 'To Be Assessed' : formatCurrency(feeTotal)) : 'Not estimated yet'}
-              </span>
-            </div>
-            <div className="db-cost-row db-cost-row--total">
-              <span>Estimated Total</span>
-              <span>
-                {estimate
-                  ? ((hasUnassessedFee || hasUnassessedTax) ? 'To Be Assessed' : formatCurrency(taxTotal + feeTotal))
-                  : 'â€”'}
+            <div className="db-cost-v2__row">
+              <div className="db-cost-v2__row-label">
+                <span className="db-cost-v2__dot" style={{ backgroundColor: 'var(--primary-green)' }} />
+                Regulatory Fees
+              </div>
+              <span className={`db-cost-v2__amount${hasUnassessedFee ? ' db-cost-v2__amount--assessed' : ''}`}>
+                {estimate ? (hasUnassessedFee ? 'To Be Assessed' : formatCurrency(feeTotal)) : '—'}
               </span>
             </div>
           </div>
 
-          <div className="db-cost-note">
-            <AlertCircle size={13} style={{ flexShrink: 0, marginTop: '1px' }}/>
-            <span>Estimates only. Final taxes, fees &amp; charges are determined by the LGU/BPLO during official assessment.</span>
+          <div className="db-cost-v2__total">
+            <span>Estimated Total</span>
+            <span className="db-cost-v2__total-value">
+              {estimate
+                ? ((hasUnassessedFee || hasUnassessedTax) ? 'To Be Assessed' : formatCurrency(taxTotal + feeTotal))
+                : '—'}
+            </span>
           </div>
+
+          <div className="db-cost-v2__note">
+            <Info size={12} style={{ flexShrink: 0, marginTop: '1px' }} />
+            <span>Estimates only. Final amounts are officially assessed by the LGU/BPLO.</span>
+          </div>
+
+          {!estimate && (
+            <Link to="/tax-estimation" className="db-cost-v2__cta">
+              Run Cost Estimation <ArrowRight size={14} />
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* â”€â”€ OFFICIAL PROCESS + RENEWAL / NOTIFICATIONS â”€â”€ */}
+      {/* ── OFFICIAL PROCESS + NOTIFICATIONS ──────────────────────────────── */}
       <div className="db-row db-row--bottom">
 
-        {/* Official Process */}
-        <div className="card db-official-process">
-          <div className="db-section-title">
-            <div className="db-official-process__icon" aria-hidden="true">i</div>
+        {/* Official Process — polished */}
+        <div className="card db-official-v2">
+          <div className="db-section-title" style={{ marginBottom: '1.5rem' }}>
+            <div className="db-official-v2__icon-wrap" aria-hidden="true">
+              <Info size={13} />
+            </div>
             <h2>How the Official Permit Process Works</h2>
           </div>
-          <div className="db-process-steps">
-            {[
-              { num: 1, title: 'File',    desc: 'Submit application & supporting documents at BPLO.' },
-              { num: 2, title: 'Assess',  desc: 'LGU assesses applicable taxes, fees & other charges.' },
-              { num: 3, title: 'Payment', desc: 'Pay the officially assessed amounts.' },
-              { num: 4, title: 'Claim',   desc: 'Receive your business permit & other documents.' },
-            ].map((step, i) => (
-              <div key={i} className="db-process-step">
-                <div className="db-process-step__num">{step.num}</div>
-                <div>
-                  <div className="db-process-step__title">{step.title}</div>
-                  <div className="db-process-step__desc">{step.desc}</div>
+
+          <div className="db-official-v2__steps">
+            {officialSteps.map((step, i) => (
+              <div key={i} className="db-official-step">
+                <div className="db-official-step__left">
+                  <div className="db-official-step__num">{step.num}</div>
+                  {i < officialSteps.length - 1 && <div className="db-official-step__line" />}
+                </div>
+                <div className="db-official-step__content">
+                  <div className="db-official-step__title">{step.title}</div>
+                  <div className="db-official-step__desc">{step.desc}</div>
                 </div>
               </div>
             ))}
           </div>
-          <p className="db-official-process__note">
+
+          <div className="db-official-v2__disclaimer">
+            <AlertCircle size={12} style={{ flexShrink: 0 }} />
             PermitEase helps you prepare for these steps. It does not replace official BPLO assessment or payment.
-          </p>
+          </div>
         </div>
 
-        {/* Right: Renewal + Notifications */}
+        {/* Right col: Renewal + Notifications */}
         <div className="db-right-col">
 
           {stats?.next_expiration && (
-            <div className={`card db-renewal-alert${stats?.days_to_expiration <= 30 ? ' db-renewal-alert--urgent' : ''}`}>
-              <div className="db-renewal-alert__title">
-                <AlertTriangle size={15}/> Renewal Alert
+            <div className={`card db-renewal-v2${stats?.days_to_expiration <= 30 ? ' db-renewal-v2--urgent' : ''}`}>
+              <div className="db-renewal-v2__title">
+                <AlertTriangle size={15} />
+                Renewal Alert
               </div>
-              <p className="db-renewal-alert__body">
+              <p className="db-renewal-v2__body">
                 {stats?.days_to_expiration < 0
                   ? 'Your business permit has expired. Review your renewal requirements.'
                   : `Your business permit expires in ${stats?.days_to_expiration} days.`}
               </p>
-              <Link to="/renewals" className="db-renewal-alert__link">View Renewals &rarr;</Link>
+              <Link to="/renewals" className="db-renewal-v2__link">
+                View Renewals <ArrowRight size={13} />
+              </Link>
             </div>
           )}
 
-          <div className="card db-notifications">
-            <div className="db-notifications__header">
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <AlertCircle size={15} style={{ color: 'var(--text-secondary)' }}/> Notifications
-              </span>
+          <div className="card db-notif-v2">
+            <div className="db-notif-v2__header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Bell size={15} style={{ color: 'var(--primary-green)' }} />
+                <span>Notifications</span>
+              </div>
               {notifications.length > 0 && (
-                <Link to="/notifications" className="db-notifications__all">View All</Link>
+                <Link to="/notifications" className="db-notif-v2__view-all">View All</Link>
               )}
             </div>
+
             {notifications.length === 0 ? (
-              <div className="db-notifications__empty">
-                <CheckCircle size={20} style={{ color: 'var(--success)', opacity: 0.5 }}/>
-                <p>No new notifications â€” you're all caught up!</p>
+              <div className="db-notif-v2__empty">
+                <div className="db-notif-v2__empty-icon">
+                  <CheckCircle size={22} strokeWidth={1.75} />
+                </div>
+                <p>All caught up! No new notifications.</p>
               </div>
             ) : (
-              <div className="db-notifications__list">
+              <div className="db-notif-v2__list">
                 {notifications.map(n => (
-                  <div key={n.id} className="db-notification-item">
-                    <div className="db-notification-item__dot" aria-hidden="true"/>
+                  <div key={n.id} className="db-notif-item">
+                    <div className="db-notif-item__dot" aria-hidden="true" />
                     <div>
-                      <div className="db-notification-item__title">{n.title}</div>
-                      <div className="db-notification-item__body">{n.message?.substring(0, 70)}â€¦</div>
+                      <div className="db-notif-item__title">{n.title}</div>
+                      <div className="db-notif-item__body">{n.message?.substring(0, 70)}…</div>
                     </div>
                   </div>
                 ))}
@@ -396,7 +559,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--government-navy)', marginBottom: '0.35rem' }}>BPLO Preparation Support Dashboard</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Municipality of Roxas â€” Business Permit Management Overview</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Municipality of Roxas — Business Permit Management Overview</p>
         </div>
         <div style={{ 
           background: 'var(--primary-green-light)', borderRadius: 'var(--radius-full)', 
@@ -546,4 +709,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

@@ -77,8 +77,8 @@ function App() {
           
           {/* Business Owner & System Admin Routes */}
           <Route path="/profile" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><BusinessProfile /></ProtectedLayout>} />
-          <Route path="/permits" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Permits /></ProtectedLayout>} />
-          <Route path="/permits/:id" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><PermitDetail /></ProtectedLayout>} />
+          <Route path="/permits" element={<ProtectedLayout allowedRoles={['business_owner', 'lgu_admin', 'system_admin']}><Permits /></ProtectedLayout>} />
+          <Route path="/permits/:id" element={<ProtectedLayout allowedRoles={['business_owner', 'lgu_admin', 'system_admin']}><PermitDetail /></ProtectedLayout>} />
           <Route path="/documents" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Documents /></ProtectedLayout>} />
           <Route path="/renewals" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Renewals /></ProtectedLayout>} />
           <Route path="/assessment" element={<ProtectedLayout allowedRoles={['business_owner', 'lgu_admin', 'system_admin']}><Assessment /></ProtectedLayout>} />
@@ -86,7 +86,7 @@ function App() {
           <Route path="/compliance" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Compliance /></ProtectedLayout>} />
           <Route path="/tax-estimation" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><TaxEstimation /></ProtectedLayout>} />
           <Route path="/fee-estimation" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><FeeEstimation /></ProtectedLayout>} />
-          <Route path="/readiness" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><PermitReadiness /></ProtectedLayout>} />
+          <Route path="/readiness" element={<Navigate to="/assessment" replace />} />
           <Route path="/compliance-history" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><ComplianceHistory /></ProtectedLayout>} />
           
           <Route path="/applications" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Applications /></ProtectedLayout>} />

@@ -82,9 +82,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         {
           title: (t.nav?.permitPreparation || 'PERMIT PREPARATION'),
           items: [
-            { name: (t.nav?.permitReadiness || 'Permit Readiness'), path: '/readiness', icon: ShieldCheck, tour: 'permit-readiness' },
-            { name: (t.nav?.myApplications || 'My Applications'), path: '/applications', icon: ClipboardCheck, tour: 'my-applications' },
-            { name: (t.nav?.myPermits || 'My Permits'), path: '/permits', icon: Shield, tour: 'my-permits' },
+            { name: (t.nav?.prepareApplication || 'Prepare Application'), path: '/applications', icon: ClipboardCheck, tour: 'prepare-application' },
+            { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield, tour: 'my-permits' },
           ]
         },
         {
@@ -115,6 +114,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           items: [
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
             { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
+            { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
             { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
             { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }
@@ -138,6 +138,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           items: [
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
             { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
+            { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
             { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
             { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }

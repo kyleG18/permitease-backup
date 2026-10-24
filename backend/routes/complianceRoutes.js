@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
-const { evaluateCompliance, getCompliance, updateRequirementStatus } = require('../controllers/complianceController');
+const { protect, requireRole } = require('../middleware/authMiddleware');
+const { evaluateCompliance, getCompliance, updateRequirementStatus, bploVerifyRequirement } = require('../controllers/complianceController');
 
 router.post('/evaluate/:businessId', protect, evaluateCompliance);
 router.get('/business/:businessId', protect, getCompliance);
 
 router.put('/business/:businessId/requirement/:requirementId', protect, updateRequirementStatus);
+router.put('/business/:bizId/requirement/:reqId/bplo-verify', protect, requireRole(['lgu_admin', 'system_admin']), bploVerifyRequirement);
 
 module.exports = router;

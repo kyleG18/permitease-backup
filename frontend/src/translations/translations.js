@@ -44,8 +44,9 @@ export const translations = {
       feeEstimation: 'Fee Estimation',
       permitPreparation: 'PERMIT PREPARATION',
       permitReadiness: 'Permit Readiness',
-      myApplications: 'My Applications',
-      myPermits: 'My Permits',
+      myApplications: 'Prepare Application',
+      prepareApplication: 'Prepare Application',
+      myPermits: 'Verify Requirements',
       renewals: 'RENEWALS',
       renewalMonitoring: 'Renewal Monitoring',
       assistance: 'ASSISTANCE',
@@ -270,7 +271,7 @@ export const translations = {
       modalCancel: 'Cancel'
     },
     permits: {
-      title: 'My Permits',
+      title: 'Verify Requirements',
       subtitle: 'Preparation submissions verified by the BPLO. Note: This is not an official permit record.',
       loading: 'Loading permits...',
       errorLoad: 'Failed to load permits.',
@@ -423,8 +424,9 @@ export const translations = {
       feeEstimation: 'Tantiya ng mga Bayarin',
       permitPreparation: 'PAGHAHANDA NG PERMIT',
       permitReadiness: 'Kahandaan sa Permit',
-      myApplications: 'Aking mga Aplikasyon',
-      myPermits: 'Aking mga Permit',
+      myApplications: 'Ihanda ang Aplikasyon',
+      prepareApplication: 'Ihanda ang Aplikasyon',
+      myPermits: 'I-verify ang mga Kinakailangan',
       renewals: 'PAGPAPARENEW',
       renewalMonitoring: 'Pagsubaybay sa Renewal',
       assistance: 'TULONG AT GABAY',
@@ -649,7 +651,7 @@ export const translations = {
       modalCancel: 'Kanselahin'
     },
     permits: {
-      title: 'Aking mga Permit',
+      title: 'I-verify ang mga Kinakailangan',
       subtitle: 'Mga paghahanda na na-verify ng BPLO. Tandaan: Hindi ito opisyal na rekord ng permit.',
       loading: 'Naglo-load ng mga permit...',
       errorLoad: 'Hindi ma-load ang mga permit.',

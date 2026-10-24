@@ -108,12 +108,14 @@ ${permits.length > 0 ? permits.map(p => `- ${p.permit_name}: ${p.status}${p.expi
 // @access  Private
 const sendMessage = async (req, res) => {
     try {
-        const { question, language } = req.body;
+        const rawQuestion = req.body.question || req.body.message;
+        const language = req.body.language || 'en';
         
-        if (!question || typeof question !== 'string') {
+        if (!rawQuestion || typeof rawQuestion !== 'string') {
             return res.status(400).json({ message: 'Question is required and must be text.' });
         }
-        if (question.trim().length === 0) {
+        const question = rawQuestion.trim();
+        if (question.length === 0) {
             return res.status(400).json({ message: 'Question cannot be empty.' });
         }
         if (question.length > 1000) {
@@ -167,7 +169,7 @@ const sendMessage = async (req, res) => {
             [req.user.id, question.trim(), response]
         );
 
-        res.json({ question: question.trim(), response });
+        res.json({ question: question.trim(), response, reply: response });
     } catch (error) {
         console.error('[ChatController] Error:', error.message);
         console.error('Server error:', error);

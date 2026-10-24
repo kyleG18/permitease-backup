@@ -108,6 +108,7 @@ const getApplicationById = async (req, res) => {
         // Load applicable requirements for the business
         const [requirements] = await db.query(
             `SELECT br.id, br.requirement_id, br.status AS req_status, br.document_id,
+                    br.bplo_status, br.bplo_notes, br.bplo_verified_at,
                     pr.permit_name, pr.description,
                     d.document_name, d.file_path, d.upload_date
              FROM business_requirements br

@@ -84,6 +84,8 @@ const getDashboardStats = async (req, res) => {
                 total_requirements: 0,
                 ready_requirements: 0,
                 missing_requirements: 0, 
+                bplo_verified_count: 0,
+                docs_submitted_count: 0,
                 assessment_completed: false,
                 businesses: []
             });
@@ -94,6 +96,8 @@ const getDashboardStats = async (req, res) => {
         // Compliance (Readiness)
         const [[{ total_reqs }]] = await db.query(`SELECT COUNT(*) as total_reqs FROM business_requirements WHERE business_id IN (${placeholders})`, businessIds);
         const [[{ missing_reqs }]] = await db.query(`SELECT COUNT(*) as missing_reqs FROM business_requirements WHERE business_id IN (${placeholders}) AND status = 'Missing'`, businessIds);
+        const [[{ bplo_verified_count }]] = await db.query(`SELECT COUNT(*) as bplo_verified_count FROM business_requirements WHERE business_id IN (${placeholders}) AND bplo_status = 'BPLO Verified'`, businessIds);
+        const [[{ docs_submitted_count }]] = await db.query(`SELECT COUNT(*) as docs_submitted_count FROM business_requirements WHERE business_id IN (${placeholders}) AND status IN ('Submitted','Approved')`, businessIds);
         
         const ready_reqs = total_reqs - missing_reqs;
         const compliance_score = total_reqs > 0 ? Math.round((ready_reqs / total_reqs) * 100) : 0;
@@ -114,6 +118,8 @@ const getDashboardStats = async (req, res) => {
             total_requirements: total_reqs,
             ready_requirements: ready_reqs,
             missing_requirements: missing_reqs,
+            bplo_verified_count: bplo_verified_count || 0,
+            docs_submitted_count: docs_submitted_count || 0,
             assessment_completed: assessment_count > 0,
             businesses
         });

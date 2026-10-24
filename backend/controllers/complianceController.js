@@ -224,5 +224,41 @@ const updateRequirementStatus = async (req, res) => {
     }
 };
 
-module.exports = { evaluateCompliance, getCompliance, updateRequirementStatus };
+// @desc    BPLO verifies/updates a requirement for a business
+// @route   PUT /api/compliance/business/:bizId/requirement/:reqId/bplo-verify
+// @access  Admin only (lgu_admin, system_admin)
+const bploVerifyRequirement = async (req, res) => {
+    try {
+        const { bizId, reqId } = req.params;
+        const { bplo_status, bplo_notes } = req.body;
+
+        const validStatuses = ['AI Suggested', 'BPLO Verified', 'Not Required', 'Needs Review'];
+        if (!validStatuses.includes(bplo_status)) {
+            return res.status(400).json({ message: 'Invalid bplo_status value' });
+        }
+
+        const [biz] = await db.query('SELECT id FROM businesses WHERE id = ?', [bizId]);
+        if (biz.length === 0) return res.status(404).json({ message: 'Business not found' });
+
+        const [req_row] = await db.query(
+            'SELECT id FROM business_requirements WHERE business_id = ? AND requirement_id = ?',
+            [bizId, reqId]
+        );
+        if (req_row.length === 0) return res.status(404).json({ message: 'Requirement not found for this business' });
+
+        await db.query(
+            `UPDATE business_requirements 
+             SET bplo_status = ?, bplo_notes = ?, bplo_verified_at = NOW(), bplo_verified_by = ?
+             WHERE business_id = ? AND requirement_id = ?`,
+            [bplo_status, bplo_notes || null, req.user.id, bizId, reqId]
+        );
+
+        res.json({ message: 'Requirement BPLO status updated', bplo_status, bplo_notes });
+    } catch (error) {
+        console.error('BPLO Verify Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+module.exports = { evaluateCompliance, getCompliance, updateRequirementStatus, bploVerifyRequirement };
 
