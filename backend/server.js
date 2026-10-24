@@ -4,7 +4,11 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const cron = require('node-cron');
 const { processRenewalReminders } = require('./services/renewalReminderService');
+const initDatabase = require('./config/initDb');
 require('dotenv').config();
+
+// Run database health check & auto-initialization
+initDatabase();
 
 // Security startup checks
 const DEFAULT_JWT_SECRET = 'my_super_secret_jwt_key_for_bizcheckpermit_development';
@@ -21,9 +25,13 @@ if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === DEFAULT_
 const app = express();
 
 // Security middleware
-// CORS configuration - restrict to configured frontend origin in production
+// CORS configuration - allow incoming requests from any frontend domain (Railway, Vercel, localhost)
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, or same-origin)
+        if (!origin) return callback(null, true);
+        return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
