@@ -105,10 +105,22 @@ const evaluateCompliance = async (req, res) => {
         const score = total > 0 ? Math.round((compliantCount / total) * 100) : 100;
         
         // Save score to a historical assessment record
-        await db.query(
-            'INSERT INTO assessments (user_id, business_id, compliance_score, assessment_result) VALUES (?, ?, ?, ?)',
-            [req.user.id, businessId, score, JSON.stringify({ note: 'Automated Rule Evaluation', total, compliantCount })]
-        );
+        try {
+            const [aCols] = await db.query(`SHOW COLUMNS FROM \`assessments\` LIKE 'compliance_score'`);
+            if (aCols.length > 0) {
+                await db.query(
+                    'INSERT INTO assessments (user_id, business_id, compliance_score, assessment_result) VALUES (?, ?, ?, ?)',
+                    [req.user.id, businessId, score, JSON.stringify({ note: 'Automated Rule Evaluation', total, compliantCount })]
+                );
+            } else {
+                await db.query(
+                    'INSERT INTO assessments (user_id, business_id, assessment_result) VALUES (?, ?, ?)',
+                    [req.user.id, businessId, JSON.stringify({ note: 'Automated Rule Evaluation', total, compliantCount, compliance_score: score })]
+                );
+            }
+        } catch (e) {
+            console.warn('[ComplianceController] Save historical assessment notice:', e.message);
+        }
 
         res.json({ message: 'Compliance evaluated', compliance_score: score, applicable_count: total });
 
@@ -156,35 +168,74 @@ const getCompliance = async (req, res) => {
         }
 
         // Detect available columns to avoid errors on older Railway schemas
-        let hasBploStatus = false, hasIsMandatory = false, hasComplianceScore = false;
+        let brCols = new Set();
         try {
-            const [brCols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\` LIKE 'bplo_status'`);
-            hasBploStatus = brCols.length > 0;
+            const [cols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\``);
+            brCols = new Set(cols.map(c => c.Field));
         } catch (e) {}
+
+        let prCols = new Set();
         try {
-            const [prCols] = await db.query(`SHOW COLUMNS FROM \`permit_requirements\` LIKE 'is_mandatory'`);
-            hasIsMandatory = prCols.length > 0;
+            const [cols] = await db.query(`SHOW COLUMNS FROM \`permit_requirements\``);
+            prCols = new Set(cols.map(c => c.Field));
         } catch (e) {}
+
+        let hasDocsTable = false;
+        try {
+            const [tbls] = await db.query(`SHOW TABLES LIKE 'documents'`);
+            hasDocsTable = tbls.length > 0;
+        } catch (e) {}
+
+        let hasComplianceScore = false;
         try {
             const [aCols] = await db.query(`SHOW COLUMNS FROM \`assessments\` LIKE 'compliance_score'`);
             hasComplianceScore = aCols.length > 0;
         } catch (e) {}
 
-        // Build checklist query using only existing columns
+        // Dynamic column selectors
+        const hasDocumentId = brCols.has('document_id');
+        const hasRemarks = brCols.has('remarks');
+        const hasCreatedAt = brCols.has('created_at');
+        const hasUpdatedAt = brCols.has('updated_at');
+        const hasBploStatus = brCols.has('bplo_status');
+        const hasBploNotes = brCols.has('bplo_notes');
+        const hasBploVerifiedAt = brCols.has('bplo_verified_at');
+        const hasBploVerifiedBy = brCols.has('bplo_verified_by');
+        const hasIsMandatory = prCols.has('is_mandatory');
+        const hasPrDesc = prCols.has('description');
+
+        const docIdSelect = hasDocumentId ? 'br.document_id,' : 'NULL AS document_id,';
+        const remarksSelect = hasRemarks ? 'br.remarks,' : 'NULL AS remarks,';
+        const createdAtSelect = hasCreatedAt ? 'br.created_at,' : 'NULL AS created_at,';
+        const updatedAtSelect = hasUpdatedAt ? 'br.updated_at,' : 'NULL AS updated_at,';
+        const bploStatusSelect = hasBploStatus ? 'br.bplo_status,' : '"AI Suggested" AS bplo_status,';
+        const bploNotesSelect = hasBploNotes ? 'br.bplo_notes,' : 'NULL AS bplo_notes,';
+        const bploVerifiedAtSelect = hasBploVerifiedAt ? 'br.bplo_verified_at,' : 'NULL AS bplo_verified_at,';
+        const bploVerifiedBySelect = hasBploVerifiedBy ? 'br.bplo_verified_by,' : 'NULL AS bplo_verified_by,';
         const isMandatorySelect = hasIsMandatory ? 'pr.is_mandatory,' : '1 AS is_mandatory,';
-        const bploSelect = hasBploStatus
-            ? 'br.bplo_status, br.bplo_notes, br.bplo_verified_at, br.bplo_verified_by,'
-            : '"AI Suggested" AS bplo_status, NULL AS bplo_notes, NULL AS bplo_verified_at, NULL AS bplo_verified_by,';
+        const prDescSelect = hasPrDesc ? 'pr.description,' : 'NULL AS description,';
+
+        const canJoinDocs = hasDocumentId && hasDocsTable;
+        const docJoin = canJoinDocs ? 'LEFT JOIN documents d ON br.document_id = d.id' : '';
+        const docFieldsSelect = canJoinDocs
+            ? 'd.document_name, d.file_path'
+            : 'NULL AS document_name, NULL AS file_path';
 
         const [checklist] = await db.query(`
-            SELECT br.id, br.business_id, br.requirement_id, br.document_id, br.status, br.remarks,
-                   br.created_at, br.updated_at,
-                   ${bploSelect}
-                   pr.permit_name, pr.description, ${isMandatorySelect}
-                   d.document_name, d.file_path
+            SELECT br.id, br.business_id, br.requirement_id, br.status,
+                   ${docIdSelect}
+                   ${remarksSelect}
+                   ${createdAtSelect}
+                   ${updatedAtSelect}
+                   ${bploStatusSelect}
+                   ${bploNotesSelect}
+                   ${bploVerifiedAtSelect}
+                   ${bploVerifiedBySelect}
+                   pr.permit_name, ${prDescSelect} ${isMandatorySelect}
+                   ${docFieldsSelect}
             FROM business_requirements br
             JOIN permit_requirements pr ON br.requirement_id = pr.id
-            LEFT JOIN documents d ON br.document_id = d.id
+            ${docJoin}
             WHERE br.business_id = ?
             ORDER BY pr.id ASC
         `, [businessId]);
@@ -192,18 +243,18 @@ const getCompliance = async (req, res) => {
         // Get latest score (safely)
         let score = 0;
         if (hasComplianceScore) {
-            const [scoreRows] = await db.query(
-                'SELECT compliance_score FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
-                [businessId]
-            );
-            score = scoreRows.length > 0 ? (scoreRows[0].compliance_score || 0) : 0;
-        } else {
-            // Fallback: compute score from checklist
-            const [assessRows] = await db.query(
-                'SELECT assessment_result FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
-                [businessId]
-            );
-            score = 0; // Can't compute without compliance_score column
+            try {
+                const [scoreRows] = await db.query(
+                    'SELECT compliance_score FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
+                    [businessId]
+                );
+                score = scoreRows.length > 0 ? (scoreRows[0].compliance_score || 0) : 0;
+            } catch (e) {
+                score = 0;
+            }
+        } else if (checklist.length > 0) {
+            const compliant = checklist.filter(c => ['Approved', 'Submitted', 'Have'].includes(c.status)).length;
+            score = Math.round((compliant / checklist.length) * 100);
         }
 
         res.json({
@@ -250,10 +301,26 @@ const updateRequirementStatus = async (req, res) => {
             return res.status(404).json({ message: 'Requirement not found for this business' });
         }
 
-        await db.query(
-            'UPDATE business_requirements SET status = ? WHERE business_id = ? AND requirement_id = ?',
-            [status, businessId, requirementId]
-        );
+        try {
+            await db.query(
+                'UPDATE business_requirements SET status = ? WHERE business_id = ? AND requirement_id = ?',
+                [status, businessId, requirementId]
+            );
+        } catch (updateErr) {
+            if (updateErr.message && (updateErr.message.includes('enum') || updateErr.message.includes('Data truncated'))) {
+                try {
+                    await db.query(`ALTER TABLE \`business_requirements\` MODIFY COLUMN status ENUM('Missing', 'Submitted', 'Approved', 'Rejected', 'Expired', 'Have', 'Not Required') DEFAULT 'Missing'`);
+                    await db.query(
+                        'UPDATE business_requirements SET status = ? WHERE business_id = ? AND requirement_id = ?',
+                        [status, businessId, requirementId]
+                    );
+                } catch (retryErr) {
+                    throw retryErr;
+                }
+            } else {
+                throw updateErr;
+            }
+        }
 
         res.json({ message: 'Status updated successfully', status });
     } catch (error) {
@@ -286,6 +353,19 @@ const bploVerifyRequirement = async (req, res) => {
             [bizId, reqId]
         );
         if (req_row.length === 0) return res.status(404).json({ message: 'Requirement not found for this business' });
+
+        // Ensure BPLO columns exist before updating
+        try {
+            const [bploCols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\` LIKE 'bplo_status'`);
+            if (bploCols.length === 0) {
+                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_status ENUM('AI Suggested', 'BPLO Verified', 'Not Required', 'Needs Review') NOT NULL DEFAULT 'AI Suggested'`);
+                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_notes TEXT NULL`);
+                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_verified_at TIMESTAMP NULL`);
+                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_verified_by INT NULL`);
+            }
+        } catch (colErr) {
+            console.warn('[bploVerifyRequirement] Ensure columns notice:', colErr.message);
+        }
 
         await db.query(
             `UPDATE business_requirements 

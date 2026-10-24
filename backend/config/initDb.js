@@ -520,7 +520,11 @@ const initDatabase = async () => {
 
         // 17. Safe Schema Migrations (Ensures all columns & types exist in production / Railway)
         await safeStep('schema migrations', async () => {
-            // business_requirements: BPLO verification columns & expanded enum
+            // business_requirements: document_id, remarks, BPLO verification columns & expanded enum
+            await ensureColumn('business_requirements', 'document_id', "INT DEFAULT NULL");
+            await ensureColumn('business_requirements', 'remarks', "TEXT NULL");
+            await ensureColumn('business_requirements', 'created_at', "TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
+            await ensureColumn('business_requirements', 'updated_at', "TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
             await ensureColumn('business_requirements', 'bplo_status', "ENUM('AI Suggested', 'BPLO Verified', 'Not Required', 'Needs Review') NOT NULL DEFAULT 'AI Suggested'");
             await ensureColumn('business_requirements', 'bplo_notes', "TEXT NULL");
             await ensureColumn('business_requirements', 'bplo_verified_at', "TIMESTAMP NULL");
@@ -554,6 +558,9 @@ const initDatabase = async () => {
             await ensureColumn('permits', 'application_id', "INT UNIQUE DEFAULT NULL");
             await ensureColumn('permits', 'verification_code', "VARCHAR(100) UNIQUE DEFAULT NULL");
             await ensureColumn('permits', 'pdf_path', "VARCHAR(255) DEFAULT NULL");
+
+            // documents: ensure expiration_date exists
+            await ensureColumn('documents', 'expiration_date', "DATE DEFAULT NULL");
 
             // chat_history: ensure question and response can store large messages
             await modifyColumn('chat_history', 'question', "TEXT NOT NULL");

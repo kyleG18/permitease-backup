@@ -154,11 +154,20 @@ const createAssessment = async (req, res) => {
             official_assessment: officialRequirements
         };
 
-        
-        const [inserted] = await db.query(
-            'INSERT INTO assessments (user_id, business_id, assessment_result, compliance_score) VALUES (?, ?, ?, ?)',
-            [req.user.id, resolvedBusinessId, JSON.stringify(assessmentPayload), 0]
-        );
+        let hasCompScore = false;
+        try {
+            const [aCols] = await db.query(`SHOW COLUMNS FROM \`assessments\` LIKE 'compliance_score'`);
+            hasCompScore = aCols.length > 0;
+        } catch (e) {}
+
+        const insertQuery = hasCompScore
+            ? 'INSERT INTO assessments (user_id, business_id, assessment_result, compliance_score) VALUES (?, ?, ?, ?)'
+            : 'INSERT INTO assessments (user_id, business_id, assessment_result) VALUES (?, ?, ?)';
+        const insertParams = hasCompScore
+            ? [req.user.id, resolvedBusinessId, JSON.stringify(assessmentPayload), 0]
+            : [req.user.id, resolvedBusinessId, JSON.stringify(assessmentPayload)];
+
+        const [inserted] = await db.query(insertQuery, insertParams);
 
         // Populate business_requirements for the UI
         if (resolvedBusinessId && officialRequirements.length > 0) {

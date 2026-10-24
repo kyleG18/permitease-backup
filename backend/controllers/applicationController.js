@@ -105,15 +105,30 @@ const getApplicationById = async (req, res) => {
             return res.status(403).json({ message: 'You do not have permission to view this application.' });
         }
 
-        // Load applicable requirements for the business
+        // Load applicable requirements for the business (safely adapt to schema)
+        let brCols = new Set();
+        try {
+            const [cols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\``);
+            brCols = new Set(cols.map(c => c.Field));
+        } catch (e) {}
+
+        const hasDocId = brCols.has('document_id');
+        const hasBplo = brCols.has('bplo_status');
+        const docSelect = hasDocId ? 'br.document_id,' : 'NULL AS document_id,';
+        const bploSelect = hasBplo
+            ? 'br.bplo_status, br.bplo_notes, br.bplo_verified_at,'
+            : '"AI Suggested" AS bplo_status, NULL AS bplo_notes, NULL AS bplo_verified_at,';
+        const docJoin = hasDocId ? 'LEFT JOIN documents d ON br.document_id = d.id' : '';
+        const docFields = hasDocId ? 'd.document_name, d.file_path, d.upload_date' : 'NULL AS document_name, NULL AS file_path, NULL AS upload_date';
+
         const [requirements] = await db.query(
-            `SELECT br.id, br.requirement_id, br.status AS req_status, br.document_id,
-                    br.bplo_status, br.bplo_notes, br.bplo_verified_at,
+            `SELECT br.id, br.requirement_id, br.status AS req_status, ${docSelect}
+                    ${bploSelect}
                     pr.permit_name, pr.description,
-                    d.document_name, d.file_path, d.upload_date
+                    ${docFields}
              FROM business_requirements br
              JOIN permit_requirements pr ON br.requirement_id = pr.id
-             LEFT JOIN documents d ON br.document_id = d.id
+             ${docJoin}
              WHERE br.business_id = ?`,
             [app.business_id]
         );
@@ -270,11 +285,18 @@ const submitApplication = async (req, res) => {
         }
 
         // Validate that all mandatory requirements have documents submitted
+        let hasDocIdInBr = false;
+        try {
+            const [cols] = await conn.query(`SHOW COLUMNS FROM \`business_requirements\` LIKE 'document_id'`);
+            hasDocIdInBr = cols.length > 0;
+        } catch (e) {}
+        const docIdClause = hasDocIdInBr ? 'br.document_id' : 'NULL as document_id';
+
         const [requirements] = await conn.query(
-            `SELECT pr.id, pr.permit_name, br.status as req_status, br.document_id
+            `SELECT pr.id, pr.permit_name, br.status as req_status, ${docIdClause}
              FROM business_requirements br
              JOIN permit_requirements pr ON br.requirement_id = pr.id
-             WHERE br.business_id = ? AND pr.is_mandatory = 1`,
+             WHERE br.business_id = ? AND (pr.is_mandatory = 1 OR pr.is_mandatory IS NULL)`,
             [app.business_id]
         );
 

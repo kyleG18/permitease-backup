@@ -86,10 +86,18 @@ const uploadDocument = [
 
             // Link to requirement if provided
             if (requirement_id) {
-                await db.query(
-                    'UPDATE business_requirements SET document_id = ?, status = ? WHERE business_id = ? AND requirement_id = ?',
-                    [result.insertId, 'Submitted', business_id, requirement_id]
-                );
+                try {
+                    const [docCols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\` LIKE 'document_id'`);
+                    if (docCols.length === 0) {
+                        await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN document_id INT DEFAULT NULL`);
+                    }
+                    await db.query(
+                        'UPDATE business_requirements SET document_id = ?, status = ? WHERE business_id = ? AND requirement_id = ?',
+                        [result.insertId, 'Submitted', business_id, requirement_id]
+                    );
+                } catch (linkErr) {
+                    console.warn('[uploadDocument] Link requirement notice:', linkErr.message);
+                }
             }
 
             await db.query(
