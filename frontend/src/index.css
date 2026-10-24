@@ -906,27 +906,17 @@ tbody td {
   .page-content { padding: 1rem 0.75rem !important; }
   .header-search { display: none !important; }
 
-  /* Universal container margin/padding reset on mobile */
-  .page-container,
-  .page-content > div[style*="padding: 2.5rem"],
-  .page-content > div[style*="padding: 2rem"],
-  .page-content > div[style*="padding:2.5rem"],
-  .page-content > div[style*="padding:2rem"],
-  .page-content > div[style*="padding: 2rem 1rem"],
-  .page-content > div[style*="padding:2rem 1rem"] {
-    padding-left: 0.25rem !important;
-    padding-right: 0.25rem !important;
+  /* Container max-width reset on mobile — keep reasonable side padding */
+  .page-container {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
-  /* Universal Card Padding on Mobile */
-  .card,
-  div[style*="background-color: white"][style*="border-radius:"],
-  div[style*="backgroundColor: white"][style*="borderRadius:"],
-  div[style*="background-color: rgb(255, 255, 255)"],
-  div[style*="background: white"][style*="border-radius:"] {
+  /* Card Padding on Mobile - only targeted named classes */
+  .card {
     padding: 1.25rem 0.875rem !important;
     box-sizing: border-box !important;
   }
@@ -938,8 +928,8 @@ tbody td {
     font-size: 1.4rem !important;
     line-height: 1.25 !important;
   }
-  h2, h2[style] { font-size: 1.18rem !important; }
-  h3, h3[style] { font-size: 1.05rem !important; }
+  h2 { font-size: 1.18rem !important; }
+  h3 { font-size: 1.05rem !important; }
 
   /* Universal Table Horizontal Scroll on Mobile */
   .table-responsive,
@@ -956,58 +946,39 @@ tbody td {
     min-width: 580px;
   }
 
-  /* Universal Modal / Dialog on Mobile */
-  .modal-content,
-  div[style*="position: fixed"][style*="inset: 0"] > div,
-  div[style*="position: fixed"][style*="inset:0"] > div,
-  div[style*="position: fixed"][style*="top: 0"] > div,
-  div[style*="position: fixed"][style*="top:0"] > div,
-  div[style*="position: fixed"][style*="z-index: 100"] > div,
-  div[style*="position: fixed"][style*="z-index: 1000"] > div,
-  div[style*="position: fixed"][style*="z-index: 9999"] > div,
-  div[style*="position: fixed"][style*="zIndex: 100"] > div,
-  div[style*="position: fixed"][style*="zIndex: 1000"] > div,
-  div[style*="position: fixed"][style*="zIndex: 9999"] > div {
-    width: calc(100vw - 20px) !important;
-    max-width: calc(100vw - 20px) !important;
+  /* Modal / Dialog on Mobile — target only named classes */
+  .modal-content {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
     max-height: 88vh !important;
     overflow-y: auto !important;
     margin: auto !important;
     padding: 1.25rem 1rem !important;
     box-sizing: border-box !important;
   }
+  /* Document upload modal */
+  .document-upload-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+  }
 
-  /* Two and Three column Form Grids collapse into 1 column on mobile */
-  div[style*="grid-template-columns: 1fr 1fr"],
-  div[style*="grid-template-columns: 1fr 2fr"],
-  div[style*="grid-template-columns:1fr 1fr"],
-  div[style*="grid-template-columns:1fr 2fr"],
-  div[style*="grid-template-columns: 1fr 300px"],
-  div[style*="grid-template-columns:1fr 300px"],
-  div[style*="grid-template-columns: repeat(3, 1fr)"],
-  div[style*="grid-template-columns: repeat(2, 1fr)"],
-  div[style*="grid-template-columns:repeat(3, 1fr)"],
-  div[style*="grid-template-columns:repeat(2, 1fr)"],
-  div[style*="grid-template-columns:repeat(3,1fr)"],
-  div[style*="grid-template-columns:repeat(2,1fr)"],
-  div[style*="gridTemplateColumns: 1fr 1fr"],
-  div[style*="gridTemplateColumns: 1fr 2fr"],
-  div[style*="gridTemplateColumns:1fr 1fr"],
-  div[style*="gridTemplateColumns:1fr 2fr"],
-  div[style*="gridTemplateColumns: 1fr 300px"],
-  div[style*="gridTemplateColumns:1fr 300px"],
-  div[style*="gridTemplateColumns: repeat(3, 1fr)"],
-  div[style*="gridTemplateColumns: repeat(2, 1fr)"],
-  div[style*="gridTemplateColumns:repeat(3, 1fr)"],
-  div[style*="gridTemplateColumns:repeat(2, 1fr)"],
-  div[style*="gridTemplateColumns:repeat(3,1fr)"],
-  div[style*="gridTemplateColumns:repeat(2,1fr)"],
-  div[style*="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))"],
-  div[style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"],
-  div[style*="gridTemplateColumns: repeat(auto-fill, minmax(200px, 1fr))"],
-  div[style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+  /* Form grids inside modals: collapse only inside .modal-content, .card, named classes */
+  .modal-content div[style*="grid-template-columns: 1fr 1fr"],
+  .modal-content div[style*="grid-template-columns: 1fr 2fr"],
+  .modal-content div[style*="grid-template-columns: repeat(3, 1fr)"],
+  .modal-content div[style*="grid-template-columns: repeat(2, 1fr)"],
+  .modal-content div[style*="gridTemplateColumns: 1fr 1fr"],
+  .modal-content div[style*="gridTemplateColumns: 1fr 2fr"],
+  .modal-content div[style*="gridTemplateColumns: repeat(3, 1fr)"],
+  .modal-content div[style*="gridTemplateColumns: repeat(2, 1fr)"],
+  .bplo-modal-content div[style*="gridTemplateColumns"],
+  .bplo-modal-content div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
-    gap: 0.875rem !important;
+    gap: 0.75rem !important;
   }
 
   /* Responsive Touch Targets & iOS Zoom Prevention */
@@ -1020,27 +991,10 @@ tbody td {
     padding: 0.5rem 1rem;
   }
 
-  /* Responsive Header Action Button Rows */
-  header div[style*="display: flex"][style*="gap: 0.75rem"],
-  header div[style*="display: flex"][style*="gap: 1rem"],
-  header div[style*="display:flex"][style*="gap:0.75rem"],
-  header div[style*="display:flex"][style*="gap:1rem"] {
-    width: 100% !important;
-    flex-wrap: wrap !important;
-  }
-
-  header div[style*="display: flex"][style*="gap: 0.75rem"] > a,
-  header div[style*="display: flex"][style*="gap: 0.75rem"] > button,
-  header div[style*="display: flex"][style*="gap: 1rem"] > a,
-  header div[style*="display: flex"][style*="gap: 1rem"] > button,
-  header div[style*="display:flex"][style*="gap:0.75rem"] > a,
-  header div[style*="display:flex"][style*="gap:0.75rem"] > button,
-  header div[style*="display:flex"][style*="gap:1rem"] > a,
-  header div[style*="display:flex"][style*="gap:1rem"] > button {
-    flex: 1 1 calc(50% - 0.5rem);
-    min-width: 130px;
-    justify-content: center;
-    text-align: center;
+  /* Header action row: keep compact, no full-width wrapping */
+  .header-actions {
+    gap: 0.625rem !important;
+    flex-shrink: 0 !important;
   }
 
   /* Floating AI Button on Mobile */
@@ -1116,27 +1070,14 @@ tbody td {
 
 @media (max-width: 540px) {
   .header { padding: 0 0.65rem !important; }
-  .page-content { padding: 0.65rem 0.35rem !important; }
-  .stats-grid { grid-template-columns: 1fr !important; }
+  /* Give pages slightly more breathing room than 0.35rem */
+  .page-content { padding: 0.875rem 0.625rem !important; }
   .auth-card  { padding: 1.5rem 0.875rem !important; }
 
   /* Readiness stat chips stack cleanly on narrow phones */
   .readiness-stat-chips {
     gap: 0.5rem 1rem !important;
     font-size: 12px !important;
-  }
-
-  /* Header actions full width on small phones */
-  header div[style*="display: flex"][style*="gap: 0.75rem"] > a,
-  header div[style*="display: flex"][style*="gap: 0.75rem"] > button,
-  header div[style*="display: flex"][style*="gap: 1rem"] > a,
-  header div[style*="display: flex"][style*="gap: 1rem"] > button,
-  header div[style*="display:flex"][style*="gap:0.75rem"] > a,
-  header div[style*="display:flex"][style*="gap:0.75rem"] > button,
-  header div[style*="display:flex"][style*="gap:1rem"] > a,
-  header div[style*="display:flex"][style*="gap:1rem"] > button {
-    flex: 1 1 100% !important;
-    width: 100% !important;
   }
 }
 
