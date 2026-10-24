@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { MessageSquare, Send, User, Bot, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Send, User, Bot, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const SUGGESTED_EN = [
   "What documents do I need for my permit?",
@@ -43,10 +43,8 @@ const Chatbot = () => {
 
   // Clean formatter to render clean text without raw asterisks or clutter
   const renderMessageContent = (rawText = '') => {
-    // If user message, just show text cleanly
     if (!rawText) return null;
 
-    // Split text into lines
     const lines = rawText.split('\n');
     return lines.map((line, idx) => {
       const trimmed = line.trim();
@@ -100,7 +98,6 @@ const Chatbot = () => {
   };
 
   useEffect(() => {
-    // Load chat history on mount
     const fetchHistory = async () => {
       try {
         const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/chat/history`, config);
@@ -124,8 +121,8 @@ const Chatbot = () => {
     if (!text.trim() || loading) return;
     const question = text.trim();
     if (question.length > 1000) {
-        setError('Message is too long. Please keep it under 1000 characters.');
-        return;
+      setError('Message is too long. Please keep it under 1000 characters.');
+      return;
     }
 
     setInput('');
@@ -138,9 +135,9 @@ const Chatbot = () => {
       setMessages(prev => [...prev, { type: 'bot', text: data.response }]);
     } catch (err) {
       if (err.response?.status === 429) {
-          setError('Too many requests. Please wait a few minutes before sending another message.');
+        setError('Too many requests. Please wait a few minutes before sending another message.');
       } else {
-          setError(err.response?.data?.message || 'Sorry, I encountered an error connecting to the AI service. Please try again.');
+        setError(err.response?.data?.message || 'Sorry, I encountered an error connecting to the AI service. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -148,102 +145,131 @@ const Chatbot = () => {
   };
 
   const clearConversation = () => {
-      // Just clear frontend state for simplicity (history remains in DB, but gives a clean slate visually)
-      setMessages([{ type: 'bot', text: defaultGreeting }]);
-      setError(null);
+    setMessages([{ type: 'bot', text: defaultGreeting }]);
+    setError(null);
   };
 
   const suggestedQuestions = isTl ? SUGGESTED_TL : SUGGESTED_EN;
 
   return (
-    <div className="animate-fade-in chatbot-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
-      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-            <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>
-              {isTl ? 'PermitEase AI Assistant' : 'PermitEase AI Assistant'}
+    <div className="animate-fade-in chatbot-container">
+      {/* Top Header Row */}
+      <div className="chatbot-header-row">
+        <div className="chatbot-header-text">
+          <div className="chatbot-title-wrap">
+            <h1 className="chatbot-title">
+              PermitEase AI Assistant
             </h1>
-            <p className="text-muted" style={{ margin: 0 }}>
-              {isTl 
-                ? 'Magtanong tungkol sa iyong mga kinakailangang permit, bayarin, o pangkalahatang payo sa negosyo.'
-                : 'Ask about your requirements, fees, compliance status, or general permit questions.'}
-            </p>
+            <span className="chatbot-status-pill">
+              <span className="chatbot-status-dot" />
+              {isTl ? 'Online' : 'Online'}
+            </span>
+          </div>
+          <p className="text-muted chatbot-subtitle">
+            {isTl 
+              ? 'Magtanong tungkol sa iyong mga kinakailangang permit, bayarin, o payo sa negosyo.'
+              : 'Ask about requirements, fees, compliance status, or general permit questions.'}
+          </p>
         </div>
-        <button onClick={clearConversation} className="btn btn-outline" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-            <RefreshCw size={16} /> {isTl ? 'Linisin ang Chat' : 'Clear View'}
+        <button 
+          onClick={clearConversation} 
+          className="btn btn-outline chatbot-clear-btn"
+          title={isTl ? 'Linisin ang Chat' : 'Clear View'}
+        >
+          <RefreshCw size={15} />
+          <span className="chatbot-clear-label">{isTl ? 'Linisin' : 'Clear View'}</span>
         </button>
       </div>
 
-      {/* Suggested Questions */}
-      <div className="chatbot-suggested-scroll" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+      {/* Suggested Questions Horizontal Chips */}
+      <div className="chatbot-suggested-scroll">
         {suggestedQuestions.map((q, i) => (
-          <button key={i} onClick={() => sendMessage(q)} disabled={loading}
-            style={{ background: 'var(--light-green)', border: '1px solid var(--secondary-green)', borderRadius: 'var(--radius-full)', padding: '0.4rem 0.9rem', fontSize: '0.8rem', color: 'var(--primary-green)', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Poppins', fontWeight: '500', opacity: loading ? 0.6 : 1 }}>
+          <button 
+            key={i} 
+            onClick={() => sendMessage(q)} 
+            disabled={loading}
+            className="chatbot-suggest-chip"
+          >
             {q}
           </button>
         ))}
       </div>
 
-      {/* Chat Window */}
-      <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
-        
-        {/* Banner */}
-        <div style={{ background: '#f8fafc', padding: '0.75rem 1.5rem', borderBottom: '1px solid var(--border-color)', fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-            <span><strong>Advisory Only:</strong> AI responses do not override official LGU decisions. Real-time data cited below comes directly from your official PermitEase records.</span>
+      {/* Main Chat Window Card */}
+      <div className="card chatbot-window">
+        {/* Advisory Banner */}
+        <div className="chatbot-banner">
+          <AlertTriangle size={15} className="chatbot-banner-icon" />
+          <span className="chatbot-banner-text">
+            <strong>{isTl ? 'Payo Lamang:' : 'Advisory Only:'}</strong>{' '}
+            {isTl 
+              ? 'Gabay lamang ang sagot ng AI batay sa opisyal na talaan ng Roxas City.' 
+              : 'AI responses are advisory guidance based on official Roxas City records.'}
+          </span>
         </div>
 
-        {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Scrollable Messages Area */}
+        <div className="chatbot-messages">
           {messages.map((msg, i) => (
-            <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', flexDirection: msg.type === 'user' ? 'row-reverse' : 'row' }}>
-              {/* Avatar */}
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: msg.type === 'bot' ? 'var(--light-green)' : 'var(--primary-green)', color: msg.type === 'bot' ? 'var(--primary-green)' : 'white' }}>
-                {msg.type === 'bot' ? <Bot size={20} /> : <User size={20} />}
+            <div 
+              key={i} 
+              className={`chatbot-message-row ${msg.type === 'user' ? 'chatbot-message-user' : 'chatbot-message-bot'}`}
+            >
+              <div className={`chatbot-avatar ${msg.type === 'user' ? 'chatbot-avatar-user' : 'chatbot-avatar-bot'}`}>
+                {msg.type === 'bot' ? <Bot size={18} /> : <User size={18} />}
               </div>
-              {/* Bubble */}
-              <div className="chatbot-bubble" style={{ maxWidth: '75%', padding: '0.875rem 1.125rem', borderRadius: msg.type === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px', background: msg.type === 'user' ? 'var(--primary-green)' : '#f8fafc', color: msg.type === 'user' ? 'white' : '#1e293b', fontSize: '0.92rem', lineHeight: '1.6', border: msg.type === 'bot' ? '1px solid #e2e8f0' : 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <div className={`chatbot-bubble ${msg.type === 'user' ? 'chatbot-bubble-user' : 'chatbot-bubble-bot'}`}>
                 {msg.type === 'user' ? msg.text : renderMessageContent(msg.text)}
               </div>
             </div>
           ))}
+
           {loading && (
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--light-green)', color: 'var(--primary-green)' }}><Bot size={20} /></div>
-              <div style={{ padding: '0.875rem 1.125rem', borderRadius: '4px 18px 18px 18px', background: '#f1f5f9', display: 'flex', gap: '6px', alignItems: 'center', border: '1px solid #e2e8f0' }}>
-                {[0, 1, 2].map(j => (
-                  <span key={j} style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary-green)', animation: 'bounce 1.2s infinite', animationDelay: `${j * 0.2}s` }} />
-                ))}
+            <div className="chatbot-message-row chatbot-message-bot">
+              <div className="chatbot-avatar chatbot-avatar-bot">
+                <Bot size={18} />
+              </div>
+              <div className="chatbot-bubble chatbot-bubble-bot chatbot-typing-bubble">
+                <span className="chatbot-typing-dot" />
+                <span className="chatbot-typing-dot" />
+                <span className="chatbot-typing-dot" />
               </div>
             </div>
           )}
+
           {error && (
-            <div style={{ alignSelf: 'center', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0' }}>
-                <AlertTriangle size={14} />
-                {error}
+            <div className="chatbot-error-pill">
+              <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+              <span>{error}</span>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
-        <div className="chatbot-input-row" style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.75rem', background: 'white' }}>
+        {/* Input Dock Row */}
+        <form 
+          className="chatbot-input-row"
+          onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
+        >
           <input
             type="text"
+            className="chatbot-input"
             value={input}
             onChange={e => { setInput(e.target.value); setError(null); }}
-            onKeyDown={e => e.key === 'Enter' && sendMessage(input)}
-            placeholder="Type a question about permits..."
+            placeholder={isTl ? 'Magtanong tungkol sa permit...' : 'Type a question about permits...'}
             disabled={loading}
-            style={{ flex: 1, padding: '0.75rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-full)', fontSize: '0.95rem', outline: 'none', fontFamily: 'Poppins', background: loading ? '#f8fafc' : 'white', cursor: loading ? 'not-allowed' : 'text' }}
           />
-          <button onClick={() => sendMessage(input)} className="btn btn-primary" style={{ borderRadius: 'var(--radius-full)', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }} disabled={loading || !input.trim()}>
+          <button 
+            type="submit" 
+            className="btn btn-primary chatbot-send-btn" 
+            disabled={loading || !input.trim()}
+            aria-label={isTl ? 'Ipadala' : 'Send'}
+          >
             <Send size={18} />
-            <span style={{ fontWeight: 600 }}>Send</span>
+            <span className="chatbot-send-label">{isTl ? 'Ipadala' : 'Send'}</span>
           </button>
-        </div>
+        </form>
       </div>
-
-      <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }`}</style>
     </div>
   );
 };
