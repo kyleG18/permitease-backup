@@ -118,6 +118,7 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val || 0);
 
   // KPI metric cards data
+  const docsSubmitted = stats?.docs_submitted_count ?? 0;
   const kpiCards = [
     {
       icon: Building2,
@@ -135,33 +136,33 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
       sub: readScore >= 80 ? 'On track' : readScore >= 50 ? 'In progress' : 'Needs attention',
       accent: readScore >= 80 ? 'var(--success)' : readScore >= 50 ? 'var(--warning)' : 'var(--danger)',
       accentBg: readScore >= 80 ? 'var(--success-light)' : readScore >= 50 ? 'var(--warning-light)' : 'var(--danger-light)',
-      to: '/applications',
-    },
-    {
-      icon: FileText,
-      label: 'Total Requirements',
-      value: loading ? '…' : (stats?.total_requirements ?? 0),
-      sub: 'Municipal checklist',
-      accent: 'var(--info)',
-      accentBg: 'var(--info-light)',
       to: '/permits',
     },
     {
       icon: CheckCircle,
       label: 'BPLO Verified',
       value: loading ? '…' : (stats?.bplo_verified_count ?? 0),
-      sub: 'Confirmed by officer',
-      accent: 'var(--success)',
-      accentBg: 'var(--success-light)',
+      sub: (stats?.bplo_verified_count ?? 0) > 0 ? 'Confirmed by officer' : 'Awaiting BPLO review',
+      accent: (stats?.bplo_verified_count ?? 0) > 0 ? 'var(--success)' : 'var(--text-secondary)',
+      accentBg: (stats?.bplo_verified_count ?? 0) > 0 ? 'var(--success-light)' : 'var(--border-light)',
+      to: '/permits',
+    },
+    {
+      icon: FileText,
+      label: 'Docs Submitted',
+      value: loading ? '…' : docsSubmitted,
+      sub: docsSubmitted > 0 ? 'Uploaded & submitted' : 'No uploads yet',
+      accent: docsSubmitted > 0 ? 'var(--info)' : 'var(--text-secondary)',
+      accentBg: docsSubmitted > 0 ? 'var(--info-light)' : 'var(--border-light)',
       to: '/permits',
     },
     {
       icon: AlertCircle,
       label: 'Missing Items',
       value: loading ? '…' : (stats?.missing_requirements ?? 0),
-      sub: 'Action needed',
-      accent: 'var(--danger)',
-      accentBg: 'var(--danger-light)',
+      sub: (stats?.missing_requirements ?? 0) === 0 ? 'All clear!' : 'Action needed',
+      accent: (stats?.missing_requirements ?? 0) === 0 ? 'var(--success)' : 'var(--danger)',
+      accentBg: (stats?.missing_requirements ?? 0) === 0 ? 'var(--success-light)' : 'var(--danger-light)',
       to: '/permits',
     },
     {

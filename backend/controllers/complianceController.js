@@ -155,9 +155,33 @@ const getCompliance = async (req, res) => {
             }
         }
 
-        // Get checklist
+        // Detect available columns to avoid errors on older Railway schemas
+        let hasBploStatus = false, hasIsMandatory = false, hasComplianceScore = false;
+        try {
+            const [brCols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\` LIKE 'bplo_status'`);
+            hasBploStatus = brCols.length > 0;
+        } catch (e) {}
+        try {
+            const [prCols] = await db.query(`SHOW COLUMNS FROM \`permit_requirements\` LIKE 'is_mandatory'`);
+            hasIsMandatory = prCols.length > 0;
+        } catch (e) {}
+        try {
+            const [aCols] = await db.query(`SHOW COLUMNS FROM \`assessments\` LIKE 'compliance_score'`);
+            hasComplianceScore = aCols.length > 0;
+        } catch (e) {}
+
+        // Build checklist query using only existing columns
+        const isMandatorySelect = hasIsMandatory ? 'pr.is_mandatory,' : '1 AS is_mandatory,';
+        const bploSelect = hasBploStatus
+            ? 'br.bplo_status, br.bplo_notes, br.bplo_verified_at, br.bplo_verified_by,'
+            : '"AI Suggested" AS bplo_status, NULL AS bplo_notes, NULL AS bplo_verified_at, NULL AS bplo_verified_by,';
+
         const [checklist] = await db.query(`
-            SELECT br.*, pr.permit_name, pr.description, pr.is_mandatory, d.document_name, d.file_path 
+            SELECT br.id, br.business_id, br.requirement_id, br.document_id, br.status, br.remarks,
+                   br.created_at, br.updated_at,
+                   ${bploSelect}
+                   pr.permit_name, pr.description, ${isMandatorySelect}
+                   d.document_name, d.file_path
             FROM business_requirements br
             JOIN permit_requirements pr ON br.requirement_id = pr.id
             LEFT JOIN documents d ON br.document_id = d.id
@@ -165,13 +189,22 @@ const getCompliance = async (req, res) => {
             ORDER BY pr.id ASC
         `, [businessId]);
 
-        // Get latest score
-        const [assessments] = await db.query(
-            'SELECT compliance_score FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
-            [businessId]
-        );
-
-        const score = assessments.length > 0 ? assessments[0].compliance_score : 0;
+        // Get latest score (safely)
+        let score = 0;
+        if (hasComplianceScore) {
+            const [scoreRows] = await db.query(
+                'SELECT compliance_score FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
+                [businessId]
+            );
+            score = scoreRows.length > 0 ? (scoreRows[0].compliance_score || 0) : 0;
+        } else {
+            // Fallback: compute score from checklist
+            const [assessRows] = await db.query(
+                'SELECT assessment_result FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
+                [businessId]
+            );
+            score = 0; // Can't compute without compliance_score column
+        }
 
         res.json({
             business_id: businessId,

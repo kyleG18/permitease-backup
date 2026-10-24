@@ -96,7 +96,14 @@ const getDashboardStats = async (req, res) => {
         // Compliance (Readiness)
         const [[{ total_reqs }]] = await db.query(`SELECT COUNT(*) as total_reqs FROM business_requirements WHERE business_id IN (${placeholders})`, businessIds);
         const [[{ missing_reqs }]] = await db.query(`SELECT COUNT(*) as missing_reqs FROM business_requirements WHERE business_id IN (${placeholders}) AND status = 'Missing'`, businessIds);
-        const [[{ bplo_verified_count }]] = await db.query(`SELECT COUNT(*) as bplo_verified_count FROM business_requirements WHERE business_id IN (${placeholders}) AND bplo_status = 'BPLO Verified'`, businessIds);
+        // bplo_status column may not exist on older Railway schemas — handle gracefully
+        let bplo_verified_count = 0;
+        try {
+            const [bploRows] = await db.query(`SELECT COUNT(*) as bplo_verified_count FROM business_requirements WHERE business_id IN (${placeholders}) AND bplo_status = 'BPLO Verified'`, businessIds);
+            bplo_verified_count = bploRows[0]?.bplo_verified_count || 0;
+        } catch (e) {
+            // column doesn't exist yet — skip
+        }
         const [[{ docs_submitted_count }]] = await db.query(`SELECT COUNT(*) as docs_submitted_count FROM business_requirements WHERE business_id IN (${placeholders}) AND status IN ('Submitted','Approved')`, businessIds);
         
         const ready_reqs = total_reqs - missing_reqs;
@@ -111,6 +118,21 @@ const getDashboardStats = async (req, res) => {
         // Get businesses list for display
         const [businesses] = await db.query('SELECT id, business_name, business_type, business_status FROM businesses WHERE user_id = ?', [req.user.id]);
 
+        // Nearest expiring permit for renewal alert
+        let next_expiration = null;
+        let days_to_expiration = null;
+        try {
+            const [expiryRows] = await db.query(
+                `SELECT expiration_date FROM permits WHERE business_id IN (${placeholders}) AND status = 'Approved' AND expiration_date IS NOT NULL ORDER BY expiration_date ASC LIMIT 1`,
+                businessIds
+            );
+            if (expiryRows.length > 0 && expiryRows[0].expiration_date) {
+                next_expiration = expiryRows[0].expiration_date;
+                const diffMs = new Date(next_expiration) - new Date();
+                days_to_expiration = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            }
+        } catch (e) { /* permits table may not exist */ }
+
         return res.json({
             role: 'business_owner',
             total_businesses: businessIds.length,
@@ -121,6 +143,8 @@ const getDashboardStats = async (req, res) => {
             bplo_verified_count: bplo_verified_count || 0,
             docs_submitted_count: docs_submitted_count || 0,
             assessment_completed: assessment_count > 0,
+            next_expiration,
+            days_to_expiration,
             businesses
         });
 
