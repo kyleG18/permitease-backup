@@ -89,7 +89,7 @@ const Header = ({ toggleSidebar }) => {
         </Link>
 
         {/* User Profile */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1.25rem', borderLeft: '1px solid var(--border-light)' }}>
+        <div className="header-profile-wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1.25rem', borderLeft: '1px solid var(--border-light)' }}>
           <div style={{ textAlign: 'right', display: 'none' }} className="user-profile-info">
             <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: '600', color: 'var(--text-primary)', lineHeight: 1.2 }}>{user?.full_name || 'User'}</p>
             <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user?.email || ''}</p>

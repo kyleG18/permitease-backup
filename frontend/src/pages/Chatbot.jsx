@@ -64,11 +64,14 @@ const Chatbot = () => {
         );
       }
 
-      // Parse inline **bold**
-      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      // Parse inline **bold** or *bold*
+      const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
       const parsedLine = parts.map((part, pIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={pIdx} style={{ color: '#0f172a', fontWeight: '600' }}>{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+          return <strong key={pIdx} style={{ color: '#0f172a', fontWeight: '600' }}>{part.slice(1, -1)}</strong>;
         }
         return part;
       });
