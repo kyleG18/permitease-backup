@@ -441,9 +441,9 @@ Instructions:
       )}
 
       {/* ── BUSINESS SELECTOR & ACTION BAR ──────────────────────────────── */}
-      <div className="card" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '260px' }}>
+      <div className="card assessment-biz-selector-card" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem' }}>
+        <div className="assessment-biz-selector-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="assessment-biz-select-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '260px' }}>
             <Building2 size={20} style={{ color: 'var(--primary-green)' }} />
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>
@@ -479,7 +479,7 @@ Instructions:
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="assessment-biz-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               className="btn btn-primary"
               onClick={handleAssess}
@@ -654,10 +654,10 @@ Instructions:
                     transition: 'all 0.2s ease'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div className="assessment-req-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                     
                     {/* Left: Info */}
-                    <div style={{ flex: 1, minWidth: '280px' }}>
+                    <div className="assessment-req-info" style={{ flex: 1, minWidth: '240px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
                         <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--government-navy)', fontWeight: 700 }}>
                           {req.permit_name}
@@ -695,7 +695,7 @@ Instructions:
                     </div>
 
                     {/* Right: Status Toggles & Ask AI Trigger Button */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', flexShrink: 0 }}>
+                    <div className="assessment-req-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', flexShrink: 0 }}>
                       
                       {/* I Have This toggle */}
                       <button
@@ -779,7 +779,7 @@ Instructions:
                       </div>
 
                       {/* Quick chips */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                      <div className="assessment-ai-chips" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
                         <button
                           onClick={() => askAiQuestion(reqKey, req.permit_name, 'Why do I need this permit requirement for my business?')}
                           disabled={helper.loading}
@@ -843,6 +843,7 @@ Instructions:
 
                       {/* Custom Question Input */}
                       <form
+                        className="assessment-ai-form"
                         onSubmit={(e) => {
                           e.preventDefault();
                           const val = (helper.inputVal || '').trim();

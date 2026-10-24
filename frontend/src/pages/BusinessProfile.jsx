@@ -276,7 +276,7 @@ const BusinessProfile = () => {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="profile-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Business Profiles</h1>
           <p className="text-muted">Manage your registered business information.</p>
@@ -298,7 +298,7 @@ const BusinessProfile = () => {
           <button className="btn btn-primary" onClick={openAddModal}><Plus size={18} /> Add Business</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+        <div className="profile-business-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
           {businesses.map(biz => (
             <div key={biz.id} className="card" style={{ borderLeft: '4px solid var(--primary-green)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>

@@ -125,7 +125,7 @@ export default function Compliance() {
   const mandatory = compliance?.checklist?.filter(c => c.is_mandatory) || [];
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1000px' }}>
+    <div className="compliance-page-container" style={{ padding: '2rem', maxWidth: '1000px' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.6rem', color: 'var(--text-dark)', marginBottom: '0.25rem' }}>
           Compliance Checklist
@@ -136,7 +136,7 @@ export default function Compliance() {
       </div>
 
       {/* Business Selector */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="compliance-selector-row" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <select
           value={selectedBizId}
           onChange={e => setSelectedBizId(e.target.value)}
@@ -160,9 +160,9 @@ export default function Compliance() {
         <div style={{ display: 'grid', gap: '1.5rem' }}>
 
           {/* Score + Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '1.5rem', backgroundColor: 'var(--white)', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)', alignItems: 'center' }}>
+          <div className="compliance-score-card" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '1.5rem', backgroundColor: 'var(--white)', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)', alignItems: 'center' }}>
             <ScoreRing score={compliance.compliance_score || 0} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <div className="compliance-stat-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
               <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#DCFCE7', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#16A34A' }}>
                   {compliance.checklist?.filter(c => c.status === 'Approved' || c.status === 'Submitted').length || 0}

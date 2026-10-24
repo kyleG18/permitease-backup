@@ -257,11 +257,11 @@ const RequirementCard = ({ item, bizId, token, isAdmin, onRefresh }) => {
       opacity: isNotRequired ? 0.55 : 1,
     }}>
       {/* Header row */}
-      <div style={{
+      <div className="permits-req-header" style={{
         display: 'flex', justifyContent: 'space-between',
         alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.4rem'
       }}>
-        <div style={{ flex: 1, minWidth: '200px' }}>
+        <div className="permits-req-info" style={{ flex: 1, minWidth: '200px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
             <span style={{
               fontWeight: '700', fontSize: '0.95rem', color: '#1E293B',
@@ -289,7 +289,7 @@ const RequirementCard = ({ item, bizId, token, isAdmin, onRefresh }) => {
         </div>
 
         {/* Status badges */}
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="permits-req-badges" style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <BploStatusBadge status={item.bplo_status || 'AI Suggested'} />
           <DocStatusBadge status={item.status} />
         </div>
@@ -437,7 +437,7 @@ export default function Permits() {
         backgroundColor: 'white', borderRadius: '12px',
         boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '1.25rem 1.5rem', marginBottom: '1.25rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="permits-biz-selector-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <Building2 size={18} color="#16A34A" />
           <label htmlFor="biz-select" style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1E293B' }}>
             {isAdmin ? 'Select Business to Review' : 'Your Business'}

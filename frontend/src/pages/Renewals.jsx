@@ -43,7 +43,7 @@ const Renewals = () => {
   const filteredPermits = data.permits.filter(p => activeFilter === 'ALL' || p.renewal_status === activeFilter);
 
   return (
-    <div className="animate-fade-in" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="animate-fade-in renewals-container" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: 'var(--text-dark)', marginBottom: '0.25rem', fontSize: '1.6rem' }}>{tr.title}</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>{tr.subtitle}</p>
@@ -56,7 +56,7 @@ const Renewals = () => {
       )}
 
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="renewals-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div className="card" onClick={() => setActiveFilter('ALL')} style={{ cursor: 'pointer', borderBottom: activeFilter === 'ALL' ? '3px solid var(--primary-green)' : '3px solid transparent', padding: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <FileText size={20} color="var(--primary-green)" />
@@ -116,7 +116,7 @@ const Renewals = () => {
                 </div>
               </div>
 
-              <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div className="renewals-card-actions" style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   {tr.expiryDate}: <strong style={{ color: 'var(--text-dark)' }}>{p.expiration_date ? new Date(p.expiration_date).toLocaleDateString() : 'N/A'}</strong>
                 </div>

@@ -542,7 +542,7 @@ export default function PermitReadiness() {
                 When you are ready to file your business permit, select your preferred official submission pathway recognized by the Municipality of Roxas:
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+              <div className="readiness-pathways-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
                 
                 {/* Pathway 1: Online via DICT iBPLS */}
                 <div style={{ border: '1px solid #BAE6FD', borderRadius: '10px', padding: '1.25rem', backgroundColor: '#F0F9FF', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>

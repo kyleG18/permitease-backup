@@ -86,7 +86,7 @@ const Documents = () => {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="documents-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Documents</h1>
           <p className="text-muted">Upload and manage your permit-related documents.</p>
@@ -105,7 +105,7 @@ const Documents = () => {
             <button className="btn btn-primary" onClick={() => setShowModal(true)}><Upload size={18} /> Upload Document</button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div className="documents-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
             {documents.map(doc => (
               <div key={doc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -138,7 +138,7 @@ const Documents = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-          <div className="card" style={{ width: '100%', maxWidth: '500px' }}>
+          <div className="card modal-content document-upload-modal" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0 }}>Upload Document</h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
@@ -159,7 +159,7 @@ const Documents = () => {
                 <input className="form-control" type="date" placeholder=" " value={formData.expiration_date} onChange={e => setFormData({...formData, expiration_date: e.target.value})} />
                 <label className="form-label">Expiration Date (optional)</label>
               </div>
-              <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2rem', textAlign: 'center', marginBottom: '1.5rem', cursor: 'pointer', background: '#FAFAFA' }}>
+              <div style={{ position: 'relative', border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2rem', textAlign: 'center', marginBottom: '1.5rem', cursor: 'pointer', background: '#FAFAFA' }}>
                 <FileText size={32} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem' }} />
                 <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{file ? file.name : 'Click to select a file'}</p>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>PDF, JPG, PNG supported</p>

@@ -565,6 +565,7 @@ export default function FeeEstimation() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
+                    flexWrap: 'wrap',
                     padding: '0.9rem 1.15rem',
                     borderRadius: 'var(--radius-sm)',
                     backgroundColor: isRenewalLbt ? '#FFFDF5' : 'var(--background)',

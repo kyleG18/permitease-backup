@@ -718,7 +718,7 @@ export default function TaxEstimation() {
             </div>
 
             {/* Line-by-Line Breakdown Table */}
-            <div style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+            <div className="table-responsive estimation-table-wrap" style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <tbody>
                   {calc.lines.map((line, i) => {

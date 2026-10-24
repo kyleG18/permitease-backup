@@ -17,7 +17,7 @@ const getValidityInfo = (expDate) => {
 };
 
 const InfoRow = ({ label, value }) => (
-  <div style={{ display: 'flex', borderBottom: '1px solid var(--border-light)', padding: '0.75rem 0' }}>
+  <div className="permit-info-row" style={{ display: 'flex', borderBottom: '1px solid var(--border-light)', padding: '0.75rem 0' }}>
     <span style={{ width: '180px', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', flexShrink: 0 }}>{label}</span>
     <span style={{ fontSize: '0.9rem', color: 'var(--text-dark)', fontWeight: '500' }}>{value || '—'}</span>
   </div>
@@ -64,7 +64,7 @@ export default function PermitDetail() {
   const fmt = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
 
   return (
-    <div className="animate-fade-in" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <div className="animate-fade-in permit-detail-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
         <Link to="/permits" style={{ color: 'var(--primary-green)', textDecoration: 'none' }}>My Permits</Link>
@@ -126,7 +126,7 @@ export default function PermitDetail() {
       )}
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+      <div className="permit-detail-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         {permit.pdf_path && (
           <button onClick={handleDownload}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: 'none', backgroundColor: 'var(--primary-green)', color: 'white', fontSize: '0.9rem', fontWeight: '600', cursor: 'pointer' }}>

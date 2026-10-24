@@ -87,9 +87,9 @@ export default function Notifications() {
   if (loading) return <div style={{ padding: '2rem', color: 'var(--text-muted)' }}>{tn.title}...</div>;
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
+    <div className="animate-fade-in notifications-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className="notifications-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>{tn.title}</h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -116,7 +116,7 @@ export default function Notifications() {
             const link = getNotificationLink(n);
             
             const content = (
-              <div style={{
+              <div className="notification-item" style={{
                 display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1.25rem 1.5rem',
                 borderBottom: idx < notifications.length - 1 ? '1px solid var(--border-light)' : 'none',
                 background: isUnread ? '#F0FDF4' : 'white',
@@ -147,7 +147,7 @@ export default function Notifications() {
                   )}
                 </div>
                 
-                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '1rem', opacity: isUnread ? 1 : 0.6 }}>
+                <div className="notification-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '1rem', opacity: isUnread ? 1 : 0.6 }}>
                   {isUnread && (
                     <button onClick={(e) => markRead(n.id, e)} title="Mark as read"
                       style={{ padding: '0.4rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary-green)', background: 'transparent', color: 'var(--primary-green)', cursor: 'pointer', display: 'flex' }}>

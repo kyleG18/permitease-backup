@@ -232,7 +232,7 @@ export default function Applications() {
       </header>
 
       {/* ── ACTIVE BUSINESS SELECTOR ─────────────────────────────────────── */}
-      <div className="card no-print" style={{ marginBottom: '1.75rem', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="card no-print applications-header-row" style={{ marginBottom: '1.75rem', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '260px' }}>
           <Building2 size={20} style={{ color: 'var(--primary-green)' }} />
           <div style={{ flex: 1 }}>
@@ -317,7 +317,7 @@ export default function Applications() {
         /* ═══════════════════════════════════════════════════════════════════ */
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+          <div className="applications-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
 
             {/* ── PATHWAY 1: IN-PERSON WALK-IN (ROXAS CITY HALL) ─────────── */}
             <div className="card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', borderTop: '4px solid var(--primary-green)', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>

@@ -67,7 +67,7 @@ export default function FormBPLOEditModal({
       zIndex: 1000,
       padding: '1rem'
     }}>
-      <div style={{
+      <div className="bplo-modal-content" style={{
         backgroundColor: '#FFFFFF',
         borderRadius: '12px',
         width: '100%',
@@ -815,7 +815,7 @@ export default function FormBPLOEditModal({
         </form>
 
         {/* Modal Footer */}
-        <div style={{
+        <div className="bplo-modal-footer" style={{
           padding: '1rem 1.5rem',
           borderTop: '1px solid #E2E8F0',
           backgroundColor: '#F8FAFC',

@@ -49,10 +49,10 @@ export default function StartApplication() {
   if (loading) return <div style={{ padding: '2rem', color: 'var(--text-muted)' }}>{isTl ? 'Naglo-load...' : 'Loading...'}</div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '780px', margin: '0 auto' }}>
+    <div className="start-app-container" style={{ padding: '2rem', maxWidth: '780px', margin: '0 auto' }}>
       
       {/* Header */}
-      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="start-app-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-green, #15803D)', marginBottom: '4px' }}>
             {isTl ? 'MUNICIPALITY OF ROXAS • FORM BPLO-01' : 'MUNICIPALITY OF ROXAS • FORM BPLO-01'}
@@ -145,7 +145,7 @@ export default function StartApplication() {
             <label style={{ display: 'block', fontWeight: '700', color: 'var(--text-dark)', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
               {isTl ? '2. Uri ng Aplikasyon' : '2. Application Type'}
             </label>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="start-app-types-grid" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               {[
                 { 
                   value: 'NEW', 

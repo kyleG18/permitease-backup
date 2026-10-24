@@ -391,7 +391,7 @@ const Onboarding = () => {
 
       <div className="card" style={{ padding: '2rem' }}>
         {/* Progress Tracker */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', position: 'relative' }}>
+        <div className="onboarding-stepper-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '20px', left: '0', right: '0', height: '2px', backgroundColor: 'var(--border-light)', zIndex: 0 }}></div>
           <div style={{ position: 'absolute', top: '20px', left: '0', height: '2px', backgroundColor: 'var(--primary-green)', zIndex: 0, width: `${((step - 1) / 3) * 100}%`, transition: 'width 0.3s ease' }}></div>
           
@@ -409,7 +409,7 @@ const Onboarding = () => {
                 }}>
                   <Icon size={18} />
                 </div>
-                <span style={{ fontSize: '0.75rem', marginTop: '0.5rem', fontWeight: isActive ? '600' : '400', color: isActive ? 'var(--text-dark)' : 'var(--text-muted)' }}>
+                <span className={`onboarding-stepper-title ${isActive ? 'active' : ''}`} style={{ fontSize: '0.75rem', marginTop: '0.5rem', fontWeight: isActive ? '600' : '400', color: isActive ? 'var(--text-dark)' : 'var(--text-muted)' }}>
                   {s.title}
                 </span>
               </div>

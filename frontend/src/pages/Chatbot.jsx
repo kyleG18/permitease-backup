@@ -156,7 +156,7 @@ const Chatbot = () => {
   const suggestedQuestions = isTl ? SUGGESTED_TL : SUGGESTED_EN;
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
+    <div className="animate-fade-in chatbot-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
             <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>
@@ -174,7 +174,7 @@ const Chatbot = () => {
       </div>
 
       {/* Suggested Questions */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div className="chatbot-suggested-scroll" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
         {suggestedQuestions.map((q, i) => (
           <button key={i} onClick={() => sendMessage(q)} disabled={loading}
             style={{ background: 'var(--light-green)', border: '1px solid var(--secondary-green)', borderRadius: 'var(--radius-full)', padding: '0.4rem 0.9rem', fontSize: '0.8rem', color: 'var(--primary-green)', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Poppins', fontWeight: '500', opacity: loading ? 0.6 : 1 }}>
@@ -201,7 +201,7 @@ const Chatbot = () => {
                 {msg.type === 'bot' ? <Bot size={20} /> : <User size={20} />}
               </div>
               {/* Bubble */}
-              <div style={{ maxWidth: '75%', padding: '0.875rem 1.125rem', borderRadius: msg.type === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px', background: msg.type === 'user' ? 'var(--primary-green)' : '#f8fafc', color: msg.type === 'user' ? 'white' : '#1e293b', fontSize: '0.92rem', lineHeight: '1.6', border: msg.type === 'bot' ? '1px solid #e2e8f0' : 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <div className="chatbot-bubble" style={{ maxWidth: '75%', padding: '0.875rem 1.125rem', borderRadius: msg.type === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px', background: msg.type === 'user' ? 'var(--primary-green)' : '#f8fafc', color: msg.type === 'user' ? 'white' : '#1e293b', fontSize: '0.92rem', lineHeight: '1.6', border: msg.type === 'bot' ? '1px solid #e2e8f0' : 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 {msg.type === 'user' ? msg.text : renderMessageContent(msg.text)}
               </div>
             </div>
@@ -226,7 +226,7 @@ const Chatbot = () => {
         </div>
 
         {/* Input */}
-        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.75rem', background: 'white' }}>
+        <div className="chatbot-input-row" style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.75rem', background: 'white' }}>
           <input
             type="text"
             value={input}

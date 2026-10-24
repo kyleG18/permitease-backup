@@ -90,7 +90,7 @@ export default function UnifiedApplicationFormView({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="unified-form-actions" style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {onBack && (
               <button
                 type="button"
@@ -209,6 +209,23 @@ export default function UnifiedApplicationFormView({
           </div>
         </div>
       )}
+
+      {/* Mobile Swipe Hint */}
+      <div className="mobile-form-scroll-hint no-print" style={{
+        display: 'none',
+        alignItems: 'center',
+        gap: '0.5rem',
+        backgroundColor: '#EFF6FF',
+        border: '1px solid #BFDBFE',
+        borderRadius: '6px',
+        padding: '0.5rem 0.75rem',
+        marginBottom: '0.75rem',
+        fontSize: '12px',
+        color: '#1E40AF',
+        fontWeight: '600'
+      }}>
+        <span>↔</span> {isTl ? 'I-swipe pakaliwa o pakanan para makita ang buong opisyal na form.' : 'Swipe left/right to view and pan the full official form.'}
+      </div>
 
       {/* ============================================================ */}
       {/* OFFICIAL UNIFIED APPLICATION FORM DOCUMENT CONTAINER         */}
