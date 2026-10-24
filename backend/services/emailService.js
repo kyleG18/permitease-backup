@@ -1,8 +1,12 @@
 const nodemailer = require('nodemailer');
 
-// Configure the email transporter using Gmail
+// Frontend URL for email links (configurable via env, defaults to local dev)
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// Configure the email transporter using Mailtrap SMTP
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT) || 2525,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -114,7 +118,7 @@ const sendApplicationSubmittedEmail = async ({ userEmail, userName, businessName
             ['Submitted On', submittedAt],
         ])}
         <p style="font-size:14px;color:#64748B;">Your application is now queued for review by the LGU. You will be notified once a staff member begins reviewing it.</p>
-        ${ctaButton('http://localhost:5173/applications', 'View My Application')}
+        ${ctaButton(`${FRONTEND_URL}/applications`, 'View My Application')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Application Submitted: ${applicationNumber}`, html);
@@ -133,7 +137,7 @@ const sendApplicationUnderReviewEmail = async ({ userEmail, userName, businessNa
             ['Status', '<span style="color:#D97706;font-weight:700;">UNDER REVIEW</span>'],
         ])}
         <p style="font-size:14px;color:#64748B;">Please wait while the BPLO evaluates your submission. You will be notified of any updates, including if corrections are needed or when a decision is made.</p>
-        ${ctaButton('http://localhost:5173/applications', 'View My Application')}
+        ${ctaButton(`${FRONTEND_URL}/applications`, 'View My Application')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Application Under Review: ${applicationNumber}`, html);
@@ -156,7 +160,7 @@ const sendCorrectionRequestedEmail = async ({ userEmail, userName, businessName,
           <div style="font-size:14px;color:#78350F;">${correctionNotes || 'Please log in to PermitEase for details.'}</div>
         </div>
         <p style="font-size:14px;color:#64748B;">Please log in to PermitEase, review the correction notes, make the necessary updates, and resubmit your application.</p>
-        ${ctaButton('http://localhost:5173/applications', 'Correct & Resubmit Application')}
+        ${ctaButton(`${FRONTEND_URL}/applications`, 'Correct & Resubmit Application')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Correction Required: ${applicationNumber}`, html);
@@ -177,7 +181,7 @@ const sendApplicationApprovedEmail = async ({ userEmail, userName, businessName,
             ...(expirationDate ? [['Permit Expires', expirationDate]] : []),
         ])}
         <p style="font-size:14px;color:#64748B;">Your official business permit has been generated. You may log in to PermitEase to view and download your permit document.</p>
-        ${ctaButton('http://localhost:5173/permits', 'View & Download My Permit')}
+        ${ctaButton(`${FRONTEND_URL}/permits`, 'View & Download My Permit')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Application Approved: ${applicationNumber}`, html);
@@ -200,7 +204,7 @@ const sendApplicationRejectedEmail = async ({ userEmail, userName, businessName,
           <div style="font-size:14px;color:#7F1D1D;">${rejectionReason || 'Please contact the BPLO for further details.'}</div>
         </div>
         <p style="font-size:14px;color:#64748B;">If you believe this is in error or have questions, please contact the BPLO directly or visit PermitEase for more information.</p>
-        ${ctaButton('http://localhost:5173/applications', 'View Application')}
+        ${ctaButton(`${FRONTEND_URL}/applications`, 'View Application')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Application Rejected: ${applicationNumber}`, html);
@@ -220,7 +224,7 @@ const sendPermitIssuedEmail = async ({ userEmail, userName, businessName, permit
             ['Valid Until', expirationDate],
         ])}
         <p style="font-size:14px;color:#64748B;">Your permit includes a digital QR code that can be scanned to verify its authenticity. You may print or keep a digital copy for your records.</p>
-        ${ctaButton('http://localhost:5173/permits', 'Download My Permit')}
+        ${ctaButton(`${FRONTEND_URL}/permits`, 'Download My Permit')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Your Business Permit Has Been Issued: ${permitNumber}`, html);
@@ -246,7 +250,7 @@ const sendRenewalReminderEmail = async ({ userEmail, userName, businessName, per
             ['Expiration Date', expirationDate],
         ])}
         <p style="font-size:14px;color:#64748B;">To avoid penalties, please log in to PermitEase and begin your renewal application before the expiration date.</p>
-        ${ctaButton('http://localhost:5173/renewals', 'Start Renewal Process')}
+        ${ctaButton(`${FRONTEND_URL}/renewals`, 'Start Renewal Process')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Permit Renewal Reminder: ${daysRemaining} Days Left (${permitNumber})`, html);
@@ -266,7 +270,7 @@ const sendPermitExpiredEmail = async ({ userEmail, userName, businessName, permi
             ['Status', '<span style="color:#DC2626;font-weight:700;">EXPIRED</span>'],
         ])}
         <p style="font-size:14px;color:#64748B;">Please log in to PermitEase immediately to initiate your renewal application.</p>
-        ${ctaButton('http://localhost:5173/renewals', 'Renew Now')}
+        ${ctaButton(`${FRONTEND_URL}/renewals`, 'Renew Now')}
         ${closing()}
     `);
     return sendEmail(userEmail, `PermitEase — Your Business Permit Has Expired: ${permitNumber}`, html);
@@ -287,7 +291,7 @@ const sendPermitStatusEmail = async (userEmail, userName, businessName, permitNa
                 ['Status', status],
                 ...(remarks ? [['Remarks', remarks]] : []),
             ])}
-            ${ctaButton('http://localhost:5173/permits', 'View My Permits')}
+            ${ctaButton(`${FRONTEND_URL}/permits`, 'View My Permits')}
             ${closing()}
         `)
     );
@@ -300,7 +304,7 @@ const sendAssessmentCompleteEmail = async (userEmail, userName, businessName) =>
         baseTemplate(`
             ${greeting(userName)}
             <p style="font-size:15px;color:#334155;">Your AI Permit Assessment for <strong>${businessName}</strong> has been generated.</p>
-            ${ctaButton('http://localhost:5173/assessment', 'View Assessment Results')}
+            ${ctaButton(`${FRONTEND_URL}/assessment`, 'View Assessment Results')}
             ${closing()}
         `)
     );

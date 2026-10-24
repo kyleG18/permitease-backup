@@ -60,7 +60,7 @@ async function runTests() {
         // Login as LGU admin
         const r3 = await axios.post(`${API}/auth/login`, {
             email: lguAdminEmail,
-            password: 'admin123'
+            password: 'Admin@12345'
         });
         lguAdminToken = r3.data.token;
 
@@ -182,8 +182,8 @@ async function runTests() {
     console.log('\n--- TEST 9: System admin access is unrestricted ---');
     try {
         const sysRes = await axios.post(`${API}/auth/login`, {
-            email: 'admin@bizcheckpermit.gov.ph',
-            password: 'admin123'
+            email: 'sysadmin@bizcheckpermit.gov.ph',
+            password: 'Admin@12345'
         });
         const sysH = { headers: { Authorization: `Bearer ${sysRes.data.token}` } };
         const auditRes = await axios.get(`${API}/admin/audit-logs`, sysH);
@@ -204,3 +204,7 @@ runTests().catch(err => {
     console.error('Unexpected error:', err.message);
     process.exit(1);
 });
+
+
+
+

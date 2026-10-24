@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { BusinessProvider } from './context/BusinessContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { ProductOnboardingProvider } from './context/ProductOnboardingContext';
+import AppTour from './components/AppTour';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Landing from './pages/Landing';
@@ -57,7 +60,9 @@ const StandaloneProtectedLayout = ({ children, allowedRoles }) => (
 function App() {
   return (
     <AuthProvider>
+      <LanguageProvider>
       <BusinessProvider>
+        <ProductOnboardingProvider>
         <Router>
         <Routes>
           {/* Public routes */}
@@ -113,10 +118,14 @@ function App() {
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        <AppTour />
       </Router>
+        </ProductOnboardingProvider>
       </BusinessProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
 
 export default App;
+

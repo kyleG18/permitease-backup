@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { FileText, Plus, Search, Filter, Download, ChevronRight } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
@@ -11,7 +12,7 @@ const STATUS_CONFIG = {
   SUBMITTED:        { label: 'Submitted to BPLO',  color: '#1E3A8A', bg: '#EFF6FF', dot: '#2563EB' },
   UNDER_REVIEW:     { label: 'Under Review',       color: '#92400E', bg: '#FEF3C7', dot: '#D97706' },
   NEEDS_CORRECTION: { label: 'For Compliance',     color: '#9A3412', bg: '#FFEDD5', dot: '#EA580C' },
-  APPROVED:         { label: 'Approved',           color: '#166534', bg: '#DCFCE7', dot: '#22C55E' },
+  APPROVED:         { label: 'Preparation Verified', color: '#166534', bg: '#DCFCE7', dot: '#22C55E' },
   REJECTED:         { label: 'Rejected',           color: '#991B1B', bg: '#FEE2E2', dot: '#EF4444' },
   CANCELLED:        { label: 'Cancelled',          color: '#475569', bg: '#F1F5F9', dot: '#94A3B8' },
   COMPLETED:        { label: 'Completed',          color: '#14532D', bg: '#F0FDF4', dot: '#16A34A' }
@@ -35,6 +36,7 @@ const StatusBadge = ({ status }) => {
 
 export default function Applications() {
   const { user, token } = useContext(AuthContext);
+  const { lang, t } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ export default function Applications() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const ta = t.applications;
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -84,33 +87,33 @@ export default function Applications() {
   }, [applications, searchQuery, statusFilter]);
 
   return (
-    <div style={{ padding: '2.5rem', maxWidth: '1280px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div className="page-container applications-page" style={{ maxWidth: '1280px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
       
       {/* HEADER */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 0.25rem', color: 'var(--government-navy)' }}>
-            My Applications
+            {ta.title}
           </h1>
           <p style={{ color: '#64748B', fontSize: '15px', margin: 0 }}>
-            Track and manage your business permit application records and their current status.
+            {ta.subtitle}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" 
+          <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" download="UNIFIED_APPLICATION_FORM_FOR_BUSINESS_PERMIT.pdf" target="_blank" rel="noopener noreferrer" 
              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1', padding: '0.625rem 1rem', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', transition: 'background 0.15s' }}>
             <Download size={16} /> Download Application Form
           </a>
-          <Link to="/readiness" 
+          <Link to="/applications/new" 
              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-green)', color: 'white', border: '1px solid var(--primary-green)', padding: '0.625rem 1rem', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', fontSize: '14px', transition: 'background 0.15s' }}>
-            <Plus size={16} /> Prepare Application
+            <Plus size={16} /> {ta.newApplication}
           </Link>
         </div>
       </header>
 
       {/* CONTENT */}
       {loading ? (
-        <div style={{ padding: '4rem', textAlign: 'center', color: '#64748B' }}>Loading application records...</div>
+        <div style={{ padding: '4rem', textAlign: 'center', color: '#64748B' }}>{ta.loading}</div>
       ) : error ? (
         <div style={{ padding: '4rem', textAlign: 'center', color: '#DC2626' }}>{error}</div>
       ) : applications.length === 0 ? (
@@ -121,15 +124,15 @@ export default function Applications() {
             <div style={{ width: '48px', height: '48px', backgroundColor: '#F1F5F9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
               <FileText size={24} color="#64748B" />
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--government-navy)', margin: '0 0 0.5rem' }}>No application records yet</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--government-navy)', margin: '0 0 0.5rem' }}>{ta.noApplications}</h3>
             <p style={{ fontSize: '14px', color: '#64748B', maxWidth: '420px', margin: '0 0 1.5rem', lineHeight: '1.5' }}>
-              You haven't created or recorded a business permit application in PermitEase. Prepare your requirements first, then download your application form and submit the required physical documents to the BPLO office.
+              {ta.noApplicationsDesc}
             </p>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <Link to="/readiness" style={{ padding: '0.625rem 1.25rem', backgroundColor: 'var(--primary-green)', color: 'white', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
-                Prepare an Application
+                {ta.startPrep}
               </Link>
-              <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" style={{ padding: '0.625rem 1.25rem', backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
+              <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" download="UNIFIED_APPLICATION_FORM_FOR_BUSINESS_PERMIT.pdf" target="_blank" rel="noopener noreferrer" style={{ padding: '0.625rem 1.25rem', backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
                 Download Form
               </a>
             </div>
@@ -185,7 +188,7 @@ export default function Applications() {
               <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
               <input 
                 type="text" 
-                placeholder="Search applications..." 
+                placeholder={ta.searchPlaceholder}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{ width: '100%', padding: '0.5rem 1rem 0.5rem 2.25rem', fontSize: '14px', border: '1px solid #CBD5E1', borderRadius: '6px', outline: 'none' }}
@@ -198,7 +201,7 @@ export default function Applications() {
                 onChange={e => setStatusFilter(e.target.value)}
                 style={{ padding: '0.5rem 2rem 0.5rem 0.75rem', fontSize: '14px', border: '1px solid #CBD5E1', borderRadius: '6px', color: 'var(--government-navy)', outline: 'none', backgroundColor: 'white', cursor: 'pointer' }}
               >
-                <option value="ALL">All Statuses</option>
+                <option value="ALL">{ta.filterAll}</option>
                 {existingStatuses.map(status => (
                   <option key={status} value={status}>{STATUS_CONFIG[status]?.label || status}</option>
                 ))}
@@ -211,7 +214,7 @@ export default function Applications() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
               <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
                 <tr>
-                  {['Application', 'Business', 'Type', 'Date', 'Status', 'Action'].map(h => (
+                  {['Application', ta.business, ta.type, ta.submitted, ta.status, ta.actions].map(h => (
                     <th key={h} style={{ padding: '1rem 1.25rem', fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>{h}</th>
                   ))}
                 </tr>
@@ -220,7 +223,7 @@ export default function Applications() {
                 {filteredApps.length === 0 ? (
                   <tr>
                     <td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
-                      No applications match your search.
+                      {ta.noApplications}
                     </td>
                   </tr>
                 ) : (
@@ -245,7 +248,7 @@ export default function Applications() {
                       </td>
                       <td style={{ padding: '1rem 1.25rem' }}>
                         <Link to={`/applications/${app.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '13px', fontWeight: '600', color: 'var(--primary-green)', textDecoration: 'none' }}>
-                          View Details <ChevronRight size={14} />
+                          {ta.viewDetails} <ChevronRight size={14} />
                         </Link>
                       </td>
                     </tr>

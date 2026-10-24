@@ -1,5 +1,52 @@
 const db = require('../config/db');
 
+/**
+ * Evaluate a requirement condition against the business profile.
+ * Mirrors the logic in readinessController.js — keep both in sync when adding new condition types.
+ *
+ * Supported condition_field values:
+ *   'always'               — always applicable
+ *   'industry_category'    — exact match on business.industry_category
+ *   'business_status'      — NOTE: complianceController does not receive appTypeStatus;
+ *                           this field is handled via readinessController instead.
+ *                           Here we match against business.business_status for evaluate triggers.
+ *   'premises_type'        — case-insensitive exact match on business.premises_type
+ *   'business_type_contains' — pipe-separated list; matches if any token equals
+ *                             business.business_type OR business.industry_category
+ *                             (case-insensitive full-value comparison, not substring)
+ *
+ * Unknown condition_field → returns false (not applicable).
+ */
+function evaluateConditionForCompliance(rule, business) {
+    const cf = (rule.condition_field || '').trim();
+    const cv = (rule.condition_value || '').trim();
+
+    if (!cf || cf === 'always') return true;
+
+    if (cf === 'industry_category') {
+        return (business.industry_category || '').trim() === cv;
+    }
+
+    if (cf === 'business_status') {
+        // complianceController matches directly against the stored business.business_status value
+        return (business.business_status || '').trim() === cv;
+    }
+
+    if (cf === 'premises_type') {
+        return (business.premises_type || '').trim().toLowerCase() === cv.toLowerCase();
+    }
+
+    // business_type_contains: pipe-separated list, full-value match (no substring)
+    if (cf === 'business_type_contains') {
+        const tokens = cv.split('|').map(t => t.trim().toLowerCase()).filter(Boolean);
+        const bizType = (business.business_type || '').trim().toLowerCase();
+        const indCat  = (business.industry_category || '').trim().toLowerCase();
+        return tokens.some(t => t === bizType || t === indCat);
+    }
+
+    return false; // unknown condition_field → not applicable
+}
+
 // @desc    Evaluate and update compliance requirements for a business
 // @route   POST /api/compliance/evaluate/:businessId
 // @access  Private
@@ -20,19 +67,7 @@ const evaluateCompliance = async (req, res) => {
         // 1. Fetch all system requirements
         const [rules] = await db.query('SELECT * FROM permit_requirements');
 
-        const applicableRules = rules.filter(rule => {
-            // Rule Engine Logic
-            if (rule.condition_field === 'always') return true;
-            
-            // e.g., condition_field = 'industry_category', condition_value = 'Food & Beverage'
-            const businessValue = business[rule.condition_field];
-            
-            if (businessValue !== undefined) {
-                // simple string match for now
-                return String(businessValue).toLowerCase() === String(rule.condition_value).toLowerCase();
-            }
-            return false;
-        });
+        const applicableRules = rules.filter(rule => evaluateConditionForCompliance(rule, business));
 
         // 2. Fetch existing business_requirements to not overwrite statuses
         const [existingReqs] = await db.query('SELECT * FROM business_requirements WHERE business_id = ?', [businessId]);
@@ -55,8 +90,12 @@ const evaluateCompliance = async (req, res) => {
             }
 
             if (!existing) {
+                // INSERT IGNORE: if a concurrent evaluate request already inserted this row
+                // (race condition — both passed the existingReqMap check before either committed),
+                // the unique key (business_id, requirement_id) prevents duplicates and IGNORE
+                // silently discards the second insert rather than throwing an error.
                 await db.query(
-                    'INSERT INTO business_requirements (business_id, requirement_id, status) VALUES (?, ?, ?)',
+                    'INSERT IGNORE INTO business_requirements (business_id, requirement_id, status) VALUES (?, ?, ?)',
                     [businessId, rule.id, status]
                 );
             }
@@ -94,6 +133,26 @@ const getCompliance = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
+        const business = biz[0];
+
+        // Safe reconciliation: ensure newly applicable requirements appear in business_requirements without resetting existing progress
+        const [rules] = await db.query('SELECT * FROM permit_requirements');
+        const applicableRules = rules.filter(rule => evaluateConditionForCompliance(rule, business));
+        
+        if (applicableRules.length > 0) {
+            const [existingRows] = await db.query('SELECT requirement_id FROM business_requirements WHERE business_id = ?', [businessId]);
+            const existingSet = new Set(existingRows.map(r => r.requirement_id));
+
+            for (const rule of applicableRules) {
+                if (!existingSet.has(rule.id)) {
+                    await db.query(
+                        'INSERT IGNORE INTO business_requirements (business_id, requirement_id, status) VALUES (?, ?, ?)',
+                        [businessId, rule.id, 'Missing']
+                    );
+                }
+            }
+        }
+
         // Get checklist
         const [checklist] = await db.query(`
             SELECT br.*, pr.permit_name, pr.description, pr.is_mandatory, d.document_name, d.file_path 
@@ -101,6 +160,7 @@ const getCompliance = async (req, res) => {
             JOIN permit_requirements pr ON br.requirement_id = pr.id
             LEFT JOIN documents d ON br.document_id = d.id
             WHERE br.business_id = ?
+            ORDER BY pr.id ASC
         `, [businessId]);
 
         // Get latest score

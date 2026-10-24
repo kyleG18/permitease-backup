@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUsers, updateUserRole, updateUserStatus, getAuditLogs } = require('../controllers/adminController');
+const { getUsers, createUser, updateUserRole, updateUserStatus, getAuditLogs } = require('../controllers/adminController');
 const { protect, requireRole } = require('../middleware/authMiddleware');
 const { processRenewalReminders } = require('../services/renewalReminderService');
 
@@ -8,6 +8,7 @@ const { processRenewalReminders } = require('../services/renewalReminderService'
 router.use(protect, requireRole(['system_admin']));
 
 router.get('/users', getUsers);
+router.post('/users', createUser);
 router.put('/users/:id/role', updateUserRole);
 router.put('/users/:id/status', updateUserStatus);
 router.get('/audit-logs', getAuditLogs);

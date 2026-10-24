@@ -55,12 +55,34 @@ const Requirements = () => {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Permit Requirements</h1>
-          <p className="text-muted">View all permit requirements applicable to businesses.</p>
+          <p className="text-muted" style={{ margin: 0 }}>
+            Official statutory clearances and prerequisite documents under the <strong>Municipality of Roxas Citizen’s Charter (RA 11032)</strong>.
+          </p>
         </div>
         {isAdmin && <button className="btn btn-primary" onClick={openAddModal}><Plus size={18} /> Add Requirement</button>}
+      </div>
+
+      {/* Roxas Citizen's Charter Reference Card */}
+      <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#166534', marginBottom: '0.2rem' }}>
+            OFFICIAL LGU CITIZEN’S CHARTER BENCHMARKS (ROXAS, ORIENTAL MINDORO)
+          </div>
+          <div style={{ fontSize: '13px', color: '#14532D' }}>
+            Standard Processing Time: <strong>53 minutes</strong> at BPLO/BOSS | Classification: <strong>Complex (up to 7 days under RA 11032)</strong> | e-Filing: <strong>iBPLS Portal</strong>
+          </div>
+        </div>
+        <a
+          href="https://www.roxasormin.com/citizens-charter/securing-mayor-s-permit-business-permit"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: '12.5px', fontWeight: '600', color: '#166534', backgroundColor: 'white', border: '1px solid #86EFAC', padding: '0.4rem 0.85rem', borderRadius: '6px', textDecoration: 'none' }}
+        >
+          View Roxas Portal Charter ↗
+        </a>
       </div>
 
       <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>

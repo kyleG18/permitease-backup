@@ -18,39 +18,60 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Passwords do not match' });
         }
 
-        // Check if user exists
-        const [existingUsers] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (existingUsers.length > 0) {
-            return res.status(400).json({ message: 'User already exists' });
+        // Password validation: minimum 6 characters (no special character or complex format required)
+        if (password.length < 6) {
+            return res.status(400).json({ 
+                message: 'Password must be at least 6 characters' 
+            });
         }
 
+        // Validate Philippine contact number format if provided
+        if (contact_number && String(contact_number).trim() !== '') {
+            const cleanContact = String(contact_number).replace(/[\s\-()]/g, '');
+            const phPhoneRegex = /^(09\d{9}|\+639\d{9})$/;
+            if (!phPhoneRegex.test(cleanContact)) {
+                return res.status(400).json({
+                    message: 'Please provide a valid 11-digit Philippine mobile number starting with 09 (e.g., 09158938768).'
+                });
+            }
+        }
+
+        // Check if email is already registered
+        const [existingUsers] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (existingUsers.length > 0) {
+            return res.status(400).json({ 
+                message: 'This email is already registered. Please log in or use a different email address.' 
+            });
+        }
+        
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Insert user
+        // New user: insert
         const [result] = await db.query(
             'INSERT INTO users (full_name, email, contact_number, password, role) VALUES (?, ?, ?, ?, ?)',
             [full_name, email, contact_number, hashedPassword, 'business_owner']
         );
 
         if (result.insertId) {
-            // Log audit
-            await logAudit(result.insertId, full_name, 'business_owner', 'User Registration', 'New business owner account created', req.ip);
+            const userId = result.insertId;
+            const userFullName = full_name;
+            await logAudit(userId, userFullName, 'business_owner', 'User Registration', 'New business owner account created', req.ip);
 
-            res.status(201).json({
-                _id: result.insertId,
-                full_name,
+            return res.status(201).json({
+                _id: userId,
+                full_name: userFullName,
                 email,
                 role: 'business_owner',
-                token: generateToken(result.insertId, 'business_owner')
+                token: generateToken(userId, 'business_owner')
             });
         } else {
-            res.status(400).json({ message: 'Invalid user data' });
+            return res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
-        console.error(error);
-        console.error('Registration error:', error); res.status(500).json({ message: 'An internal server error occurred during registration. Please try again later.' });
+        console.error('Registration error:', error);
+        res.status(500).json({ message: 'An internal server error occurred during registration. Please try again later.' });
     }
 };
 
@@ -85,22 +106,22 @@ const loginUser = async (req, res) => {
                 token: generateToken(user.id, user.role)
             });
         } else {
-            res.status(401).json({ message: 'Invalid credentials' });
+            res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
-        console.error(error);
-        console.error('Login error:', error); res.status(500).json({ message: 'An internal server error occurred during login. Please try again later.' });
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'An internal server error occurred during login. Please try again later.' });
     }
 };
 
 // Generate JWT
 const generateToken = (id, role) => {
-    return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
+    return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret123', {
+        expiresIn: '30d'
     });
 };
 
 module.exports = {
     registerUser,
-    loginUser,
+    loginUser
 };

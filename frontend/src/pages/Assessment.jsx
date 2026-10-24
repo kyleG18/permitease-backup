@@ -1,13 +1,16 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { BrainCircuit, CheckCircle, FileText, ChevronDown, ChevronUp, History, Info, Building2, AlertCircle } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const Assessment = () => {
   const { user } = useContext(AuthContext);
+  const { lang, t } = useContext(LanguageContext);
   const config = { headers: { Authorization: `Bearer ${user.token}` } };
+  const ta = t.assessment;
 
   const [businesses, setBusinesses] = useState([]);
   const [selectedBizId, setSelectedBizId] = useState('');
@@ -68,8 +71,8 @@ const Assessment = () => {
   return (
     <div className="animate-fade-in">
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>AI Permit Assessment</h1>
-        <p className="text-muted">Select your registered business and receive an AI-powered analysis of the permits and requirements that apply to it.</p>
+        <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>{ta.title}</h1>
+        <p className="text-muted">{ta.subtitle}</p>
       </div>
 
       {/* Business Selector Card */}
@@ -80,7 +83,7 @@ const Assessment = () => {
           </div>
           <div>
             <h2 style={{ margin: 0 }}>Assess My Business</h2>
-            <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>Choose a business profile to analyze</p>
+            <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>{ta.selectBusiness}</p>
           </div>
         </div>
 
@@ -95,7 +98,7 @@ const Assessment = () => {
         ) : businesses.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
             <Building2 size={40} style={{ color: 'var(--text-muted)', marginBottom: '0.75rem', opacity: 0.5 }} />
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>You have no registered business profiles. Complete onboarding first.</p>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{ta.noBusinesses} {ta.noBusinessesDesc}</p>
           </div>
         ) : (
           <>
@@ -133,7 +136,7 @@ const Assessment = () => {
               onClick={handleAssess}
               disabled={loading || !selectedBizId}
             >
-              {loading ? 'Analyzing business profile...' : <><BrainCircuit size={18} /> Run AI Assessment</>}
+              {loading ? ta.generating : <><BrainCircuit size={18} /> {ta.generate}</>}
             </button>
           </>
         )}
@@ -183,7 +186,7 @@ const Assessment = () => {
           <div className="card" style={{ borderLeft: '4px solid var(--primary-green)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <CheckCircle size={20} color="var(--primary-green)" />
-              <h2 style={{ color: 'var(--primary-green)', margin: 0 }}>Required Permits & Documents</h2>
+              <h2 style={{ color: 'var(--primary-green)', margin: 0 }}>{ta.recommendedPermits}</h2>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
@@ -248,12 +251,12 @@ const Assessment = () => {
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <History size={22} style={{ color: 'var(--primary-green)' }} />
-          <h2 style={{ margin: 0 }}>Assessment History</h2>
+          <h2 style={{ margin: 0 }}>{ta.historyTitle}</h2>
         </div>
         {loadingHistory ? (
           <p className="text-muted">Loading...</p>
         ) : assessments.length === 0 ? (
-          <p className="text-muted text-center" style={{ padding: '2rem' }}>No assessments yet.</p>
+          <p className="text-muted text-center" style={{ padding: '2rem' }}>{ta.noHistory}</p>
         ) : (
           assessments.map(a => {
             let parsed = null;
@@ -266,7 +269,7 @@ const Assessment = () => {
 
             return (
               <div key={a.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', marginBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', cursor: 'pointer' }} onClick={() => setExpandedHistory(expandedHistory === a.id ? null : a.id)}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', cursor: 'pointer', flexWrap: 'wrap', gap: '0.5rem' }} onClick={() => setExpandedHistory(expandedHistory === a.id ? null : a.id)}>
                   <div>
                     <p style={{ fontWeight: '600', margin: '0 0 0.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
                       <Building2 size={15} color="var(--primary-green)" />

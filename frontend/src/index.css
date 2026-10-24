@@ -787,48 +787,345 @@ tbody td {
 
 /* ==========================================================================
    RESPONSIVE — Sidebar + Layout
+/* Base Navigation Controls */
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0.5rem;
+  margin-left: auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Floating AI Chat Button */
+.floating-chat-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  padding: 0;
+  transition: transform var(--transition-fast), bottom var(--transition-fast), right var(--transition-fast);
+}
+
+.floating-chat-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Page Containers */
+.page-container {
+  width: 100%;
+  margin: 0 auto;
+  font-family: 'Inter', -apple-system, sans-serif;
+  padding: 0 0 2rem;
+}
+
+.readiness-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: 'Inter', -apple-system, sans-serif;
+  padding: 0 0 2rem;
+}
+
+/* Two-column layout for Application Details */
+.app-detail-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.app-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.app-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (max-width: 960px) {
+  .app-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE — Sidebar + Layout & Mobile Optimization
    ========================================================================== */
 @media (max-width: 1023px) {
   .sidebar {
     transform: translateX(-100%);
     box-shadow: none;
+    z-index: 50;
   }
   .sidebar.sidebar-open {
     transform: translateX(0);
-    box-shadow: 4px 0 24px rgba(20, 40, 30, 0.18);
+    box-shadow: 4px 0 24px rgba(20, 40, 30, 0.25);
   }
   .main-content { margin-left: 0; }
   .menu-btn        { display: flex !important; }
   .sidebar-close-btn { display: flex !important; }
-}
 
-@media (max-width: 1023px) {
   .dashboard-grid  { grid-template-columns: 1fr; }
   .stats-grid      { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.875rem; }
 }
 
-@media (max-width: 767px) {
-  .header    { padding: 0 1rem !important; height: 54px !important; }
-  .page-content { padding: 1rem; }
+@media (max-width: 768px) {
+  .header { padding: 0 0.875rem !important; height: 56px !important; }
+  .header-actions { gap: 0.5rem !important; }
+  .page-content { padding: 1rem 0.75rem !important; }
   .header-search { display: none !important; }
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-  .stat-card  { padding: 0.875rem 1rem; }
-  .stat-info .value { font-size: 1.375rem; }
-  h1 { font-size: 1.375rem; }
-  h2 { font-size: 1.2rem; }
-  .card { padding: 1rem; }
-  .form-group { margin-bottom: 1rem; }
-  .modal-content {
-    width: 95vw !important;
-    max-height: 90vh;
-    overflow-y: auto;
-    margin: 1rem auto;
+
+  /* Universal container margin/padding reset on mobile */
+  .page-container,
+  .page-content > div[style*="padding: 2.5rem"],
+  .page-content > div[style*="padding: 2rem"],
+  .page-content > div[style*="padding:2.5rem"],
+  .page-content > div[style*="padding:2rem"],
+  .page-content > div[style*="padding: 2rem 1rem"],
+  .page-content > div[style*="padding:2rem 1rem"] {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Universal Card Padding on Mobile */
+  .card,
+  div[style*="background-color: white"][style*="border-radius:"],
+  div[style*="backgroundColor: white"][style*="borderRadius:"],
+  div[style*="background-color: rgb(255, 255, 255)"],
+  div[style*="background: white"][style*="border-radius:"] {
+    padding: 1.25rem 0.875rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Responsive Headings */
+  h1, .page-header h1, h1[style],
+  div[style*="font-size: 32px"], div[style*="font-size: 28px"],
+  div[style*="fontSize: 32px"], div[style*="fontSize: 28px"] {
+    font-size: 1.4rem !important;
+    line-height: 1.25 !important;
+  }
+  h2, h2[style] { font-size: 1.18rem !important; }
+  h3, h3[style] { font-size: 1.05rem !important; }
+
+  /* Universal Table Horizontal Scroll on Mobile */
+  .table-responsive,
+  .card:has(table),
+  div:has(> table),
+  div[style*="overflow: hidden"]:has(table),
+  div[style*="overflow:hidden"]:has(table) {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+  }
+  table {
+    display: table !important;
+    min-width: 580px;
+  }
+
+  /* Universal Modal / Dialog on Mobile */
+  .modal-content,
+  div[style*="position: fixed"][style*="inset: 0"] > div,
+  div[style*="position: fixed"][style*="inset:0"] > div,
+  div[style*="position: fixed"][style*="top: 0"] > div,
+  div[style*="position: fixed"][style*="top:0"] > div,
+  div[style*="position: fixed"][style*="z-index: 100"] > div,
+  div[style*="position: fixed"][style*="z-index: 1000"] > div,
+  div[style*="position: fixed"][style*="z-index: 9999"] > div,
+  div[style*="position: fixed"][style*="zIndex: 100"] > div,
+  div[style*="position: fixed"][style*="zIndex: 1000"] > div,
+  div[style*="position: fixed"][style*="zIndex: 9999"] > div {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    padding: 1.25rem 1rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Two-column Form Grids collapse into 1 column on mobile */
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 2fr"],
+  div[style*="grid-template-columns:1fr 1fr"],
+  div[style*="grid-template-columns:1fr 2fr"],
+  div[style*="grid-template-columns: 1fr 300px"],
+  div[style*="grid-template-columns:1fr 300px"],
+  div[style*="gridTemplateColumns: 1fr 1fr"],
+  div[style*="gridTemplateColumns: 1fr 2fr"],
+  div[style*="gridTemplateColumns:1fr 1fr"],
+  div[style*="gridTemplateColumns:1fr 2fr"],
+  div[style*="gridTemplateColumns: 1fr 300px"],
+  div[style*="gridTemplateColumns:1fr 300px"],
+  div[style*="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))"],
+  div[style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"],
+  div[style*="gridTemplateColumns: repeat(auto-fill, minmax(200px, 1fr))"],
+  div[style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    grid-template-columns: 1fr !important;
+    gap: 0.875rem !important;
+  }
+
+  /* Responsive Touch Targets & iOS Zoom Prevention */
+  input, select, textarea, .form-control {
+    font-size: 16px !important; /* Prevents auto-zoom in mobile Safari / Chrome */
+  }
+
+  .btn {
+    min-height: 42px;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Responsive Header Action Button Rows */
+  header div[style*="display: flex"][style*="gap: 0.75rem"],
+  header div[style*="display: flex"][style*="gap: 1rem"],
+  header div[style*="display:flex"][style*="gap:0.75rem"],
+  header div[style*="display:flex"][style*="gap:1rem"] {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  header div[style*="display: flex"][style*="gap: 0.75rem"] > a,
+  header div[style*="display: flex"][style*="gap: 0.75rem"] > button,
+  header div[style*="display: flex"][style*="gap: 1rem"] > a,
+  header div[style*="display: flex"][style*="gap: 1rem"] > button,
+  header div[style*="display:flex"][style*="gap:0.75rem"] > a,
+  header div[style*="display:flex"][style*="gap:0.75rem"] > button,
+  header div[style*="display:flex"][style*="gap:1rem"] > a,
+  header div[style*="display:flex"][style*="gap:1rem"] > button {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 130px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Floating AI Button on Mobile */
+  .floating-chat-btn {
+    bottom: 1.25rem !important;
+    right: 1.25rem !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .floating-chat-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* Readiness Checklist Item on Mobile */
+  .readiness-item-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.875rem !important;
+  }
+  .readiness-item-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  .readiness-item-actions > button {
+    flex: 1 !important;
+    justify-content: center !important;
+    min-height: 40px !important;
+  }
+
+  /* Search & Toolbar inputs expand gracefully */
+  .applications-search-box,
+  div[style*="max-width: 320px"] > input,
+  div[style*="max-width: 320px"],
+  div[style*="maxWidth: 320px"] > input,
+  div[style*="maxWidth: 320px"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Permit Meta Details Wrap */
+  .permit-meta-grid,
+  div[style*="grid-template-columns: repeat(3, auto)"],
+  div[style*="gridTemplateColumns: repeat(3, auto)"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem 1.5rem !important;
+    margin-top: 0.75rem !important;
+  }
+
+  /* Unified Form responsive container */
+  .unified-form-scroll-container,
+  .unified-form-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  #unified-application-form-doc {
+    min-width: 680px;
+  }
+
+  /* Onboarding Banner on Mobile */
+  .onboarding-banner-container {
+    padding: 0.625rem 0.875rem !important;
+    gap: 0.625rem !important;
+  }
+  .onboarding-dots {
+    display: none !important;
   }
 }
 
 @media (max-width: 540px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .auth-card  { padding: 1.5rem 1rem !important; }
+  .header { padding: 0 0.65rem !important; }
+  .page-content { padding: 0.65rem 0.35rem !important; }
+  .stats-grid { grid-template-columns: 1fr !important; }
+  .auth-card  { padding: 1.5rem 0.875rem !important; }
+
+  /* Readiness stat chips stack cleanly on narrow phones */
+  .readiness-stat-chips {
+    gap: 0.5rem 1rem !important;
+    font-size: 12px !important;
+  }
+
+  /* Header actions full width on small phones */
+  header div[style*="display: flex"][style*="gap: 0.75rem"] > a,
+  header div[style*="display: flex"][style*="gap: 0.75rem"] > button,
+  header div[style*="display: flex"][style*="gap: 1rem"] > a,
+  header div[style*="display: flex"][style*="gap: 1rem"] > button,
+  header div[style*="display:flex"][style*="gap:0.75rem"] > a,
+  header div[style*="display:flex"][style*="gap:0.75rem"] > button,
+  header div[style*="display:flex"][style*="gap:1rem"] > a,
+  header div[style*="display:flex"][style*="gap:1rem"] > button {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
 }
 
 /* ==========================================================================
@@ -1588,3 +1885,16 @@ tbody td {
     print-color-adjust: exact !important;
   }
 }
+
+  /* === UNIFIED APPLICATION FORM PRINT STYLES === */
+  @media print {
+    .unified-form-wrapper .no-print { display: none !important; }
+    #unified-application-form-doc {
+      border: 2px solid #000 !important;
+      box-shadow: none !important;
+    }
+    .app-detail-sidebar { display: none !important; }
+    .app-detail-grid { display: block !important; }
+    .app-detail-main { width: 100% !important; }
+    #unified-application-form-doc table { page-break-inside: avoid !important; }
+  }

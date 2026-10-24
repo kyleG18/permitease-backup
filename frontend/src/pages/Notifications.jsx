@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { Bell, CheckCheck, Trash2, BellOff, Info, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
@@ -31,9 +32,11 @@ const getNotificationLink = (n) => {
 
 export default function Notifications() {
   const { user } = useContext(AuthContext);
+  const { lang, t } = useContext(LanguageContext);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = user?.token;
+  const tn = t.notifications;
 
   const fetchNotifications = async () => {
     try {
@@ -81,21 +84,21 @@ export default function Notifications() {
     return date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
   };
 
-  if (loading) return <div style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading notifications...</div>;
+  if (loading) return <div style={{ padding: '2rem', color: 'var(--text-muted)' }}>{tn.title}...</div>;
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>Notifications</h1>
+          <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>{tn.title}</h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
           </p>
         </div>
         {unreadCount > 0 && (
           <button onClick={markAllRead} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'white', color: 'var(--text-dark)', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}>
-            <CheckCheck size={16} /> Mark all as read
+            <CheckCheck size={16} /> {tn.markAllRead}
           </button>
         )}
       </div>
@@ -103,8 +106,8 @@ export default function Notifications() {
       {notifications.length === 0 ? (
         <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '4rem', textAlign: 'center', boxShadow: 'var(--shadow-card)' }}>
           <BellOff size={48} style={{ color: '#CBD5E1', margin: '0 auto 1rem' }} />
-          <h3 style={{ margin: '0 0 0.5rem', color: 'var(--text-dark)' }}>No Notifications</h3>
-          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>You're all caught up! System alerts and updates will appear here.</p>
+          <h3 style={{ margin: '0 0 0.5rem', color: 'var(--text-dark)' }}>{tn.noNotifications}</h3>
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{tn.noNotificationsDesc}</p>
         </div>
       ) : (
         <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>

@@ -86,7 +86,7 @@ const Documents = () => {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Documents</h1>
           <p className="text-muted">Upload and manage your permit-related documents.</p>

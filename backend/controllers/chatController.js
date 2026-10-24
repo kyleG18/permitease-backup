@@ -108,7 +108,7 @@ ${permits.length > 0 ? permits.map(p => `- ${p.permit_name}: ${p.status}${p.expi
 // @access  Private
 const sendMessage = async (req, res) => {
     try {
-        const { question } = req.body;
+        const { question, language } = req.body;
         
         if (!question || typeof question !== 'string') {
             return res.status(400).json({ message: 'Question is required and must be text.' });
@@ -156,7 +156,7 @@ const sendMessage = async (req, res) => {
         // 7. Call AI Service
         let response = '';
         try {
-            response = await generateChatResponse(messages, userContext, staticContext, requirements, knowledgeDocs);
+            response = await generateChatResponse(messages, userContext, staticContext, requirements, knowledgeDocs, language);
         } catch (aiError) {
             return res.status(503).json({ message: aiError.message });
         }

@@ -1,21 +1,38 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { MessageSquare, Send, User, Bot, AlertTriangle, RefreshCw } from 'lucide-react';
 
-const SUGGESTED = [
+const SUGGESTED_EN = [
   "What documents do I need for my permit?",
+  "How long does BPLO processing take in Roxas?",
+  "Where do I get my ESO Certificate?",
   "How much is my estimated permit fee?",
   "When should I renew my permit?",
-  "What does my application status mean?",
-  "Why does my application need correction?",
-  "What should I do if my permit is expired?"
+  "What are the requirements for Sanitary Permit in Roxas?"
+];
+
+const SUGGESTED_TL = [
+  "Ano ang mga dokumentong kailangan para sa permit?",
+  "Gaano katagal ang proseso sa BPLO sa Roxas?",
+  "Saan kinukuha ang ESO Certificate?",
+  "Magkano ang tinatayang bayarin sa permit?",
+  "Kailan dapat mag-renew ng permit?",
+  "Ano ang mga requirements para sa Sanitary Permit sa Roxas?"
 ];
 
 const Chatbot = () => {
   const { user } = useContext(AuthContext);
+  const { lang } = useContext(LanguageContext);
+  const isTl = lang === 'tl';
+
+  const defaultGreeting = isTl
+    ? "Kumusta! Ako ang PermitEase AI Assistant 🤖\n\nMatutulungan kita sa:\n• Kulang na permit requirements\n• Tinatayang bayarin para sa iyong negosyo\n• Compliance at application status\n• Mga tanong tungkol sa permit at negosyo sa Tagalog o English\n\nPaano kita matutulungan ngayon?"
+    : "Hello! I'm the PermitEase AI Assistant 🤖\n\nI can help you with:\n• Your missing permit requirements\n• Estimated fees for your business\n• Your compliance and application status\n• General permit and business questions\n\nHow can I help you today?";
+
   const [messages, setMessages] = useState([
-    { type: 'bot', text: "Hello! I'm the PermitEase AI Assistant 🤖\n\nI can help you with:\n• Your missing permit requirements\n• Estimated fees for your business\n• Your compliance and application status\n• General permit questions (English or Tagalog)\n\nHow can I help you today?" }
+    { type: 'bot', text: defaultGreeting }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,6 +40,64 @@ const Chatbot = () => {
   const bottomRef = useRef(null);
 
   const config = { headers: { Authorization: `Bearer ${user.token}` } };
+
+  // Clean formatter to render clean text without raw asterisks or clutter
+  const renderMessageContent = (rawText = '') => {
+    // If user message, just show text cleanly
+    if (!rawText) return null;
+
+    // Split text into lines
+    const lines = rawText.split('\n');
+    return lines.map((line, idx) => {
+      const trimmed = line.trim();
+
+      // Skip visual markdown divider lines like '---' or '***'
+      if (/^[-*_]{3,}$/.test(trimmed)) {
+        return <div key={idx} style={{ height: '8px', borderBottom: '1px solid #cbd5e1', margin: '8px 0' }} />;
+      }
+
+      // Headers (e.g. ### 1. Header or ## Header)
+      if (/^#{1,4}\s+/.test(trimmed)) {
+        const headerText = trimmed.replace(/^#{1,4}\s+/, '').replace(/\*\*/g, '');
+        return (
+          <div key={idx} style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginTop: '10px', marginBottom: '4px' }}>
+            {headerText}
+          </div>
+        );
+      }
+
+      // Parse inline **bold**
+      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      const parsedLine = parts.map((part, pIdx) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={pIdx} style={{ color: '#0f172a', fontWeight: '600' }}>{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      });
+
+      // Standard list items (bullets or numbers)
+      const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ');
+      if (isBullet) {
+        return (
+          <div key={idx} style={{ display: 'flex', gap: '8px', marginLeft: '6px', marginBottom: '4px' }}>
+            <span style={{ color: 'var(--primary-green)', fontWeight: 'bold' }}>•</span>
+            <div style={{ flex: 1 }}>{parsedLine.slice(1)}</div>
+          </div>
+        );
+      }
+
+      // Empty line / paragraph break
+      if (!trimmed) {
+        return <div key={idx} style={{ height: '6px' }} />;
+      }
+
+      return (
+        <div key={idx} style={{ marginBottom: '2px' }}>
+          {parsedLine}
+        </div>
+      );
+    });
+  };
 
   useEffect(() => {
     // Load chat history on mount
@@ -59,7 +134,7 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/chat`, { question }, config);
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/chat`, { question, language: lang }, config);
       setMessages(prev => [...prev, { type: 'bot', text: data.response }]);
     } catch (err) {
       if (err.response?.status === 429) {
@@ -74,25 +149,33 @@ const Chatbot = () => {
 
   const clearConversation = () => {
       // Just clear frontend state for simplicity (history remains in DB, but gives a clean slate visually)
-      setMessages([{ type: 'bot', text: "Hello! I'm the PermitEase AI Assistant 🤖\n\nHow can I help you today?" }]);
+      setMessages([{ type: 'bot', text: defaultGreeting }]);
       setError(null);
   };
+
+  const suggestedQuestions = isTl ? SUGGESTED_TL : SUGGESTED_EN;
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-            <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>PermitEase AI Assistant</h1>
-            <p className="text-muted" style={{ margin: 0 }}>Ask about your requirements, fees, compliance status, or general permit questions — in English or Tagalog.</p>
+            <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>
+              {isTl ? 'PermitEase AI Assistant' : 'PermitEase AI Assistant'}
+            </h1>
+            <p className="text-muted" style={{ margin: 0 }}>
+              {isTl 
+                ? 'Magtanong tungkol sa iyong mga kinakailangang permit, bayarin, o pangkalahatang payo sa negosyo.'
+                : 'Ask about your requirements, fees, compliance status, or general permit questions.'}
+            </p>
         </div>
         <button onClick={clearConversation} className="btn btn-outline" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-            <RefreshCw size={16} /> Clear View
+            <RefreshCw size={16} /> {isTl ? 'Linisin ang Chat' : 'Clear View'}
         </button>
       </div>
 
       {/* Suggested Questions */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-        {SUGGESTED.map((q, i) => (
+        {suggestedQuestions.map((q, i) => (
           <button key={i} onClick={() => sendMessage(q)} disabled={loading}
             style={{ background: 'var(--light-green)', border: '1px solid var(--secondary-green)', borderRadius: 'var(--radius-full)', padding: '0.4rem 0.9rem', fontSize: '0.8rem', color: 'var(--primary-green)', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Poppins', fontWeight: '500', opacity: loading ? 0.6 : 1 }}>
             {q}
@@ -118,8 +201,8 @@ const Chatbot = () => {
                 {msg.type === 'bot' ? <Bot size={20} /> : <User size={20} />}
               </div>
               {/* Bubble */}
-              <div style={{ maxWidth: '75%', padding: '0.875rem 1.125rem', borderRadius: msg.type === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px', background: msg.type === 'user' ? 'var(--primary-green)' : '#f1f5f9', color: msg.type === 'user' ? 'white' : '#334155', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap', border: msg.type === 'bot' ? '1px solid #e2e8f0' : 'none' }}>
-                {msg.text}
+              <div style={{ maxWidth: '75%', padding: '0.875rem 1.125rem', borderRadius: msg.type === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px', background: msg.type === 'user' ? 'var(--primary-green)' : '#f8fafc', color: msg.type === 'user' ? 'white' : '#1e293b', fontSize: '0.92rem', lineHeight: '1.6', border: msg.type === 'bot' ? '1px solid #e2e8f0' : 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                {msg.type === 'user' ? msg.text : renderMessageContent(msg.text)}
               </div>
             </div>
           ))}

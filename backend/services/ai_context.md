@@ -36,43 +36,52 @@ Typical Documents (as seen on the Municipality of Roxas Unified Form):
 3. Community Tax Certificate (Sedula)
 4. Barangay Business Clearance
 5. Sanitary Permit/Health Clearance (Rural Health Center)
-6. Environment & Sanitation Certification (MENRO)
-7. Zoning Compliance Certificate/Locational Clearance (MPDO)
-8. Building Permit/Occupational Permit (MEO)
-9. Tourism Clearance (Resort, Hotel, Restaurant & Lodging) (Tourism Office)
-10. Payment Receipt (MTO)
-11. Fire Safety Inspection Clearance (BFP)
+6. ESO Certificate (Environment and Sanitation Office / BOSS) — In the published Roxas Citizen's Charter, this is listed as the ESO Certificate issued by the Environment and Sanitation Office at the Business One Stop Shop.
+7. Zoning Compliance / Locational Clearance (MPDO / BOSS) — Required for new business applications. On renewal, required only if there is an improvement on the structure.
+8. Building Permit / Occupancy Permit (MEO / BOSS) — Required for new business applications. On renewal, required only if there is an improvement on the structure.
+9. Tourism Clearance (for Hotel, Lodging, Apartelle, Transient, Resort and Restaurant) (Municipal Tourism Office)
+10. Official Receipt (Municipal Treasurer's Office)
+11. Fire Safety Inspection Certificate (Bureau of Fire Protection / BOSS)
 
 ==========================================================
 OFFICE RESPONSIBILITIES
 ==========================================================
 
 BUREAU OF FIRE PROTECTION (BFP)
-Purpose: Ensures compliance with the Fire Code.
+Office: Bureau of Fire Protection / Business One Stop Shop (BOSS)
+Purpose: Ensures compliance with the Fire Code of the Philippines (RA 9514).
 Inspection includes: Fire Extinguisher, Exit Signs, Emergency Exit, Electrical Wiring.
+Issues: Fire Safety Inspection Certificate (FSIC).
 
 MUNICIPAL HEALTH OFFICE (MHO/RHU)
-Purpose: Ensures compliance with sanitation and public health standards.
-Issues: Sanitary Permit / Health Clearance.
+Office: Municipal Health Office / Business One Stop Shop (BOSS)
+Purpose: Ensures compliance with sanitation and public health standards (PD 856).
+Issues: Sanitary Certification.
 
 MUNICIPAL ENGINEERING OFFICE (MEO)
-Purpose: Verifies structural safety.
-Issues: Building Permit / Occupational Permit.
+Office: Municipal Engineering Office / Business One Stop Shop (BOSS)
+Purpose: Verifies structural and occupancy compliance.
+Issues: Building Permit / Occupancy Permit.
+Condition Note: Required for new applications; for renewals, required if there is an improvement on the structure.
 
 MUNICIPAL PLANNING AND DEVELOPMENT OFFICE (MPDO)
-Purpose: Checks zoning compliance.
-Issues: Zoning Clearance.
+Office: Municipal Planning and Development Office / Business One Stop Shop (BOSS)
+Purpose: Checks zoning and land use compliance.
+Issues: Zoning Compliance / Locational Clearance.
+Condition Note: Required for new applications; for renewals, required if there is an improvement on the structure.
 
 MUNICIPAL TREASURER'S OFFICE (MTO)
-Purpose: Assessment and payment of taxes and fees.
-Issues: Official Receipt.
+Purpose: Assessment and collection of local business taxes and regulatory fees.
+Issues: Official Receipt / Cedula (Community Tax Certificate).
 
-MENRO
-Purpose: Environmental compliance.
-Issues: Environment & Sanitation Certification.
+ENVIRONMENT AND SANITATION OFFICE (ESO)
+Office: Environment and Sanitation Office / Business One Stop Shop (BOSS)
+Purpose: Environmental compliance and solid waste management.
+Issues: ESO Certificate (listed in the Roxas Citizen's Charter).
 
 TOURISM OFFICE
-Issues: Tourism Clearance (Required only for Hotel, Resort, Inn, Pension House, Tourist Attraction, Restaurants).
+Office: Municipal Tourism Office
+Issues: Tourism Clearance (Required for Hotel, Lodging, Apartelle, Transient, Resort, and Restaurant).
 
 ==========================================================
 AI RESPONSE GUIDELINES

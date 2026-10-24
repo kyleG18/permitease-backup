@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') cb(null, true);
     else cb(new Error('Only PDF files allowed'), false);
-}});
+}, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // @desc    Get all knowledge base documents
 // @route   GET /api/knowledge

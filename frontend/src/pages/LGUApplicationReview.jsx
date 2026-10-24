@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CheckCircle, XCircle, AlertCircle, Clock, Building2, FileText, ChevronRight, Play, RotateCcw, Shield } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
+import UnifiedApplicationFormView from '../components/UnifiedApplicationFormView';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
@@ -232,34 +233,12 @@ export default function LGUApplicationReview() {
         
         {/* LEFT COLUMN */}
         <div>
-          {/* Business Info */}
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={18} color="var(--primary-green)" /> Business Information</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                            {[
-                { label: 'Business Name', value: app.business_name },
-                { label: 'Business Category', value: app.business_type },
-                { label: 'Ownership Type', value: app.ownership_type || '�' },
-                { label: 'Primary Products', value: app.primary_products || '�' },
-                { label: 'Premises Type', value: app.premises_type || '�' },
-                { label: 'Address', value: app.address },
-                { label: 'Location', value: resolvedLocation ? `${resolvedLocation.barangay}, ${resolvedLocation.city}
-${resolvedLocation.province ? resolvedLocation.province + ', ' : ''}${resolvedLocation.region}` : 'Loading...' },
-                { label: 'Owner', value: app.owner_name },
-                { label: 'Contact', value: app.owner_contact || '�' },
-                { label: 'Employees', value: app.employees },
-                { label: 'Capitalization', value: app.capitalization ? `?${Number(app.capitalization).toLocaleString()}` : '�' },
-                { label: 'Gross Sales', value: app.gross_sales ? `?${Number(app.gross_sales).toLocaleString()}` : '�' },
-              ].map(f => (
-                <div key={f.label}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{f.label}</div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-dark)', whiteSpace: 'pre-line' }}>{f.value}</div>
-                </div>
-              ))}
-            </div>
+          {/* Official Unified Application Form View */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <UnifiedApplicationFormView app={app} printable={true} showInstructions={false} />
           </div>
 
-                    {/* Permit Readiness Score */}
+          {/* Permit Readiness Score */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--government-navy)' }}>

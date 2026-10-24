@@ -139,6 +139,16 @@ const AsymmetricalAuth = ({ defaultMode = 'login' }) => {
       return;
     }
 
+    // Validate Philippine contact number format if provided
+    if (registerData.contact_number && registerData.contact_number.trim() !== '') {
+      const cleanContact = registerData.contact_number.replace(/[\s\-()]/g, '');
+      const phPhoneRegex = /^(09\d{9}|\+639\d{9})$/;
+      if (!phPhoneRegex.test(cleanContact)) {
+        setError('Please enter a valid 11-digit Philippine mobile number starting with 09 (e.g., 09158938768).');
+        return;
+      }
+    }
+
     if (!registerData.agreeTerms) {
       setError('You must agree to the Terms of Service and Privacy Policy.');
       return;

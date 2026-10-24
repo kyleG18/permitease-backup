@@ -1,11 +1,14 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Bell, LogOut, Menu } from 'lucide-react';
+import LanguageSwitchButton from './LanguageSwitchButton';
+import { useTranslation } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const Header = ({ toggleSidebar }) => {
+  const { t } = useTranslation();
   const { user, logout } = useContext(AuthContext);
   const [unreadCount, setUnreadCount] = useState(0);
   const token = user?.token;
@@ -31,9 +34,9 @@ const Header = ({ toggleSidebar }) => {
           className="menu-btn" 
           onClick={toggleSidebar} 
           aria-label="Open navigation"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'none' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
         >
-          <Menu size={20} strokeWidth={2.5} />
+          <Menu size={22} strokeWidth={2.5} />
         </button>
 
         {/* Search Bar */}
@@ -41,7 +44,7 @@ const Header = ({ toggleSidebar }) => {
           <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
           <input
             type="text"
-            placeholder="Search permits, requirements..."
+            placeholder={t.header?.searchPlaceholder || 'Search permits, requirements...'}
             className="form-control"
             style={{ 
               padding: '0.6rem 1rem 0.6rem 2.75rem', 
@@ -58,6 +61,8 @@ const Header = ({ toggleSidebar }) => {
 
       {/* User Actions */}
       <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {/* Language Switch Button */}
+        <LanguageSwitchButton />
         {/* Notification Bell */}
         <Link 
           to="/notifications" 
@@ -122,3 +127,4 @@ const Header = ({ toggleSidebar }) => {
 };
 
 export default Header;
+

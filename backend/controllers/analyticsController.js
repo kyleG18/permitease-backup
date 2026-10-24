@@ -210,24 +210,42 @@ const getPermitAnalytics = async (req, res) => {
     }
 };
 
-// @desc    Get missing requirements rankings
+// @desc    Get missing requirements rankings and preparation intelligence
 // @route   GET /api/analytics/requirements
 // @access  Private (LGU Admin, System Admin)
 const getRequirementAnalytics = async (req, res) => {
     try {
-        // Find requirements that are most often 'Missing'
-        const [missingRows] = await db.query(`
-            SELECT pr.permit_name AS requirementName, 
-                   COUNT(*) AS missingCount
-            FROM business_requirements br
-            JOIN permit_requirements pr ON br.requirement_id = pr.id
-            WHERE br.status = 'Missing'
-            GROUP BY br.requirement_id, pr.permit_name
-            ORDER BY missingCount DESC
+        // Find requirements with prepared and missing counts
+        const [reqRows] = await db.query(`
+            SELECT 
+                pr.id AS requirementId,
+                pr.permit_name AS requirementName, 
+                COUNT(br.id) AS totalAssigned,
+                SUM(CASE WHEN br.status = 'Missing' THEN 1 ELSE 0 END) AS missingCount,
+                SUM(CASE WHEN br.status IN ('Submitted', 'Approved') THEN 1 ELSE 0 END) AS preparedCount
+            FROM permit_requirements pr
+            LEFT JOIN business_requirements br ON br.requirement_id = pr.id
+            GROUP BY pr.id, pr.permit_name
+            ORDER BY missingCount DESC, totalAssigned DESC
             LIMIT 10
         `);
 
-        res.json(missingRows);
+        const formatted = reqRows.map(r => {
+            const total = Number(r.totalAssigned) || 0;
+            const missing = Number(r.missingCount) || 0;
+            const prepared = Number(r.preparedCount) || 0;
+            const preparedRate = total > 0 ? Math.round((prepared / total) * 100) : 0;
+            return {
+                requirementId: r.requirementId,
+                requirementName: r.requirementName,
+                totalAssigned: total,
+                missingCount: missing,
+                preparedCount: prepared,
+                preparedRate: preparedRate
+            };
+        });
+
+        res.json(formatted);
     } catch (error) {
         console.error('[AnalyticsController] getRequirementAnalytics error:', error);
         res.status(500).json({ message: 'Unable to load requirement analytics.' });

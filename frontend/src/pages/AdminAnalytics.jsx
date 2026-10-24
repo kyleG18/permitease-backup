@@ -149,7 +149,7 @@ export default function AdminAnalytics() {
             {/* Charts Row 1 */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 {/* Application Trends */}
-                <div className="card" style={{ flex: '2', minWidth: '400px' }}>
+                <div className="card" style={{ flex: '2', minWidth: '280px' }}>
                     <h5 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Application Trends</h5>
                     {applications?.trend?.length > 0 ? (
                         <div style={{ height: '300px' }}>
@@ -169,7 +169,7 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Applications by Status */}
-                <div className="card" style={{ flex: '1', minWidth: '300px' }}>
+                <div className="card" style={{ flex: '1', minWidth: '280px' }}>
                     <h5 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Applications by Status</h5>
                     {applications?.byStatus?.length > 0 ? (
                         <div style={{ height: '300px' }}>
@@ -194,7 +194,7 @@ export default function AdminAnalytics() {
             {/* Charts Row 2 */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 {/* Business Distribution */}
-                <div className="card" style={{ flex: '1', minWidth: '300px' }}>
+                <div className="card" style={{ flex: '1', minWidth: '280px' }}>
                     <h5 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Businesses by Industry</h5>
                     {businesses?.byIndustry?.length > 0 ? (
                         <div style={{ height: '300px' }}>
@@ -213,25 +213,55 @@ export default function AdminAnalytics() {
                     )}
                 </div>
 
-                {/* Common Missing Requirements */}
-                <div className="card" style={{ flex: '1', minWidth: '300px', overflow: 'hidden' }}>
-                    <h5 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Most Common Missing Requirements</h5>
+                {/* Common Missing Requirements & Preparation Bottlenecks */}
+                <div className="card" style={{ flex: '1', minWidth: '280px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                        <div>
+                            <h5 style={{ margin: '0 0 0.25rem', color: 'var(--text-dark)' }}>Preparation Bottlenecks</h5>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Top requirements local businesses still need to prepare</p>
+                        </div>
+                    </div>
+
                     {requirements?.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {requirements.map((req, idx) => (
-                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '6px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                        <div style={{ width: '24px', height: '24px', backgroundColor: '#FEE2E2', color: '#DC2626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: '700' }}>{idx + 1}</div>
-                                        <span style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-dark)' }}>{req.requirementName}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {requirements.map((req, idx) => {
+                                const total = (req.missingCount || 0) + (req.preparedCount || 0);
+                                const prepRate = total > 0 ? Math.round(((req.preparedCount || 0) / total) * 100) : 0;
+                                return (
+                                    <div key={idx} style={{ padding: '0.85rem', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', gap: '0.5rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                                <div style={{ width: '22px', height: '22px', backgroundColor: idx < 3 ? '#FEE2E2' : '#F1F5F9', color: idx < 3 ? '#DC2626' : '#64748B', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: '700', flexShrink: 0 }}>
+                                                    {idx + 1}
+                                                </div>
+                                                <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text-dark)' }}>{req.requirementName}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#16A34A', backgroundColor: '#DCFCE7', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                                                    {req.preparedCount || 0} Ready
+                                                </span>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#DC2626', backgroundColor: '#FEE2E2', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                                                    {req.missingCount || 0} Missing
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Progress bar */}
+                                        <div style={{ height: '6px', backgroundColor: '#FEE2E2', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+                                            <div style={{ height: '100%', width: `${prepRate}%`, backgroundColor: '#16A34A', transition: 'width 0.4s ease' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748B', marginTop: '0.35rem' }}>
+                                            <span>Preparation rate</span>
+                                            <span style={{ fontWeight: '600', color: prepRate > 70 ? '#16A34A' : '#EA580C' }}>{prepRate}% prepared</span>
+                                        </div>
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#DC2626' }}>{req.missingCount} missing</span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <div style={{ height: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                             <FileX size={40} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                            <div>No missing requirements recorded.</div>
+                            <div>No requirement data recorded.</div>
                         </div>
                     )}
                 </div>

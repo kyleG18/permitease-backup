@@ -63,22 +63,79 @@ const createAssessment = async (req, res) => {
             return res.status(503).json({ message: aiError.message });
         }
 
-        // 3. Cross-reference AI classification with actual database rules
+        // 3. Cross-reference AI classification and authoritative profile with actual database rules
         const predictedIndustry = aiResult.industry_category;
         const predictedType = aiResult.business_type;
+
+        // Canonical mapping from simplified AI categories to canonical business types
+        const AI_CATEGORY_TO_CANONICAL = {
+            'food & beverage': 'Food & Beverage',
+            'retail': 'Retail & Trading',
+            'services': 'Services (Personal & Professional)',
+            'manufacturing': 'Manufacturing & Processing',
+            'agriculture': 'Agriculture, Fishery & Aquaculture',
+            'others': 'Others',
+        };
+        const canonicalCategoryFromAI = AI_CATEGORY_TO_CANONICAL[String(predictedIndustry || '').trim().toLowerCase()] || '';
+
+        // Canonical mapping for simplified AI business types (from aiService prompt examples)
+        const AI_TYPE_TO_CANONICAL = {
+            'restaurant': 'Restaurant / Full-Service Eatery',
+            'cafe': 'Cafe / Coffee Shop',
+            'fast food': 'Fast Food / Quick Service',
+            'carenderia': 'Carenderia / Turo-Turo',
+            'sari-sari store': 'Sari-Sari Store',
+            'hotel': 'Hotel / Inn',
+            'resort': 'Resort / Beach Resort',
+            'hostel': 'Pension House / Hostel',
+        };
+        const canonicalTypeFromAI = AI_TYPE_TO_CANONICAL[String(predictedType || '').trim().toLowerCase()] || '';
+
+        const APP_TYPE_TO_STATUS = {
+            'NEW': 'New Application',
+            'RENEWAL': 'Renewal',
+        };
 
         const officialRequirements = [];
         for (const reqRule of allRequirements) {
             let applicable = false;
-            if (reqRule.condition_field === 'always') {
+            const cf = (reqRule.condition_field || '').trim();
+            const cv = (reqRule.condition_value || '').trim();
+
+            if (cf === 'always' || !cf) {
                 applicable = true;
-            } else if (reqRule.condition_field === 'industry_category' &&
-                     String(reqRule.condition_value).toLowerCase() === String(predictedIndustry).toLowerCase()) {
-                applicable = true;
-            } else if (reqRule.condition_field === 'business_type' &&
-                     String(reqRule.condition_value).toLowerCase() === String(predictedType).toLowerCase()) {
-                applicable = true;
+            } else if (cf === 'industry_category') {
+                const bizInd = bizObject ? (bizObject.industry_category || '').trim().toLowerCase() : '';
+                const predInd = String(predictedIndustry || '').trim().toLowerCase();
+                const canonCat = canonicalCategoryFromAI.toLowerCase();
+                const cvLower = cv.toLowerCase();
+                applicable = cvLower === bizInd || cvLower === predInd || cvLower === canonCat;
+            } else if (cf === 'business_type_contains') {
+                // Pipe-separated token list — matches against authoritative bizObject fields, AI predictions, or canonical mappings
+                const tokens = cv.split('|').map(t => t.trim().toLowerCase()).filter(Boolean);
+                const pt = (predictedType     || '').trim().toLowerCase();
+                const pi = (predictedIndustry || '').trim().toLowerCase();
+                const canonCat  = canonicalCategoryFromAI.toLowerCase();
+                const canonType = canonicalTypeFromAI.toLowerCase();
+                const bt = bizObject ? (bizObject.business_type     || '').trim().toLowerCase() : '';
+                const bi = bizObject ? (bizObject.industry_category || '').trim().toLowerCase() : '';
+                applicable = tokens.some(t => t === pt || t === pi || t === canonCat || t === canonType || t === bt || t === bi);
+            } else if (cf === 'premises_type') {
+                // The business object (bizObject) has the actual stored premises_type if available
+                if (bizObject && bizObject.premises_type) {
+                    applicable = (bizObject.premises_type || '').trim().toLowerCase() === cv.toLowerCase();
+                }
+            } else if (cf === 'business_status') {
+                // Support business_status (AITR for Renewal, Building Permit/Zoning for New Application)
+                const rawStatus = (bizObject && bizObject.business_status) ||
+                                  req.body.business_status ||
+                                  req.body.application_type;
+                const statusToMatch = (rawStatus && (APP_TYPE_TO_STATUS[rawStatus.toUpperCase()] || rawStatus)) || '';
+                if (statusToMatch) {
+                    applicable = statusToMatch.trim().toLowerCase() === cv.toLowerCase();
+                }
             }
+
             if (applicable) {
                 officialRequirements.push({ requirement_id: reqRule.id,
                     permit_name: reqRule.permit_name,
@@ -109,7 +166,7 @@ const createAssessment = async (req, res) => {
             for (const req of officialRequirements) {
                 if (!existingMap.has(req.requirement_id)) {
                     await db.query(
-                        'INSERT INTO business_requirements (business_id, requirement_id, status) VALUES (?, ?, ?)',
+                        'INSERT IGNORE INTO business_requirements (business_id, requirement_id, status) VALUES (?, ?, ?)',
                         [resolvedBusinessId, req.requirement_id, 'Missing']
                     );
                 }

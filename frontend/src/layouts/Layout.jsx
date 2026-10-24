@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import ProductOnboardingBanner from '../components/ProductOnboardingBanner';
 import { MessageSquare } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -44,6 +45,10 @@ const Layout = ({ children }) => {
       
       <div className="main-content">
         <Header toggleSidebar={toggleSidebar} />
+
+        {/* Product Onboarding Banner — renders between header and page content */}
+        {user?.role === 'business_owner' && <ProductOnboardingBanner />}
+
         <main className="page-content animate-fade-in">
           {children}
         </main>
@@ -53,16 +58,10 @@ const Layout = ({ children }) => {
       {!isChatPage && (
         <Link 
           to="/assistant" 
-          className="btn btn-primary"
-          style={{
-            position: 'fixed', bottom: '2rem', right: '2rem',
-            width: '56px', height: '56px', borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: 'var(--shadow-lg)', zIndex: 100, padding: 0
-          }}
+          className="btn btn-primary floating-chat-btn"
           title="Ask AI Assistant"
         >
-          <MessageSquare size={24} />
+          <MessageSquare size={22} />
         </Link>
       )}
     </div>

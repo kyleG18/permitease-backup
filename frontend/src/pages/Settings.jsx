@@ -1,10 +1,13 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { User, Lock, Save } from 'lucide-react';
 
 const Settings = () => {
   const { user, login } = useContext(AuthContext); // Need login to update context possibly, but we can just force re-login for major changes
+  const { lang, t } = useContext(LanguageContext);
+  const ts = t.settings;
   
   const [profile, setProfile] = useState({ full_name: user?.full_name || '', contact_number: '' }); // Would fetch real contact if stored in context
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm_password: '' });
@@ -18,7 +21,7 @@ const Settings = () => {
     e.preventDefault();
     try {
       await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/profile`, profile, config);
-      setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setProfileMessage({ type: 'success', text: ts.profileUpdated });
       // Minor issue: the AuthContext still has the old name in memory until they re-login, but that's okay for now.
     } catch (err) {
       setProfileMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update profile' });
@@ -28,12 +31,12 @@ const Settings = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwords.new_password !== passwords.confirm_password) {
-      setPasswordMessage({ type: 'error', text: 'New passwords do not match!' });
+      setPasswordMessage({ type: 'error', text: ts.passwordMismatch });
       return;
     }
     try {
       await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/password`, passwords, config);
-      setPasswordMessage({ type: 'success', text: 'Password changed successfully!' });
+      setPasswordMessage({ type: 'success', text: ts.passwordUpdated });
       setPasswords({ current_password: '', new_password: '', confirm_password: '' });
     } catch (err) {
       setPasswordMessage({ type: 'error', text: err.response?.data?.message || 'Failed to change password' });
@@ -43,14 +46,14 @@ const Settings = () => {
   return (
     <div className="animate-fade-in" style={{ maxWidth: '800px' }}>
       <div className="mb-4">
-        <h2 className="m-0" style={{ fontWeight: 600, color: 'var(--text-dark)' }}>Account Settings</h2>
-        <p className="text-muted">Manage your personal profile and security preferences.</p>
+        <h2 className="m-0" style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{ts.title}</h2>
+        <p className="text-muted">{ts.subtitle}</p>
       </div>
 
       <div className="card mb-4">
         <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <User size={20} className="text-muted" />
-          <h3 className="m-0" style={{ fontSize: '1.125rem' }}>Profile Information</h3>
+          <h3 className="m-0" style={{ fontSize: '1.125rem' }}>{ts.profileTab}</h3>
         </div>
         <div className="p-4">
           {profileMessage.text && (
@@ -61,7 +64,7 @@ const Settings = () => {
           <form onSubmit={handleProfileSubmit}>
             <div className="form-group">
               <input type="email" className="form-control" value={user?.email} disabled placeholder=" " />
-              <label className="form-label">Email Address (Cannot be changed)</label>
+              <label className="form-label">{ts.email} (Cannot be changed)</label>
             </div>
             
             <div className="form-group">
@@ -73,7 +76,7 @@ const Settings = () => {
                 required 
                 placeholder=" "
               />
-              <label className="form-label">Full Name</label>
+              <label className="form-label">{ts.fullName}</label>
             </div>
 
             <div className="form-group">
@@ -84,11 +87,11 @@ const Settings = () => {
                 onChange={(e) => setProfile({ ...profile, contact_number: e.target.value })}
                 placeholder=" "
               />
-              <label className="form-label">Contact Number</label>
+              <label className="form-label">{ts.phone}</label>
             </div>
 
             <button type="submit" className="btn btn-primary">
-              <Save size={18} style={{ marginRight: '8px' }} /> Save Changes
+              <Save size={18} style={{ marginRight: '8px' }} /> {ts.saveChanges}
             </button>
           </form>
         </div>
@@ -97,7 +100,7 @@ const Settings = () => {
       <div className="card">
         <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Lock size={20} className="text-muted" />
-          <h3 className="m-0" style={{ fontSize: '1.125rem' }}>Change Password</h3>
+          <h3 className="m-0" style={{ fontSize: '1.125rem' }}>{ts.securityTab}</h3>
         </div>
         <div className="p-4">
           {passwordMessage.text && (
@@ -115,7 +118,7 @@ const Settings = () => {
                 required 
                 placeholder=" "
               />
-              <label className="form-label">Current Password</label>
+              <label className="form-label">{ts.currentPassword}</label>
             </div>
 
             <div className="form-group">
@@ -127,7 +130,7 @@ const Settings = () => {
                 required 
                 placeholder=" "
               />
-              <label className="form-label">New Password</label>
+              <label className="form-label">{ts.newPassword}</label>
             </div>
 
             <div className="form-group">
@@ -139,11 +142,11 @@ const Settings = () => {
                 required 
                 placeholder=" "
               />
-              <label className="form-label">Confirm New Password</label>
+              <label className="form-label">{ts.confirmPassword}</label>
             </div>
 
             <button type="submit" className="btn btn-primary">
-              <Save size={18} style={{ marginRight: '8px' }} /> Update Password
+              <Save size={18} style={{ marginRight: '8px' }} /> {ts.updatePassword}
             </button>
           </form>
         </div>

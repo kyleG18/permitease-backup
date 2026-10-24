@@ -34,7 +34,21 @@ const getPermit = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM permits WHERE id = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ message: 'Permit not found' });
-        res.json(rows[0]);
+        
+        const permit = rows[0];
+        
+        // RBAC Check
+        const isOwner = permit.business_id && await (async () => {
+            const [biz] = await db.query('SELECT user_id FROM businesses WHERE id = ?', [permit.business_id]);
+            return biz.length > 0 && biz[0].user_id === req.user.id;
+        })();
+        const isAdmin = ['lgu_admin', 'system_admin'].includes(req.user.role);
+        
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to view this permit.' });
+        }
+        
+        res.json(permit);
     } catch (error) {
         console.error('Server error:', error);
         res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
@@ -50,6 +64,19 @@ const createPermit = async (req, res) => {
         if (!business_id || !permit_name) {
             return res.status(400).json({ message: 'Business and permit name are required' });
         }
+
+        // Verify business belongs to the user (or user is admin)
+        const [biz] = await db.query('SELECT user_id FROM businesses WHERE id = ?', [business_id]);
+        if (biz.length === 0) {
+            return res.status(404).json({ message: 'Business not found' });
+        }
+
+        const isOwner = biz[0].user_id === req.user.id;
+        const isAdmin = ['lgu_admin', 'system_admin'].includes(req.user.role);
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to create permit for this business.' });
+        }
+
         const [result] = await db.query(
             'INSERT INTO permits (business_id, permit_name, permit_number, issue_date, expiration_date, status, remarks) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [business_id, permit_name, permit_number, issue_date || null, expiration_date || null, status || 'Pending', remarks]
@@ -73,33 +100,56 @@ const createPermit = async (req, res) => {
 // @access  Private
 const updatePermit = async (req, res) => {
     try {
-        const { permit_name, permit_number, issue_date, expiration_date, status, remarks } = req.body;
-        
-        // Fetch current permit to check if status changed and get user info for email
+        // Fetch current permit to check ownership
         const [existing] = await db.query(
-            `SELECT p.status, p.permit_name, b.business_name, u.email, u.full_name 
+            `SELECT p.id, p.status, p.permit_name, p.business_id, b.user_id
              FROM permits p 
              JOIN businesses b ON p.business_id = b.id 
-             JOIN users u ON b.user_id = u.id 
              WHERE p.id = ?`, 
             [req.params.id]
         );
 
+        if (existing.length === 0) {
+            return res.status(404).json({ message: 'Permit not found' });
+        }
+
+        const permit = existing[0];
+        
+        // RBAC Check
+        const isOwner = permit.user_id === req.user.id;
+        const isAdmin = ['lgu_admin', 'system_admin'].includes(req.user.role);
+        
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to update this permit.' });
+        }
+
+        const { permit_name, permit_number, issue_date, expiration_date, status, remarks } = req.body;
+        
         await db.query(
             'UPDATE permits SET permit_name=?, permit_number=?, issue_date=?, expiration_date=?, status=?, remarks=? WHERE id=?',
             [permit_name, permit_number, issue_date || null, expiration_date || null, status, remarks, req.params.id]
         );
 
         // Send email notification if status changed
-        if (existing.length > 0 && existing[0].status !== status) {
-            const user = existing[0];
-            await sendPermitStatusEmail(user.email, user.full_name, user.business_name, permit_name, status, remarks);
-            
-            // Also add in-app notification
-            await db.query(
-                'INSERT INTO notifications (user_id, title, message) SELECT user_id, ?, ? FROM businesses b JOIN permits p ON p.business_id = b.id WHERE p.id = ?',
-                ['Permit Status Updated', `Your permit "${permit_name}" is now ${status}.`, req.params.id]
+        if (permit.status !== status) {
+            const [userRows] = await db.query(
+                `SELECT u.email, u.full_name, b.business_name 
+                 FROM permits p 
+                 JOIN businesses b ON p.business_id = b.id 
+                 JOIN users u ON b.user_id = u.id 
+                 WHERE p.id = ?`,
+                [req.params.id]
             );
+            if (userRows.length > 0) {
+                const user = userRows[0];
+                await sendPermitStatusEmail(user.email, user.full_name, user.business_name, permit_name, status, remarks);
+                
+                // Also add in-app notification
+                await db.query(
+                    'INSERT INTO notifications (user_id, title, message) SELECT user_id, ?, ? FROM businesses b JOIN permits p ON p.business_id = b.id WHERE p.id = ?',
+                    ['Permit Status Updated', `Your permit "${permit_name}" is now ${status}.`, req.params.id]
+                );
+            }
         }
 
         res.json({ message: 'Permit updated successfully' });
@@ -114,6 +164,29 @@ const updatePermit = async (req, res) => {
 // @access  Private
 const deletePermit = async (req, res) => {
     try {
+        // Fetch current permit to check ownership
+        const [existing] = await db.query(
+            `SELECT p.id, p.business_id, b.user_id
+             FROM permits p 
+             JOIN businesses b ON p.business_id = b.id 
+             WHERE p.id = ?`, 
+            [req.params.id]
+        );
+
+        if (existing.length === 0) {
+            return res.status(404).json({ message: 'Permit not found' });
+        }
+
+        const permit = existing[0];
+        
+        // RBAC Check
+        const isOwner = permit.user_id === req.user.id;
+        const isAdmin = ['lgu_admin', 'system_admin'].includes(req.user.role);
+        
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to delete this permit.' });
+        }
+
         await db.query('DELETE FROM permits WHERE id = ?', [req.params.id]);
         res.json({ message: 'Permit deleted successfully' });
     } catch (error) {

@@ -47,10 +47,10 @@ const getMyPermitRenewals = async (req, res) => {
              JOIN businesses b ON p.business_id = b.id
              LEFT JOIN applications a ON a.business_id = b.id 
                 AND a.application_type = 'RENEWAL' 
-                AND a.status NOT IN ('APPROVED', 'REJECTED', 'CANCELLED')
+                AND a.status NOT IN ('APPROVED', 'REJECTED')
              WHERE b.user_id = ?
              ORDER BY p.expiration_date ASC`,
-            [userId]
+        [userId]
         );
         
         const summary = {
@@ -103,7 +103,7 @@ const getAdminRenewalMonitoring = async (req, res) => {
              JOIN users u ON b.user_id = u.id
              LEFT JOIN applications a ON a.business_id = b.id 
                 AND a.application_type = 'RENEWAL' 
-                AND a.status NOT IN ('APPROVED', 'REJECTED', 'CANCELLED')
+                AND a.status NOT IN ('APPROVED', 'REJECTED')
              ORDER BY p.expiration_date ASC`
         );
         

@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { BusinessContext } from '../context/BusinessContext';
+import { useTranslation } from '../context/LanguageContext';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -21,10 +22,12 @@ import {
   ShieldCheck,
   Shield,
   Rocket,
-  X
+  X,
+  History,
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, closeSidebar }) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { user } = useContext(AuthContext);
   const { isOnboarded } = useContext(BusinessContext);
@@ -36,55 +39,70 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       if (!isOnboarded) {
         return [
           {
-            title: 'MAIN',
+            title: (t.nav?.main || 'MAIN'),
             items: [
-              { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-              { name: 'Set Up My Business', path: '/onboarding', icon: Rocket }
+              { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard, tour: 'dashboard' },
+              { name: (t.nav?.setUpBusiness || 'Set Up My Business'), path: '/onboarding', icon: Rocket }
             ]
           },
           {
-            title: 'ASSISTANCE',
+            title: (t.nav?.assistance || 'ASSISTANCE'),
             items: [
-              { name: 'Tax Estimation', path: '/tax-estimation', icon: Receipt },
-              { name: 'Fee Estimation', path: '/fee-estimation', icon: Receipt },
-              { name: 'AI Help', path: '/assistant', icon: MessageSquare }
+              { name: (t.nav?.taxEstimation || 'Tax Estimation'), path: '/tax-estimation', icon: Receipt, tour: 'tax-estimation' },
+              { name: (t.nav?.feeEstimation || 'Fee Estimation'), path: '/fee-estimation', icon: Receipt, tour: 'fee-estimation' },
+              { name: (t.nav?.aiHelp || 'AI Help'), path: '/assistant', icon: MessageSquare, tour: 'ai-help' }
+            ]
+          },
+          {
+            title: 'NOTIFICATIONS',
+            items: [
+              { name: (t.nav?.notifications || 'Notifications'), path: '/notifications', icon: Bell, tour: 'notifications' }
             ]
           }
         ];
       }
       
+      // ONBOARDED business_owner — flattened flow order
       return [
         {
-          title: 'MAIN',
+          title: (t.nav?.main || 'MAIN'),
           items: [
-            { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-            { name: 'My Business', path: '/profile', icon: Building2 },
+            { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard, tour: 'dashboard' },
+            { name: (t.nav?.myBusiness || 'My Business'), path: '/profile', icon: Building2, tour: 'my-business' },
           ]
         },
         {
-          title: 'ASSESSMENT',
+          title: (t.nav?.assessment || 'ASSESSMENT'),
           items: [
-            { name: 'AI Permit Assessment', path: '/assessment', icon: BrainCircuit },
-            { name: 'Tax Estimation', path: '/tax-estimation', icon: Receipt },
-            { name: 'Fee Estimation', path: '/fee-estimation', icon: Receipt },
+            { name: (t.nav?.aiAssessment || 'AI Permit Assessment'), path: '/assessment', icon: BrainCircuit, tour: 'ai-assessment' },
+            { name: (t.nav?.taxEstimation || 'Tax Estimation'), path: '/tax-estimation', icon: Receipt, tour: 'tax-estimation' },
+            { name: (t.nav?.feeEstimation || 'Fee Estimation'), path: '/fee-estimation', icon: Receipt, tour: 'fee-estimation' },
           ]
         },
         {
-          title: 'PERMIT PREPARATION',
+          title: (t.nav?.permitPreparation || 'PERMIT PREPARATION'),
           items: [
-            { name: 'Permit Readiness', path: '/readiness', icon: ShieldCheck },
+            { name: (t.nav?.permitReadiness || 'Permit Readiness'), path: '/readiness', icon: ShieldCheck, tour: 'permit-readiness' },
+            { name: (t.nav?.myApplications || 'My Applications'), path: '/applications', icon: ClipboardCheck, tour: 'my-applications' },
+            { name: (t.nav?.myPermits || 'My Permits'), path: '/permits', icon: Shield, tour: 'my-permits' },
           ]
         },
         {
-          title: 'RENEWALS',
+          title: (t.nav?.renewals || 'RENEWALS'),
           items: [
-            { name: 'Renewals', path: '/renewals', icon: CalendarClock }
+            { name: (t.nav?.renewalMonitoring || 'Renewals'), path: '/renewals', icon: CalendarClock, tour: 'renewals' },
           ]
         },
         {
-          title: 'ASSISTANCE',
+          title: (t.nav?.assistance || 'ASSISTANCE'),
           items: [
-            { name: 'AI Help', path: '/assistant', icon: MessageSquare }
+            { name: (t.nav?.aiHelp || 'AI Help'), path: '/assistant', icon: MessageSquare, tour: 'ai-help' },
+          ]
+        },
+        {
+          title: 'NOTIFICATIONS',
+          items: [
+            { name: (t.nav?.notifications || 'Notifications'), path: '/notifications', icon: Bell, tour: 'notifications' },
           ]
         }
       ];
@@ -93,9 +111,9 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     if (role === 'lgu_admin') {
       return [
         {
-          title: 'MAIN',
+          title: (t.nav?.main || 'MAIN'),
           items: [
-            { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
             { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
             { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
@@ -103,14 +121,11 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           ]
         },
         {
-          title: 'ASSISTANCE & DATA',
+          title: 'ANALYTICS & DATA',
           items: [
-            { name: 'AI Classification', path: '/assessment', icon: BrainCircuit },
-            { name: 'Tax & Fee Rules', path: '/tax-estimate', icon: Receipt },
-            { name: 'Knowledge Base', path: '/knowledge', icon: Library },
-            { name: 'AI Assistant', path: '/assistant', icon: MessageSquare },
             { name: 'LGU Analytics', path: '/admin/analytics', icon: BarChart },
             { name: 'Reports', path: '/reports', icon: FileText },
+            { name: 'Knowledge Base', path: '/knowledge', icon: Library },
           ]
         }
       ];
@@ -119,33 +134,34 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     if (role === 'system_admin') {
       return [
         {
-          title: 'MAIN',
+          title: (t.nav?.main || 'MAIN'),
           items: [
-            { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
             { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
             { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
-            { name: 'Business Profiles', path: '/profile', icon: Building2 },
             { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }
           ]
         },
         {
-          title: 'ADMIN & SYSTEM',
+          title: 'ADMINISTRATION',
           items: [
             { name: 'User Management', path: '/user-management', icon: Users },
-            { name: 'Role Management', path: '/role-management', icon: ShieldAlert },
-            { name: 'AI Assessment', path: '/assessment', icon: BrainCircuit },
-            { name: 'AI Assistant', path: '/assistant', icon: MessageSquare },
-            { name: 'Knowledge Base', path: '/knowledge', icon: Library },
+            { name: 'Audit Trail', path: '/audit-logs', icon: History }
+          ]
+        },
+        {
+          title: 'ANALYTICS & REPORTS',
+          items: [
             { name: 'LGU Analytics', path: '/admin/analytics', icon: BarChart },
             { name: 'Reports', path: '/reports', icon: FileText },
-            { name: 'Audit Logs', path: '/audit-logs', icon: FileText }
+            { name: 'Knowledge Base', path: '/knowledge', icon: Library }
           ]
         }
       ];
     }
 
-    return [{ title: 'MAIN', items: [{ name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }] }];
+    return [{ title: (t.nav?.main || 'MAIN'), items: [{ name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard }] }];
   };
 
   const navSections = getNavSections();
@@ -154,7 +170,16 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
       {/* Logo Area */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-mark">P</div>
+        <img 
+          src="/images/roxas-seal.png" 
+          alt="Municipality of Roxas Seal" 
+          style={{ 
+            width: '38px', 
+            height: '38px', 
+            objectFit: 'contain', 
+            flexShrink: 0 
+          }} 
+        />
         <div className="sidebar-logo-text">
           <h2>PermitEase</h2>
           <span>Municipality of Roxas</span>
@@ -163,20 +188,21 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           className="sidebar-close-btn"
           onClick={closeSidebar}
           aria-label="Close navigation"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'none', padding: '0.25rem', marginLeft: 'auto' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem', marginLeft: 'auto' }}
         >
           <X size={20} />
         </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" aria-label="Main navigation">
         {navSections.map((section, idx) => (
           <div key={idx} style={{ marginBottom: '1.25rem' }}>
             <div className="sidebar-section-label">{section.title}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               {section.items.map((item) => {
-                const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path ||
+                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path + '/'));
                 const Icon = item.icon;
                 return (
                   <Link 
@@ -184,9 +210,11 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                     to={item.path} 
                     onClick={closeSidebar} 
                     className={`sidebar-item ${isActive ? 'active' : ''}`}
+                    data-tour={item.tour || undefined}
+                    aria-current={isActive ? 'page' : undefined}
                   >
-                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} style={{ color: isActive ? 'var(--primary-green)' : 'var(--text-muted)' }} />
-                    {item.name}
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} style={{ color: isActive ? 'var(--primary-green)' : 'var(--text-muted)', flexShrink: 0 }} />
+                    <span>{item.name}</span>
                   </Link>
                 );
               })}
@@ -195,15 +223,16 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         ))}
       </nav>
 
-      {/* Settings Footer */}
+      {/* Settings + Tour Footer */}
       <div className="sidebar-footer">
         <Link 
           to="/settings" 
           onClick={closeSidebar} 
           className={`sidebar-item ${location.pathname === '/settings' ? 'active' : ''}`}
+          aria-current={location.pathname === '/settings' ? 'page' : undefined}
         >
-          <Settings size={18} strokeWidth={location.pathname === '/settings' ? 2.5 : 2} /> 
-          Settings
+          <Settings size={18} strokeWidth={location.pathname === '/settings' ? 2.5 : 2} />
+          <span>Settings</span>
         </Link>
       </div>
     </aside>

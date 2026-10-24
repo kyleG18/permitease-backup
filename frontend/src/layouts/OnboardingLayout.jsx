@@ -1,4 +1,5 @@
 import React from 'react';
+import LanguageSwitchButton from '../components/LanguageSwitchButton';
 
 const OnboardingLayout = ({ children }) => {
   return (
@@ -12,18 +13,22 @@ const OnboardingLayout = ({ children }) => {
         alignItems: 'center', 
         gap: '0.75rem' 
       }}>
-        <div style={{ 
-          width: '36px', height: '36px', 
-          backgroundColor: 'var(--primary-green)', color: 'white', 
-          borderRadius: 'var(--radius-sm)', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          fontWeight: 'bold', fontSize: '1.2rem' 
-        }}>
-          P
-        </div>
+        <img 
+          src="/images/roxas-seal.png" 
+          alt="Municipality of Roxas Seal" 
+          style={{ 
+            width: '38px', 
+            height: '38px', 
+            objectFit: 'contain',
+            flexShrink: 0
+          }} 
+        />
         <div>
           <h1 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-dark)' }}>PermitEase</h1>
           <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Municipality of Roxas</p>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <LanguageSwitchButton />
         </div>
       </header>
       
@@ -36,3 +41,4 @@ const OnboardingLayout = ({ children }) => {
 };
 
 export default OnboardingLayout;
+

@@ -26,7 +26,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const getUserBusinessIds = async (userId) => {
     const [businesses] = await db.query('SELECT id FROM businesses WHERE user_id = ?', [userId]);

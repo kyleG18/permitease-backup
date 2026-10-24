@@ -276,7 +276,7 @@ const BusinessProfile = () => {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Business Profiles</h1>
           <p className="text-muted">Manage your registered business information.</p>
@@ -298,7 +298,7 @@ const BusinessProfile = () => {
           <button className="btn btn-primary" onClick={openAddModal}><Plus size={18} /> Add Business</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
           {businesses.map(biz => (
             <div key={biz.id} className="card" style={{ borderLeft: '4px solid var(--primary-green)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -341,8 +341,8 @@ const BusinessProfile = () => {
 
       {/* Modern Top-Label Form Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-          <div className="card" style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0.75rem', boxSizing: 'border-box' }}>
+          <div className="card modal-content" style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '1.5rem', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '1rem' }}>
               <h2 style={{ margin: 0, color: 'var(--primary-dark)' }}>{editingBusiness ? 'Edit Business Profile' : 'Add Business'}</h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
@@ -457,6 +457,7 @@ const BusinessProfile = () => {
                     <option value="">Select</option>
                     <option>Commercial Establishment</option><option>Home-Based</option>
                     <option>Residential/Commercial</option><option>Shared/Leased Space</option>
+                    <option>Public Market Stall</option><option>Other</option>
                   </select>
                 </div>
                 <div>

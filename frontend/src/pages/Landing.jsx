@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, RefreshCw, ListChecks, Coins, ShieldCheck, Landmark, User, BarChart3, CheckCircle, ArrowRight, Menu, X } from 'lucide-react';
 import Footer from '../components/Footer';
+import LanguageSwitchButton from '../components/LanguageSwitchButton';
+import { useTranslation } from '../context/LanguageContext';
 
 const Landing = () => {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -85,7 +88,7 @@ const Landing = () => {
             flex-direction: column;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: #1E3A8A;
+            background: linear-gradient(180deg, #0F4A28 0%, #0A361D 100%);
             z-index: 200;
             align-items: center;
             justify-content: center;
@@ -160,16 +163,18 @@ const Landing = () => {
 
         {/* Desktop Nav */}
         <nav className="nav-desktop">
+          <LanguageSwitchButton variant="landing" />
           <a href="#" style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: '600', textDecoration: 'none', position: 'relative', paddingBottom: '4px', borderBottom: '3px solid #16A34A' }}>Home</a>
           <a href="#services" style={{ color: '#475569', fontSize: '0.95rem', fontWeight: '600', textDecoration: 'none' }}>Services</a>
           <a href="#how-it-works" style={{ color: '#475569', fontSize: '0.95rem', fontWeight: '600', textDecoration: 'none' }}>About</a>
-          <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.6rem 1.4rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.6rem 1.4rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803D'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16A34A'}>
             <User size={15} /> Login
           </button>
         </nav>
 
         {/* Mobile Nav Toggle */}
         <div className="nav-mobile">
+          <LanguageSwitchButton variant="landing" style={{ padding: '0.45rem 0.65rem' }} />
           <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#16A34A', color: 'white', padding: '0.55rem 1rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}>
             <User size={14} /> Login
           </button>
@@ -214,30 +219,30 @@ const Landing = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
             <div style={{ width: '36px', height: '4px', backgroundColor: '#16A34A', flexShrink: 0 }} />
             <span style={{ color: '#374151', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Official Business Permit Preparation & Support Portal
+              {t.landing.portalBadge}
             </span>
           </div>
 
           <h1 className="hero-h1" style={{ fontWeight: '900', margin: '0 0 0.4rem 0', color: '#1E3A8A', lineHeight: 1.05 }}>
-            PermitEase
+            {t.landing.heroTitle1}
           </h1>
           <h2 className="hero-h2" style={{ fontWeight: '700', margin: '0 0 1.25rem 0', color: '#1E3A8A', lineHeight: 1.2 }}>
-            Your Business Permit<br />Preparation, Made Simple.
+            {t.landing.heroTitle2}
           </h2>
 
           <p style={{ fontSize: '1rem', margin: '0 0 2rem 0', color: '#374151', lineHeight: 1.65, maxWidth: '480px' }}>
-            Prepare your requirements, track your progress, monitor your readiness, and stay informed — all in one place, before you visit the BPLO.
+            {t.landing.heroDesc}
           </p>
 
           <div className="hero-btns">
-            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer' }}>
-              <FileText size={17} /> Start New Business &rarr;
+            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#072216'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0B2C1D'}>
+              <FileText size={17} /> {t.landing.startNewBtn} &rarr;
             </button>
-            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#16A34A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1.5px solid #16A34A', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer' }}>
-              <RefreshCw size={17} /> Prepare Renewal &rarr;
+            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#16A34A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1.5px solid #16A34A', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(11, 44, 29, 0.05)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+              <RefreshCw size={17} /> {t.landing.prepareRenewalBtn} &rarr;
             </button>
             <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#1E3A8A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer' }}>
-              <User size={17} /> Login to Portal
+              <User size={17} /> {t.landing.loginPortalBtn}
             </button>
           </div>
         </div>
@@ -253,25 +258,25 @@ const Landing = () => {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
             <div style={{ width: '36px', height: '4px', backgroundColor: '#16A34A' }} />
-            <span style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Our Services</span>
+            <span style={{ color: '#166534', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t.landing.servicesBadge}</span>
           </div>
 
           <h2 className="section-h2" style={{ fontWeight: '800', margin: '0 0 1rem 0', color: '#1E3A8A' }}>
-            Everything You Need for<br />Business Permit Compliance
+            {t.landing.servicesTitle}
           </h2>
           <p style={{ fontSize: '1rem', margin: '0 0 3.5rem 0', color: '#475569', lineHeight: 1.65, maxWidth: '680px' }}>
-            PermitEase helps business owners understand what they need before applying, organize their requirements, monitor their application status, and stay informed about upcoming renewals.
+            {t.landing.servicesSubtitle}
           </p>
 
           <div className="services-grid">
             {[
-              { icon: <ListChecks size={26} />, title: 'Permit Requirements', desc: 'View the complete list of required documents based on your business type and category.' },
-              { icon: <Coins size={26} />, title: 'Tax & Fee Estimation', desc: 'Get an estimated amount of applicable taxes and regulatory fees based on configured LGU rules.' },
-              { icon: <ShieldCheck size={26} />, title: 'Permit Readiness', desc: 'Track your compliance status and see which requirements are still pending or completed.' },
-              { icon: <FileText size={26} />, title: 'Preparation Summary', desc: 'Generate a complete summary of your prepared documents and compliance status before your BPLO visit.' },
+              { icon: <ListChecks size={26} />, title: t.landing.service1Title, desc: t.landing.service1Desc },
+              { icon: <Coins size={26} />, title: t.landing.service2Title, desc: t.landing.service2Desc },
+              { icon: <ShieldCheck size={26} />, title: t.landing.service3Title, desc: t.landing.service3Desc },
+              { icon: <FileText size={26} />, title: t.landing.service4Title, desc: t.landing.service4Desc },
             ].map((s, i) => (
               <div key={i}>
-                <div style={{ width: '58px', height: '58px', backgroundColor: '#E2E8F0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: '#1E3A8A' }}>
+                <div style={{ width: '58px', height: '58px', backgroundColor: '#DCFCE7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: '#16A34A' }}>
                   {s.icon}
                 </div>
                 <h3 style={{ fontSize: '1.15rem', color: '#1E3A8A', margin: '0 0 0.6rem 0', fontWeight: '700' }}>{s.title}</h3>
@@ -280,13 +285,13 @@ const Landing = () => {
             ))}
 
             {/* Support Box */}
-            <div className="support-box" style={{ backgroundColor: '#F1F5F9', borderLeft: '4px solid #16A34A', padding: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderRadius: '4px' }}>
+            <div className="support-box" style={{ backgroundColor: '#F0FDF4', borderLeft: '4px solid #16A34A', padding: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderRadius: '4px' }}>
               <div style={{ color: '#1E3A8A', flexShrink: 0 }}>
                 <Landmark size={44} />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.2rem', color: '#1E3A8A', margin: '0 0 0.4rem 0', fontWeight: '800' }}>Supporting a More Business-Friendly Municipality</h3>
-                <p style={{ color: '#475569', margin: 0, fontSize: '0.97rem' }}>Together for a stronger, more competitive Roxas.</p>
+                <h3 style={{ fontSize: '1.2rem', color: '#1E3A8A', margin: '0 0 0.4rem 0', fontWeight: '800' }}>{t.landing.supportBoxTitle}</h3>
+                <p style={{ color: '#475569', margin: 0, fontSize: '0.97rem' }}>{t.landing.supportBoxDesc}</p>
               </div>
             </div>
           </div>
@@ -296,23 +301,23 @@ const Landing = () => {
       {/* ── HOW IT WORKS ── */}
       <section id="how-it-works" style={{ padding: '5rem 5%', backgroundColor: '#ffffff' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-h2" style={{ fontWeight: '800', margin: '0 0 0.5rem 0', color: '#1E3A8A' }}>How It Works</h2>
+          <h2 className="section-h2" style={{ fontWeight: '800', margin: '0 0 0.5rem 0', color: '#1E3A8A' }}>{t.landing.howItWorksTitle}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
             <div style={{ width: '36px', height: '4px', backgroundColor: '#16A34A' }} />
-            <span style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '500' }}>Get started in just a few simple steps.</span>
+            <span style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '500' }}>{t.landing.howItWorksSubtitle}</span>
           </div>
 
           <div className="steps-row">
             {[
-              { num: '01', icon: <User size={22} />, title: 'Create Account', desc: 'Register and set up your business profile.' },
-              { num: '02', icon: <ListChecks size={22} />, title: 'Complete Requirements', desc: 'Upload necessary documents and answer the assessment questions.' },
-              { num: '03', icon: <BarChart3 size={22} />, title: 'Track Readiness', desc: 'Monitor your compliance status and get AI-powered insights.' },
-              { num: '04', icon: <CheckCircle size={22} />, title: 'Get Your Summary', desc: 'View your preparation summary and estimated fees.' },
+              { num: '01', icon: <User size={22} />, title: t.landing.step1Title, desc: t.landing.step1Desc },
+              { num: '02', icon: <ListChecks size={22} />, title: t.landing.step2Title, desc: t.landing.step2Desc },
+              { num: '03', icon: <BarChart3 size={22} />, title: t.landing.step3Title, desc: t.landing.step3Desc },
+              { num: '04', icon: <CheckCircle size={22} />, title: t.landing.step4Title, desc: t.landing.step4Desc },
             ].map((step, i, arr) => (
               <div key={step.num} style={{ display: 'contents' }}>
                 <div style={{ flex: '1', minWidth: '160px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#1E3A8A', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '0.85rem', flexShrink: 0 }}>{step.num}</div>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#16A34A', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '0.85rem', flexShrink: 0 }}>{step.num}</div>
                     <div style={{ width: '46px', height: '46px', borderRadius: '50%', backgroundColor: '#F1F5F9', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {step.icon}
                     </div>
@@ -338,25 +343,25 @@ const Landing = () => {
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
           <div className="card animate-slide-up" style={{ width: '100%', maxWidth: '420px', textAlign: 'center', padding: '2.5rem', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
-            <h2 style={{ color: '#166534', marginBottom: '0.5rem', fontWeight: '800', fontSize: '1.4rem' }}>Welcome to PermitEase</h2>
-            <p style={{ color: '#64748B', marginBottom: '2rem', fontSize: '0.95rem' }}>Please log in or register to continue.</p>
+            <h2 style={{ color: '#1E3A8A', marginBottom: '0.5rem', fontWeight: '800', fontSize: '1.4rem' }}>{t.landing.modalTitle}</h2>
+            <p style={{ color: '#64748B', marginBottom: '2rem', fontSize: '0.95rem' }}>{t.landing.modalSubtitle}</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <button 
                 onClick={() => navigate('/login')} 
                 style={{ padding: '1rem', backgroundColor: '#16A34A', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803D'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16A34A'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#072216'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0B2C1D'}
               >
-                Log In to Existing Account
+                {t.landing.modalLoginBtn}
               </button>
               <button 
                 onClick={() => navigate('/register')} 
                 style={{ padding: '1rem', backgroundColor: 'transparent', color: '#16A34A', border: '1.5px solid #16A34A', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(11, 44, 29, 0.05)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
-                Register New Business
+                {t.landing.modalRegisterBtn}
               </button>
             </div>
 
@@ -366,7 +371,7 @@ const Landing = () => {
               onMouseEnter={(e) => e.currentTarget.style.color = '#16A34A'}
               onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}
             >
-              Cancel
+              {t.landing.modalCancel}
             </button>
           </div>
         </div>
@@ -377,3 +382,4 @@ const Landing = () => {
 };
 
 export default Landing;
+

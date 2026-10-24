@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CheckCircle, AlertCircle, FileText, ChevronRight, Send, UploadCloud, X, Printer, Download, Info } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
+import UnifiedApplicationFormView from '../components/UnifiedApplicationFormView';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
@@ -226,7 +227,7 @@ export default function ApplicationDetail() {
   }
 
   return (
-    <div style={{ padding: '2.5rem', maxWidth: '1280px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div className="page-container app-detail-page" style={{ maxWidth: '1280px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
       
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '13px', color: '#64748B' }}>
@@ -248,16 +249,23 @@ export default function ApplicationDetail() {
             {app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal'} • <StatusBadge status={app.status} />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" target="_blank" rel="noopener noreferrer" 
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.625rem 1.1rem', borderRadius: '6px', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }}
+          >
+            <Printer size={16} /> Print Pre-filled Form
+          </button>
+          <a href="/forms/Roxas_Business_Permit_Application_Form.pdf" download="UNIFIED_APPLICATION_FORM_FOR_BUSINESS_PERMIT.pdf" target="_blank" rel="noopener noreferrer" 
              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1', padding: '0.625rem 1rem', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
-            <Download size={16} /> Download Form
+            <Download size={16} /> Download Blank PDF
           </a>
         </div>
       </header>
 
       {/* OFFICIAL PROCESS NOTICE */}
-      <div style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '8px', padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
+      <div className="no-print" style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '8px', padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
         <Info size={18} color="#0284C7" style={{ flexShrink: 0, marginTop: '2px' }} />
         <div>
           <div style={{ fontSize: '13px', fontWeight: '700', color: '#0369A1', marginBottom: '0.25rem' }}>OFFICIAL PROCESS</div>
@@ -267,35 +275,14 @@ export default function ApplicationDetail() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'start' }}>
+      <div className="app-detail-grid">
         
         {/* LEFT COLUMN: MAIN CONTENT */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', gridColumn: 'span 2' }}>
+        <div className="app-detail-main">
           
-          {/* Application Information */}
-          <section>
-            <h2 style={{ fontSize: '20px', fontWeight: '650', color: 'var(--government-navy)', margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FileText size={20} color="var(--primary-green)" /> Application Information
-            </h2>
-            <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                {[
-                  { label: 'Business', value: app.business_name },
-                  { label: 'Application Type', value: app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal' },
-                  { label: 'Application Date', value: formatDate(new Date(app.created_at)) },
-                  { label: 'Application ID', value: app.application_number || 'Unassigned' },
-                  { label: 'Industry', value: app.industry_category },
-                  { label: 'Capitalization', value: app.capitalization ? `₱${Number(app.capitalization).toLocaleString()}` : null },
-                  { label: 'Gross Sales', value: app.gross_sales ? `₱${Number(app.gross_sales).toLocaleString()}` : null },
-                  { label: 'Owner', value: app.owner_name }
-                ].filter(f => f.value).map((f, i) => (
-                  <div key={i}>
-                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '0.25rem' }}>{f.label}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--government-navy)' }}>{f.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Unified Application Form View */}
+          <section style={{ marginBottom: '2.5rem' }}>
+            <UnifiedApplicationFormView app={app} printable={true} showInstructions={true} />
           </section>
 
           {/* Documents Section */}
@@ -421,7 +408,7 @@ export default function ApplicationDetail() {
         </div>
 
         {/* RIGHT COLUMN: STATUS & TIMELINE */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', gridColumn: 'span 1' }}>
+        <div className="app-detail-sidebar">
           
           <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '1.5rem' }}>
             <h3 style={{ fontSize: '16px', fontWeight: '650', color: 'var(--government-navy)', margin: '0 0 1rem' }}>Application Status</h3>

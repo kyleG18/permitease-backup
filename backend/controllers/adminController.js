@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const bcrypt = require('bcryptjs');
 const { logAudit } = require('../services/auditService');
 
 // @desc    Get all users
@@ -8,6 +9,44 @@ const getUsers = async (req, res) => {
     try {
         const [users] = await db.query('SELECT id, full_name, email, contact_number, role, status, created_at FROM users ORDER BY created_at DESC');
         res.json(users);
+    } catch (error) {
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
+    }
+};
+
+// @desc    Create a new user (admin only — for BPLO personnel, etc.)
+// @route   POST /api/admin/users
+// @access  System Admin
+const createUser = async (req, res) => {
+    try {
+        const { full_name, email, password, role, contact_number } = req.body;
+
+        if (!full_name || !email || !password || !role) {
+            return res.status(400).json({ message: 'Full name, email, password, and role are required.' });
+        }
+
+        const validRoles = ['business_owner', 'lgu_admin', 'system_admin'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ message: 'Invalid role.' });
+        }
+
+        // Check if email already exists
+        const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (existing.length > 0) {
+            return res.status(409).json({ message: 'A user with this email already exists.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const [result] = await db.query(
+            'INSERT INTO users (full_name, email, password, role, contact_number, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [full_name, email, hashedPassword, role, contact_number || null, 'active']
+        );
+
+        await logAudit(req.user.id, req.user.full_name, req.user.role, 'Create User', `Created user ${email} with role ${role}`, req.ip);
+
+        res.status(201).json({ id: result.insertId, message: 'User created successfully.' });
     } catch (error) {
         console.error('Server error:', error);
         res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
@@ -26,13 +65,11 @@ const updateUserRole = async (req, res) => {
             return res.status(400).json({ message: 'Invalid role' });
         }
 
-        // Check if updating self (prevent self-demotion out of system_admin)
         if (parseInt(req.params.id) === req.user.id && role !== 'system_admin') {
             return res.status(400).json({ message: 'You cannot remove your own System Admin role.' });
         }
 
         await db.query('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
-        
         await logAudit(req.user.id, req.user.full_name, req.user.role, 'Update User Role', `Changed user ID ${req.params.id} role to ${role}`, req.ip);
         
         res.json({ message: 'User role updated successfully' });
@@ -53,13 +90,11 @@ const updateUserStatus = async (req, res) => {
             return res.status(400).json({ message: 'Invalid status' });
         }
 
-        // Prevent self-deactivation
         if (parseInt(req.params.id) === req.user.id) {
             return res.status(400).json({ message: 'You cannot deactivate your own account.' });
         }
 
         await db.query('UPDATE users SET status = ? WHERE id = ?', [status, req.params.id]);
-        
         await logAudit(req.user.id, req.user.full_name, req.user.role, 'Update User Status', `Changed user ID ${req.params.id} status to ${status}`, req.ip);
         
         res.json({ message: 'User status updated successfully' });
@@ -82,4 +117,4 @@ const getAuditLogs = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, updateUserRole, updateUserStatus, getAuditLogs };
+module.exports = { getUsers, createUser, updateUserRole, updateUserStatus, getAuditLogs };

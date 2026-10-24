@@ -41,10 +41,11 @@ const processRenewalReminders = async () => {
 
     try {
         // Fetch all active (Approved) permits with owner info
+        // Use business-specific notification email if set, else fall back to account email
         const [permits] = await db.query(`
             SELECT p.id, p.permit_number, p.expiration_date, p.business_id,
                    b.business_name, b.user_id,
-                   u.email, u.full_name
+                   COALESCE(b.email, u.email) AS email, u.full_name
             FROM permits p
             JOIN businesses b ON p.business_id = b.id
             JOIN users u ON b.user_id = u.id

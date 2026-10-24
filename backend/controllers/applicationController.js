@@ -33,8 +33,9 @@ const generateApplicationNumber = async () => {
 /**
  * Log an event to application_history
  */
-const logHistory = async (applicationId, actorUserId, action, oldStatus, newStatus, remarks = null) => {
-    await db.query(
+const logHistory = async (applicationId, actorUserId, action, oldStatus, newStatus, remarks = null, connection = db) => {
+    const executor = connection || db;
+    await executor.query(
         `INSERT INTO application_history (application_id, actor_user_id, action, old_status, new_status, remarks)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [applicationId, actorUserId, action, oldStatus || null, newStatus || null, remarks]
@@ -144,50 +145,56 @@ const getApplicationById = async (req, res) => {
  * Create a new DRAFT application.
  */
 const createDraft = async (req, res) => {
+    const conn = await db.getConnection();
     try {
+        await conn.beginTransaction();
+
         const { business_id, application_type } = req.body;
 
         if (!business_id || !application_type) {
+            await conn.rollback();
             return res.status(400).json({ message: 'Business and application type are required.' });
         }
 
         if (!['NEW', 'RENEWAL'].includes(application_type)) {
+            await conn.rollback();
             return res.status(400).json({ message: 'Application type must be NEW or RENEWAL.' });
         }
 
         // Verify business belongs to this user
-        const [biz] = await db.query(
+        const [biz] = await conn.query(
             'SELECT id, business_name FROM businesses WHERE id = ? AND user_id = ?',
             [business_id, req.user.id]
         );
         if (biz.length === 0) {
+            await conn.rollback();
             return res.status(403).json({ message: 'Business not found or does not belong to you.' });
         }
 
-        // Prevent duplicate active application creation
+        // Prevent duplicate active application creation - use SELECT FOR UPDATE to lock rows
         let existingApps = [];
         if (application_type === 'RENEWAL') {
-            const [rows] = await db.query(
+            const [rows] = await conn.query(
                 `SELECT id, status FROM applications 
                  WHERE business_id = ? AND application_type = 'RENEWAL' 
-                 AND status NOT IN ('APPROVED', 'REJECTED', 'CANCELLED') 
-                 AND user_id = ?`,
+                 AND status NOT IN ('APPROVED', 'REJECTED') 
+                 AND user_id = ? FOR UPDATE`,
                 [business_id, req.user.id]
             );
             existingApps = rows;
         } else {
-            const [rows] = await db.query(
+            const [rows] = await conn.query(
                 `SELECT id, status FROM applications 
                  WHERE business_id = ? AND application_type = 'NEW' 
-                 AND status NOT IN ('APPROVED', 'REJECTED', 'CANCELLED') 
-                 AND user_id = ?`,
+                 AND status NOT IN ('APPROVED', 'REJECTED') 
+                 AND user_id = ? FOR UPDATE`,
                 [business_id, req.user.id]
             );
             existingApps = rows;
         }
 
         if (existingApps.length > 0) {
-            // Return existing active application to avoid duplicating
+            await conn.rollback();
             return res.status(200).json({
                 id: existingApps[0].id,
                 message: 'Existing active application recovered.',
@@ -195,14 +202,16 @@ const createDraft = async (req, res) => {
             });
         }
 
-        const [result] = await db.query(
+        const [result] = await conn.query(
             `INSERT INTO applications (user_id, business_id, application_type, status)
              VALUES (?, ?, ?, 'DRAFT')`,
             [req.user.id, business_id, application_type]
         );
 
         // Log history
-        await logHistory(result.insertId, req.user.id, 'Application Created', null, 'DRAFT');
+        await logHistory(result.insertId, req.user.id, 'Application Created', null, 'DRAFT', null, conn);
+
+        await conn.commit();
 
         res.status(201).json({
             id: result.insertId,
@@ -210,8 +219,11 @@ const createDraft = async (req, res) => {
             status: 'DRAFT'
         });
     } catch (error) {
+        await conn.rollback();
         console.error(error);
         res.status(500).json({ message: 'Unable to create application. Please try again.' });
+    } finally {
+        conn.release();
     }
 };
 
@@ -254,6 +266,27 @@ const submitApplication = async (req, res) => {
         if (!app.business_name || !app.business_type || !app.address) {
             await conn.rollback();
             return res.status(400).json({ message: 'Please complete the required business information before submitting.' });
+        }
+
+        // Validate that all mandatory requirements have documents submitted
+        const [requirements] = await conn.query(
+            `SELECT pr.id, pr.permit_name, br.status as req_status, br.document_id
+             FROM business_requirements br
+             JOIN permit_requirements pr ON br.requirement_id = pr.id
+             WHERE br.business_id = ? AND pr.is_mandatory = 1`,
+            [app.business_id]
+        );
+
+        const missingRequirements = requirements.filter(r => 
+            r.req_status !== 'Submitted' && r.req_status !== 'Approved' && !r.document_id
+        );
+
+        if (missingRequirements.length > 0) {
+            await conn.rollback();
+            const missingNames = missingRequirements.map(r => r.permit_name).join(', ');
+            return res.status(400).json({ 
+                message: `Cannot submit: missing required documents for ${missingNames}. Please upload all required documents before submitting.` 
+            });
         }
 
         // Generate application number if not yet assigned
@@ -475,7 +508,7 @@ const approveApplication = async (req, res) => {
              FROM applications a
              JOIN businesses b ON a.business_id = b.id
              JOIN users u ON a.user_id = u.id
-             WHERE a.id = ?`, 
+             WHERE a.id = ? FOR UPDATE`, 
             [req.params.id]
         );
         if (rows.length === 0) { await conn.rollback(); return res.status(404).json({ message: 'Application not found.' }); }
@@ -519,13 +552,20 @@ const approveApplication = async (req, res) => {
         // Internal code for DB uniqueness (used for file-naming, not as an official permit number)
         let verificationCode = permitGenerator.generateVerificationCode();
         let isUnique = false;
-        while (!isUnique) {
-            const [codeCheck] = await conn.query('SELECT id FROM permits WHERE verification_code = ?', [verificationCode]);
+        let attempts = 0;
+        const maxAttempts = 5;
+        while (!isUnique && attempts < maxAttempts) {
+            const [codeCheck] = await conn.query('SELECT id FROM permits WHERE verification_code = ? LIMIT 1', [verificationCode]);
             if (codeCheck.length === 0) {
                 isUnique = true;
             } else {
                 verificationCode = permitGenerator.generateVerificationCode();
+                attempts++;
             }
+        }
+        if (!isUnique) {
+            await conn.rollback();
+            return res.status(500).json({ message: 'Failed to generate unique verification code. Please try again.' });
         }
 
         // Load checklist for the preparation summary
@@ -559,13 +599,31 @@ const approveApplication = async (req, res) => {
         // Finalize PDF path using internal ref
         const finalPdfPath = permitGenerator.finalizePermitDocument(tempPdfPath, internalRef);
 
-        // Insert Permit record — status 'Verified' indicates BPLO has reviewed the preparation submission
-        // This is NOT an official permit issuance
-        await conn.query(
-            `INSERT INTO permits (business_id, application_id, permit_name, permit_number, issue_date, expiration_date, status, verification_code, pdf_path)
-             VALUES (?, ?, ?, ?, ?, ?, 'Approved', ?, ?)`,
-            [app.business_id, app.id, permitName, permitNumber, issueDate, expirationDate, verificationCode, finalPdfPath]
-        );
+        // Insert Permit record with concurrency collision retry on unique_verification_code
+        let permitInserted = false;
+        let insertAttempts = 0;
+        while (!permitInserted && insertAttempts < 3) {
+            try {
+                await conn.query(
+                    `INSERT INTO permits (business_id, application_id, permit_name, permit_number, issue_date, expiration_date, status, verification_code, pdf_path)
+                     VALUES (?, ?, ?, ?, ?, ?, 'Approved', ?, ?)`,
+                    [app.business_id, app.id, permitName, permitNumber, issueDate, expirationDate, verificationCode, finalPdfPath]
+                );
+                permitInserted = true;
+            } catch (err) {
+                if (err.code === 'ER_DUP_ENTRY' && err.message && err.message.includes('verification_code')) {
+                    verificationCode = permitGenerator.generateVerificationCode();
+                    insertAttempts++;
+                } else {
+                    throw err;
+                }
+            }
+        }
+        if (!permitInserted) {
+            await conn.rollback();
+            if (tempPdfPath) permitGenerator.cleanupTempFile(tempPdfPath);
+            return res.status(500).json({ message: 'Unable to generate unique verification code under concurrent load.' });
+        }
 
         await conn.commit();
 
