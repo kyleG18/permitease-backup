@@ -226,6 +226,11 @@ const Assessment = () => {
         }
       } catch (err) {
         console.error('Failed to load compliance data', err);
+        const detail = err.response?.data?.detail;
+        const msg = err.response?.data?.message;
+        if (detail || msg) {
+          setError(detail ? `Requirements load notice: ${detail}` : `Requirements load notice: ${msg}`);
+        }
       } finally {
         setLoadingChecklist(false);
       }
@@ -363,7 +368,9 @@ Instructions:
       }));
     } catch (err) {
       console.error('Ask AI error:', err);
-      const errMsg = err.response?.data?.message || err.message || 'Unable to get AI answer right now. Please try again.';
+      const detail = err.response?.data?.detail;
+      const msg = err.response?.data?.message;
+      const errMsg = detail ? `AI Advisor error: ${detail}` : (msg || err.message || 'Unable to get AI answer right now. Please try again.');
       setAiHelperState(prev => ({
         ...prev,
         [reqKey]: {

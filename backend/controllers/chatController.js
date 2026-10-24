@@ -118,8 +118,8 @@ const sendMessage = async (req, res) => {
         if (question.length === 0) {
             return res.status(400).json({ message: 'Question cannot be empty.' });
         }
-        if (question.length > 1000) {
-            return res.status(400).json({ message: 'Question is too long. Maximum 1000 characters.' });
+        if (question.length > 4000) {
+            return res.status(400).json({ message: 'Question is too long. Maximum 4000 characters.' });
         }
 
         // 1. Fetch permit requirements for context

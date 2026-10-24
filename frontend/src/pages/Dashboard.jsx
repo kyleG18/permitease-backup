@@ -646,8 +646,14 @@ const AdminDashboard = ({ user, stats, loading }) => {
           <div className="card">
             <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', color: 'var(--government-navy)' }}>Quick Actions</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <Link to="/requirements" className="btn btn-outline btn-block" style={{ justifyContent: 'flex-start' }}>
-                <ClipboardCheck size={16} /> Manage Requirements
+              <Link to="/permits" className="btn btn-primary btn-block" style={{ justifyContent: 'flex-start', fontWeight: '700' }}>
+                <ShieldCheck size={16} /> Verify Requirements Hub
+              </Link>
+              <Link to="/admin/applications" className="btn btn-outline btn-block" style={{ justifyContent: 'flex-start' }}>
+                <ClipboardCheck size={16} /> Review Pre-Assessments
+              </Link>
+              <Link to="/requirements" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
+                <FileText size={16} /> Permit Rules Config
               </Link>
               <Link to="/tax-estimation" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
                 <Receipt size={16} /> Tax & Fee Rules

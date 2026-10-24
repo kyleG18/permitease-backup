@@ -192,20 +192,26 @@ const createAssessment = async (req, res) => {
     }
 };
 
-// @desc    Get all assessments for user
+// @desc    Get all assessments
 // @route   GET /api/assessments
 // @access  Private
 const getAssessments = async (req, res) => {
     try {
-        // Fetch all assessments (both business-linked and description-based)
-        const [assessments] = await db.query(
-            `SELECT a.*, b.business_name FROM assessments a LEFT JOIN businesses b ON a.business_id = b.id WHERE a.user_id = ? ORDER BY a.created_at DESC`,
-            [req.user.id]
-        );
+        let query = `SELECT a.*, b.business_name FROM assessments a LEFT JOIN businesses b ON a.business_id = b.id`;
+        const params = [];
+        if (req.user.role === 'business_owner') {
+            query += ` WHERE a.user_id = ?`;
+            params.push(req.user.id);
+        }
+        query += ` ORDER BY a.created_at DESC`;
+        const [assessments] = await db.query(query, params);
         res.json(assessments);
     } catch (error) {
         console.error('Server error:', error);
-        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
+        res.status(500).json({ 
+            message: 'An internal server error occurred. Please try again later.',
+            detail: error.message 
+        });
     }
 };
 
@@ -214,12 +220,21 @@ const getAssessments = async (req, res) => {
 // @access  Private
 const getAssessment = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM assessments WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        let query = 'SELECT * FROM assessments WHERE id = ?';
+        const params = [req.params.id];
+        if (req.user.role === 'business_owner') {
+            query += ' AND user_id = ?';
+            params.push(req.user.id);
+        }
+        const [rows] = await db.query(query, params);
         if (rows.length === 0) return res.status(404).json({ message: 'Assessment not found' });
         res.json(rows[0]);
     } catch (error) {
         console.error('Server error:', error);
-        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
+        res.status(500).json({ 
+            message: 'An internal server error occurred. Please try again later.',
+            detail: error.message 
+        });
     }
 };
 

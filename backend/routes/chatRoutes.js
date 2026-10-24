@@ -10,7 +10,7 @@ const chatLimiter = rateLimit({
     message: { message: 'Too many chat messages from this IP, please try again after 15 minutes.' }
 });
 
-router.post('/', protect, requireRole(['business_owner', 'system_admin']), chatLimiter, sendMessage);
-router.get('/history', protect, requireRole(['business_owner', 'system_admin']), getChatHistory);
+router.post('/', protect, requireRole(['business_owner', 'lgu_admin', 'system_admin']), chatLimiter, sendMessage);
+router.get('/history', protect, requireRole(['business_owner', 'lgu_admin', 'system_admin']), getChatHistory);
 
 module.exports = router;

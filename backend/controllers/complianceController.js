@@ -114,8 +114,10 @@ const evaluateCompliance = async (req, res) => {
 
     } catch (error) {
         console.error('Evaluate Compliance Error:', error);
-        console.error('Server error:', error);
-        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
+        res.status(500).json({ 
+            message: 'An internal server error occurred. Please try again later.',
+            detail: error.message 
+        });
     }
 };
 
@@ -178,8 +180,11 @@ const getCompliance = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Server error:', error);
-        res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
+        console.error('getCompliance error:', error);
+        res.status(500).json({ 
+            message: 'An internal server error occurred. Please try again later.',
+            detail: error.message 
+        });
     }
 };
 
@@ -201,7 +206,7 @@ const updateRequirementStatus = async (req, res) => {
         }
 
         // Validate status
-        if (!['Missing', 'Submitted', 'Approved'].includes(status)) {
+        if (!['Missing', 'Submitted', 'Approved', 'Have', 'Not Required'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status' });
         }
 
@@ -220,7 +225,10 @@ const updateRequirementStatus = async (req, res) => {
         res.json({ message: 'Status updated successfully', status });
     } catch (error) {
         console.error('Update Requirement Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ 
+            message: 'Internal server error',
+            detail: error.message 
+        });
     }
 };
 
@@ -256,7 +264,10 @@ const bploVerifyRequirement = async (req, res) => {
         res.json({ message: 'Requirement BPLO status updated', bplo_status, bplo_notes });
     } catch (error) {
         console.error('BPLO Verify Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ 
+            message: 'Internal server error',
+            detail: error.message 
+        });
     }
 };
 
