@@ -160,7 +160,7 @@ export default function LGUApplicationReview() {
   const formatDateTime = (date) => date ? new Date(date).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="lgu-review-container animate-fade-in" className="lgu-review-container animate-fade-in" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
       {/* Modals */}
       {modal === 'review' && (
         <ConfirmModal title="Start Review" description={`Are you sure you want to start reviewing application ${app.application_number}?`} confirmText="Start Review" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={() => doAction('start-review')} />
@@ -176,21 +176,21 @@ export default function LGUApplicationReview() {
       )}
 
       {/* Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+      <div className="lgu-review-breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
         <Link to="/admin/applications" style={{ color: 'var(--primary-green)', textDecoration: 'none' }}>Pre-Assessments</Link>
         <ChevronRight size={14} />
         <span>{app.application_number}</span>
       </div>
 
       {/* STEP 10 - LGU Review Summary */}
-      <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between' }}>
+      <div className="lgu-review-header-card" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Pre-Assessment Ref.</div>
           <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-green)', fontFamily: 'monospace', marginBottom: '0.5rem' }}>{app.application_number}</div>
           <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.25rem', color: 'var(--text-dark)' }}>{app.business_name}</h1>
           <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{app.application_type === 'NEW' ? 'New Business Permit Preparation' : 'Renewal Preparation'}</div>
         </div>
-        <div style={{ display: 'flex', gap: '2rem', textAlign: 'right' }}>
+        <div className="lgu-review-meta-row" style={{ display: 'flex', gap: '2rem', textAlign: 'right' }}>
           <div>
             <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Preparation Status</div>
             <StatusBadge status={app.status} />
@@ -203,7 +203,7 @@ export default function LGUApplicationReview() {
       </div>
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+      <div className="lgu-review-actions" style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
         {canStartReview && (
           <button onClick={() => setModal('review')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#2563EB', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
             <Play size={16} /> Start Review
@@ -229,7 +229,7 @@ export default function LGUApplicationReview() {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
+      <div className="lgu-review-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
         
         {/* LEFT COLUMN */}
         <div>

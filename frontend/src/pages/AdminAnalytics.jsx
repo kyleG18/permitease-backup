@@ -113,7 +113,7 @@ export default function AdminAnalytics() {
     return (
         <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
             {/* Header & Filter */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="analytics-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>LGU Analytics</h1>
                     <p className="text-muted">Municipality of Roxas Business Permit and Licensing Office</p>
@@ -130,7 +130,7 @@ export default function AdminAnalytics() {
 
             {/* Current Snapshot Row */}
             <h4 style={{ marginBottom: '1rem', color: 'var(--text-dark)', borderBottom: '2px solid var(--border-light)', paddingBottom: '0.5rem' }}>Current Municipal Status (Snapshot)</h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+            <div className="analytics-kpi-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                 <StatCard title="Total Businesses" value={overview?.totalBusinesses} icon={<Building2 size={24} />} colorClass="primary" />
                 <StatCard title="Verified Submissions" value={overview?.activePermits} icon={<CheckCircle size={24} />} colorClass="success" />
                 <StatCard title="Expiring Soon" value={overview?.expiringSoonPermits} icon={<Clock size={24} />} colorClass="warning" subtitle="<= 60 days remaining" />
@@ -139,7 +139,7 @@ export default function AdminAnalytics() {
 
             {/* Selected Period Row */}
             <h4 style={{ marginBottom: '1rem', color: 'var(--text-dark)', borderBottom: '2px solid var(--border-light)', paddingBottom: '0.5rem' }}>Selected Period ({period === 'all' ? 'All Time' : period === '1y' ? 'This Year' : `Last ${period.replace('d','') } Days`})</h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+            <div className="analytics-kpi-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                 <StatCard title="Apps Submitted" value={overview?.totalApplications} icon={<FileText size={24} />} colorClass="primary" />
                 <StatCard title="Pending Review" value={overview?.pendingApplications} icon={<Clock size={24} />} colorClass="warning" />
                 <StatCard title="Renewal Apps" value={overview?.renewalApplications} icon={<RotateCw size={24} />} colorClass="primary" />
@@ -147,7 +147,7 @@ export default function AdminAnalytics() {
             </div>
 
             {/* Charts Row 1 */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div className="analytics-charts-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 {/* Application Trends */}
                 <div className="card" style={{ flex: '2', minWidth: '280px' }}>
                     <h5 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>Application Trends</h5>
@@ -268,7 +268,7 @@ export default function AdminAnalytics() {
             </div>
 
             {/* Recent Activity Table */}
-            <div className="card" style={{ overflow: 'hidden' }}>
+            <div className="card analytics-activity-wrap" style={{ overflow: 'hidden' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h5 style={{ margin: 0, color: 'var(--text-dark)' }}>Recent Application Activity</h5>
                     {activity?.processingTime?.available ? (

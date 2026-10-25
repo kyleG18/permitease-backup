@@ -57,22 +57,22 @@ export default function LGUApplications() {
   });
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px' }}>
+    <div className="lgu-apps-container animate-fade-in" style={{ padding: '2rem', maxWidth: '1200px' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.6rem', margin: 0, color: 'var(--text-dark)' }}>Pre-Assessment Submissions</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>Review business permit preparation submissions from MSME owners in the municipality</p>
       </div>
 
       {/* Filters & Search */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="lgu-apps-toolbar" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="lgu-apps-filter-chips" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{ padding: '0.4rem 1rem', borderRadius: '999px', border: `2px solid ${filter === f ? 'var(--primary-green)' : 'var(--border-color)'}`, backgroundColor: filter === f ? 'var(--light-green)' : 'white', color: filter === f ? 'var(--primary-green)' : 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer' }}>
               {f.replace('_', ' ')}
             </button>
           ))}
         </div>
-        <div style={{ position: 'relative', marginLeft: 'auto' }}>
+        <div className="lgu-apps-search" style={{ position: 'relative', marginLeft: 'auto' }}>
           <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input type="text" placeholder="Search pre-assessments..." value={search} onChange={e => setSearch(e.target.value)}
             style={{ paddingLeft: '2.25rem', padding: '0.5rem 0.75rem 0.5rem 2.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', fontSize: '0.875rem', width: '240px' }} />
@@ -88,8 +88,8 @@ export default function LGUApplications() {
           <p style={{ color: 'var(--text-muted)' }}>There are currently no preparation submissions matching your selected filter.</p>
         </div>
       ) : (
-        <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="table-scroll-wrap" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
             <thead>
               <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid var(--border-color)' }}>
                 {['Application #', 'Business', 'Owner', 'Readiness', 'Submitted', 'Status', 'Action'].map(h => (
@@ -103,7 +103,6 @@ export default function LGUApplications() {
                   <td style={{ padding: '1rem', fontWeight: '700', color: 'var(--primary-green)', fontFamily: 'monospace', fontSize: '0.875rem' }}>{app.application_number}</td>
                   <td style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: '500' }}>{app.business_name}</td>
                   <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>{app.owner_name}</td>
-                  {/* Removed Type to save space for Readiness */}
                   <td style={{ padding: '1rem', fontSize: '0.85rem' }}>
                     {app.total_reqs > 0 ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

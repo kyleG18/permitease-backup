@@ -143,7 +143,7 @@ const UserManagement = () => {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
       {/* Header */}
-      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4" style={{ gap: '1rem' }}>
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 um-header-row" style={{ gap: '1rem' }}>
         <div>
           <h2 className="m-0" style={{ fontWeight: 700, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Users size={28} color="var(--primary-green, #16A34A)" />
@@ -215,7 +215,7 @@ const UserManagement = () => {
       )}
 
       {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="um-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #16A34A' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Total Users</span>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-dark)', marginTop: '0.2rem' }}>{stats.total}</div>
@@ -237,7 +237,7 @@ const UserManagement = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="card mb-4" style={{ padding: '1rem' }}>
+      <div className="card mb-4 um-toolbar" style={{ padding: '1rem' }}>
         <div className="d-flex flex-wrap justify-content-between align-items-center" style={{ gap: '1rem' }}>
           {/* Search Box */}
           <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: '420px' }}>

@@ -9,7 +9,7 @@ const RoleManagement = () => {
         <p className="text-muted">Overview of the system's Role-Based Access Control (RBAC) levels.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <div className="role-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
         
         {/* System Admin */}
         <div className="card">

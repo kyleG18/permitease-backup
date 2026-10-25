@@ -2994,6 +2994,277 @@ tbody td {
   }
 }
 
+/* ==========================================================================
+   ADMIN & BPLO PERSONNEL PAGES — MOBILE RESPONSIVE
+   ========================================================================== */
+@media (max-width: 768px) {
+
+  /* ── Shared: Table Scroll Wrapper ── */
+  .table-scroll-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+  }
+
+  /* ── LGU Applications List (/admin/applications) ── */
+  .lgu-apps-container {
+    padding: 1rem 0.75rem !important;
+    max-width: 100% !important;
+  }
+  .lgu-apps-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  .lgu-apps-filter-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.35rem !important;
+  }
+  .lgu-apps-filter-chips button {
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.75rem !important;
+  }
+  .lgu-apps-search {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  .lgu-apps-search input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── LGU Application Review (/admin/applications/:id) ── */
+  .lgu-review-container {
+    padding: 0.875rem 0.625rem !important;
+    max-width: 100% !important;
+  }
+  .lgu-review-breadcrumb {
+    font-size: 0.8rem !important;
+    margin-bottom: 1rem !important;
+    flex-wrap: wrap !important;
+  }
+  .lgu-review-header-card {
+    padding: 1.25rem 1rem !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  .lgu-review-meta-row {
+    flex-direction: row !important;
+    text-align: left !important;
+    gap: 1.25rem !important;
+    flex-wrap: wrap !important;
+  }
+  .lgu-review-actions {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+  .lgu-review-actions button,
+  .lgu-review-actions a {
+    flex: 1 1 calc(50% - 0.25rem) !important;
+    min-width: 130px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 0.82rem !important;
+    padding: 0.6rem 0.75rem !important;
+  }
+  .lgu-review-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  /* ── Admin Analytics (/admin/analytics) ── */
+  .analytics-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+  .analytics-header-row select {
+    width: 100% !important;
+  }
+  .analytics-kpi-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  .analytics-kpi-row > div {
+    min-width: 0 !important;
+    padding: 1rem 0.875rem !important;
+  }
+  .analytics-charts-row {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  .analytics-chart-card {
+    overflow: hidden !important;
+    min-width: 0 !important;
+  }
+  .analytics-activity-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* ── Admin Renewals (/admin/renewals) ── */
+  .admin-renewals-container {
+    padding: 1rem 0.75rem !important;
+    max-width: 100% !important;
+  }
+  .admin-renewals-summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  .admin-renewals-summary-grid .card {
+    padding: 1rem 0.875rem !important;
+  }
+  .admin-renewals-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  .admin-renewals-toolbar > div:first-child {
+    width: 100% !important;
+  }
+  .admin-renewals-toolbar input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── Admin Permits (/admin/permits) ── */
+  .admin-permits-container {
+    padding: 1rem 0.75rem !important;
+  }
+  .admin-permits-stat-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .admin-permits-stat-grid > div {
+    padding: 0.875rem 0.65rem !important;
+  }
+  .admin-permits-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+    padding: 0.875rem !important;
+  }
+  .admin-permits-toolbar select {
+    width: 100% !important;
+  }
+
+  /* ── Reports (/reports) ── */
+  .reports-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  .reports-kpi-grid .card {
+    padding: 1rem 0.875rem !important;
+    gap: 0.75rem !important;
+  }
+  .reports-tables-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* ── User Management (/user-management) ── */
+  .um-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.875rem !important;
+  }
+  .um-header-row > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+  }
+  .um-header-row > div:last-child button {
+    flex: 1 !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+    padding: 0.5rem 0.5rem !important;
+  }
+  .um-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.625rem !important;
+  }
+  .um-stat-grid .card {
+    padding: 0.875rem 0.75rem !important;
+  }
+  .um-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+  .um-toolbar > div:first-child {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* ── Audit Logs (/audit-logs) ── */
+  .audit-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+  .audit-header-row > div:last-child button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .audit-stat-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .audit-stat-grid .card {
+    padding: 0.875rem 0.65rem !important;
+  }
+  .audit-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  .audit-toolbar > div:first-child {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .audit-filter-tabs {
+    flex-wrap: wrap !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+  }
+  .audit-filter-tabs button {
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.65rem !important;
+    flex: 1 1 auto !important;
+  }
+
+  /* ── Role Management (/role-management) ── */
+  .role-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+/* Narrower phones: 390px and below */
+@media (max-width: 390px) {
+  .admin-permits-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .audit-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .analytics-kpi-row {
+    grid-template-columns: 1fr !important;
+  }
+  .reports-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .um-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-renewals-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media print {
   /* Hide application shell elements */
   .sidebar,

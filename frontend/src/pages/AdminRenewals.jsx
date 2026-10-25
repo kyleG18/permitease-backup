@@ -53,7 +53,7 @@ const AdminRenewals = () => {
   });
 
   return (
-    <div className="animate-fade-in" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="admin-renewals-container animate-fade-in" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: 'var(--text-dark)', marginBottom: '0.25rem', fontSize: '1.6rem' }}>Renewal Monitoring (LGU)</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Municipality-wide permit expiration and renewal tracking.</p>
@@ -66,7 +66,7 @@ const AdminRenewals = () => {
       )}
 
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="admin-renewals-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div className="card" onClick={() => setActiveFilter('ALL')} style={{ cursor: 'pointer', borderBottom: activeFilter === 'ALL' ? '3px solid var(--primary-green)' : '3px solid transparent', padding: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <FileText size={20} color="var(--primary-green)" />
@@ -98,7 +98,7 @@ const AdminRenewals = () => {
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="admin-renewals-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ position: 'relative', width: '300px' }}>
           <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input 
@@ -115,7 +115,7 @@ const AdminRenewals = () => {
       </div>
 
       {/* Table */}
-      <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+      <div className="card admin-renewals-table-wrap table-scroll-wrap" style={{ padding: 0, overflowX: 'auto' }}>
         <table className="table" style={{ minWidth: '800px', marginBottom: 0 }}>
           <thead>
             <tr>

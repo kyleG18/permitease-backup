@@ -83,7 +83,7 @@ const AuditLogs = () => {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
       {/* Header */}
-      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4" style={{ gap: '1rem' }}>
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 audit-header-row" style={{ gap: '1rem' }}>
         <div>
           <h2 className="m-0" style={{ fontWeight: 700, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Activity size={28} color="var(--primary-green, #16A34A)" />
@@ -111,7 +111,7 @@ const AuditLogs = () => {
       )}
 
       {/* Metric Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="audit-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #16A34A' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Total Events</span>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-dark)', marginTop: '0.2rem' }}>{logs.length}</div>
@@ -130,7 +130,7 @@ const AuditLogs = () => {
       </div>
 
       {/* Filter and Search */}
-      <div className="card mb-4" style={{ padding: '1rem' }}>
+      <div className="card mb-4 audit-toolbar" style={{ padding: '1rem' }}>
         <div className="d-flex flex-wrap justify-content-between align-items-center" style={{ gap: '1rem' }}>
           <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: '420px' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
@@ -144,7 +144,7 @@ const AuditLogs = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <div className="audit-filter-tabs" style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {[
               { id: 'ALL', label: 'All Events' },
               { id: 'USER', label: 'User & Role Changes' },

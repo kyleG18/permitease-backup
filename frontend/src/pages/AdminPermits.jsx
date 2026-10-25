@@ -73,14 +73,14 @@ export default function AdminPermits() {
   if (error) return <div style={{ padding: '2rem', color: 'var(--danger)' }}>{error}</div>;
 
   return (
-    <div className="animate-fade-in" style={{ padding: '2rem' }}>
+    <div className="admin-permits-container animate-fade-in" style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>Preparation Records</h1>
         <p style={{ color: 'var(--text-muted)', marginTop: '0.35rem', fontSize: '0.9rem' }}>BPLO-verified preparation submission summaries. These are not official issued permits.</p>
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="admin-permits-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {[
           { label: 'Total Issued', count: permits.length, color: '#2563EB', bg: '#DBEAFE' },
           { label: 'Valid', count: validCount, color: '#166534', bg: '#DCFCE7' },
@@ -94,7 +94,7 @@ export default function AdminPermits() {
       </div>
 
       {/* Filters */}
-      <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="admin-permits-toolbar" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '200px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem' }}>
           <Search size={16} color="var(--text-muted)" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by permit no., business, or owner…" style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.9rem' }} />
@@ -108,7 +108,7 @@ export default function AdminPermits() {
       </div>
 
       {/* Table */}
-      <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+      <div className="table-scroll-wrap" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid var(--border-light)' }}>
