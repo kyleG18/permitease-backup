@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { CheckCircle, AlertCircle, FileText, ChevronRight, Send, UploadCloud, X, Printer, Download, Info } from 'lucide-react';
+import { CheckCircle, AlertCircle, FileText, ChevronRight, Send, UploadCloud, X, Printer, Download, Info, Calendar, Clock, MapPin, Ticket } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
 import UnifiedApplicationFormView from '../components/UnifiedApplicationFormView';
 
@@ -79,6 +79,14 @@ export default function ApplicationDetail() {
 
   // Physical Preparation Checklist State
   const [physicalPrep, setPhysicalPrep] = useState({});
+
+  // Fast-Track Walk-in Scheduling State
+  const [showWalkinModal, setShowWalkinModal] = useState(false);
+  const [walkinDate, setWalkinDate] = useState('');
+  const [walkinSlot, setWalkinSlot] = useState('Morning (8:00 AM - 11:00 AM)');
+  const [schedulingWalkin, setSchedulingWalkin] = useState(false);
+  const [walkinError, setWalkinError] = useState('');
+  const [walkinSuccessMsg, setWalkinSuccessMsg] = useState('');
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -160,6 +168,63 @@ export default function ApplicationDetail() {
     } catch {
       setSubmitError('Unable to submit application. Please try again.');
       setSubmitting(false);
+    }
+  };
+
+  const handleScheduleWalkin = async (e) => {
+    e.preventDefault();
+    if (!walkinDate) {
+      setWalkinError('Please select a date for your walk-in appointment.');
+      return;
+    }
+    setSchedulingWalkin(true);
+    setWalkinError('');
+    try {
+      const res = await fetch(`${API}/applications/${id}/schedule-walkin`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          walkin_date: walkinDate,
+          walkin_time_slot: walkinSlot
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to schedule walk-in appointment.');
+      }
+      setShowWalkinModal(false);
+      setWalkinSuccessMsg(`Walk-in appointment confirmed for ${walkinDate} (${walkinSlot})! Ticket: #${data.queue_ticket_number}`);
+      loadApp();
+    } catch (err) {
+      setWalkinError(err.message);
+    } finally {
+      setSchedulingWalkin(false);
+    }
+  };
+
+  const handleDownloadSummaryPDF = async () => {
+    try {
+      const res = await fetch(`${API}/applications/${id}/preparation-summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        alert('Failed to download preparation routing slip.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PermitEase_RoutingSlip_${app?.application_number || 'Draft'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Failed to download preparation routing slip.');
     }
   };
 
@@ -265,13 +330,125 @@ export default function ApplicationDetail() {
       </header>
 
       {/* OFFICIAL PROCESS NOTICE */}
-      <div className="no-print" style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '8px', padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
+      <div className="no-print" style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '8px', padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <Info size={18} color="#0284C7" style={{ flexShrink: 0, marginTop: '2px' }} />
         <div>
           <div style={{ fontSize: '13px', fontWeight: '700', color: '#0369A1', marginBottom: '0.25rem' }}>OFFICIAL PROCESS</div>
           <p style={{ fontSize: '13px', color: '#0C4A6E', margin: 0, lineHeight: 1.5 }}>
             PermitEase is used to help you prepare and track your application. Official document review, assessment, signatures, payment, and permit processing are handled by the appropriate Municipality of Roxas / BPLO office.
           </p>
+        </div>
+      </div>
+
+      {walkinSuccessMsg && (
+        <div className="no-print" style={{
+          backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0',
+          padding: '0.75rem 1.25rem', borderRadius: '8px', marginBottom: '1.5rem',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '500'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle size={18} color="#166534" />
+            <span>{walkinSuccessMsg}</span>
+          </div>
+          <button onClick={() => setWalkinSuccessMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534' }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* FAST-TRACK WALKIN & WINDOW 1 QUEUE TICKET CARD */}
+      <div className="no-print" style={{
+        backgroundColor: app.walkin_date ? (app.walkin_status === 'ATTENDED' ? '#F0FDF4' : '#F8FAFC') : '#EFF6FF',
+        border: `1px solid ${app.walkin_date ? (app.walkin_status === 'ATTENDED' ? '#BBF7D0' : '#CBD5E1') : '#BFDBFE'}`,
+        borderRadius: '10px',
+        padding: '1.25rem 1.5rem',
+        marginBottom: '2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <div style={{ flex: 1, minWidth: '280px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+            <Ticket size={18} color={app.walkin_date ? '#166534' : '#1D4ED8'} />
+            <span style={{ 
+              fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em',
+              color: app.walkin_date ? '#166534' : '#1E40AF' 
+            }}>
+              {app.walkin_date ? 'Fast-Track Walk-in Scheduled' : 'City Hall Window 1 Appointment'}
+            </span>
+            {app.queue_ticket_number && (
+              <span style={{
+                backgroundColor: '#1E3A8A', color: 'white', padding: '0.15rem 0.6rem',
+                borderRadius: '4px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.05em', fontFamily: 'monospace'
+              }}>
+                #{app.queue_ticket_number}
+              </span>
+            )}
+            {app.walkin_status === 'ATTENDED' && (
+              <span style={{
+                backgroundColor: '#DCFCE7', color: '#166534', padding: '0.15rem 0.5rem',
+                borderRadius: '4px', fontSize: '11px', fontWeight: '700'
+              }}>
+                ✓ Sighted & Endorsed to Cashier
+              </span>
+            )}
+          </div>
+
+          <div style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5 }}>
+            {app.walkin_date ? (
+              <div>
+                <strong>Appointment: </strong>
+                {new Date(app.walkin_date).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {' • '}
+                <span style={{ color: '#1E40AF', fontWeight: '600' }}>{app.walkin_time_slot || 'Morning Window'}</span>
+                <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '0.25rem' }}>
+                  <MapPin size={13} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'text-bottom' }} />
+                  BPLO Receiving Counter (Window 1), Ground Floor, Roxas Municipal Hall
+                </div>
+              </div>
+            ) : (
+              <div>
+                Schedule a designated walk-in batch window to submit your physical clearance folder at <strong>BPLO Window 1</strong> without waiting in unorganized lines.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={handleDownloadSummaryPDF}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1',
+              padding: '0.55rem 0.9rem', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer'
+            }}
+          >
+            <Download size={15} /> Download Routing Slip (PDF)
+          </button>
+          
+          {app.walkin_status !== 'ATTENDED' && (
+            <button
+              type="button"
+              onClick={() => {
+                setWalkinDate(app.walkin_date ? new Date(app.walkin_date).toISOString().split('T')[0] : '');
+                setWalkinSlot(app.walkin_time_slot || 'Morning (8:00 AM - 11:00 AM)');
+                setWalkinError('');
+                setShowWalkinModal(true);
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                backgroundColor: app.walkin_date ? '#F1F5F9' : 'var(--primary-green)',
+                color: app.walkin_date ? '#1E293B' : 'white',
+                border: app.walkin_date ? '1px solid #CBD5E1' : 'none',
+                padding: '0.55rem 1rem', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer'
+              }}
+            >
+              <Calendar size={15} /> {app.walkin_date ? 'Reschedule Window' : 'Schedule Walk-in Window'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -470,6 +647,143 @@ export default function ApplicationDetail() {
               <button type="submit" disabled={uploadingDoc || !file} style={{ width: '100%', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.75rem', borderRadius: '6px', fontWeight: '500', cursor: uploadingDoc || !file ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
                 {uploadingDoc ? 'Uploading...' : 'Upload Document'}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Fast-Track Walk-in Scheduling Modal */}
+      {showWalkinModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(2px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1100, padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: 'white', borderRadius: '12px', width: '100%', maxWidth: '480px',
+            padding: '1.75rem', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+          }}>
+            <button
+              onClick={() => setShowWalkinModal(false)}
+              style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Calendar size={20} color="#166534" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--government-navy)' }}>
+                  {app.walkin_date ? 'Reschedule Walk-in Window' : 'Schedule Fast-Track Walk-in'}
+                </h3>
+                <div style={{ fontSize: '12px', color: '#64748B' }}>Window 1 • Roxas Municipal Hall BPLO</div>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '13px', color: '#64748B', margin: '0.75rem 0 1.25rem', lineHeight: 1.5 }}>
+              Choose a batch time window to present your physical clearance folder. BPLO limits hourly intake to prevent counter crowding.
+            </p>
+
+            {walkinError && (
+              <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '0.625rem 0.875rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '13px' }}>
+                {walkinError}
+              </div>
+            )}
+
+            <form onSubmit={handleScheduleWalkin}>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--government-navy)', marginBottom: '0.4rem' }}>
+                  Appointment Date *
+                </label>
+                <input
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={walkinDate}
+                  onChange={e => setWalkinDate(e.target.value)}
+                  required
+                  style={{
+                    width: '100%', padding: '0.625rem 0.75rem', border: '1px solid #CBD5E1', borderRadius: '6px',
+                    fontSize: '14px', fontFamily: 'Inter, sans-serif'
+                  }}
+                />
+                <span style={{ fontSize: '11.5px', color: '#64748B', display: 'block', marginTop: '0.25rem' }}>
+                  BPLO Counter is open Monday to Friday, 8:00 AM - 5:00 PM.
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--government-navy)', marginBottom: '0.4rem' }}>
+                  Select Batch Time Window *
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {[
+                    { slot: 'Morning (8:00 AM - 11:00 AM)', desc: 'Priority intake & document pre-verification' },
+                    { slot: 'Afternoon (1:00 PM - 4:00 PM)', desc: 'Sighting & final endorsement to Cashier' }
+                  ].map(item => (
+                    <label
+                      key={item.slot}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+                        padding: '0.75rem 1rem', borderRadius: '8px',
+                        border: walkinSlot === item.slot ? '2px solid var(--primary-green)' : '1px solid #E2E8F0',
+                        backgroundColor: walkinSlot === item.slot ? '#F0FDF4' : 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="walkinSlot"
+                        value={item.slot}
+                        checked={walkinSlot === item.slot}
+                        onChange={() => setWalkinSlot(item.slot)}
+                        style={{ marginTop: '2px', accentColor: 'var(--primary-green)' }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--government-navy)' }}>{item.slot}</div>
+                        <div style={{ fontSize: '12px', color: '#64748B' }}>{item.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.75rem 1rem', marginBottom: '1.5rem', fontSize: '12px', color: '#475569' }}>
+                <div style={{ fontWeight: '600', marginBottom: '0.2rem', color: '#1E293B' }}>Physical Folder Checklist to Bring:</div>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', lineHeight: 1.4 }}>
+                  <li>Printed Pre-filled Unified Form</li>
+                  <li>Barangay Business Clearance</li>
+                  <li>DTI / SEC / CDA Registration</li>
+                  <li>Community Tax Certificate (Cedula)</li>
+                </ul>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowWalkinModal(false)}
+                  style={{
+                    flex: 1, backgroundColor: 'white', color: '#475569', border: '1px solid #CBD5E1',
+                    padding: '0.625rem', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '14px'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={schedulingWalkin || !walkinDate}
+                  style={{
+                    flex: 1.5, backgroundColor: 'var(--primary-green)', color: 'white', border: 'none',
+                    padding: '0.625rem', borderRadius: '6px', fontWeight: '600',
+                    cursor: schedulingWalkin || !walkinDate ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {schedulingWalkin ? 'Confirming...' : 'Confirm Appointment'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

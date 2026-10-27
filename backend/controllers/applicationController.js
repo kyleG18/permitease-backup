@@ -831,6 +831,15 @@ const getPreparationSummaryPDF = async (req, res) => {
            .text(`Application Type: ${app.application_type === 'NEW' ? 'New Business Permit' : 'Renewal'}`)
            .text(`Application Number: ${app.application_number || 'Draft'}`)
            .text(`Date Generated: ${new Date().toLocaleDateString('en-PH')}`);
+
+        if (app.walkin_date) {
+            doc.moveDown(0.5);
+            doc.font('Helvetica-Bold').fillColor('#166534')
+               .text(`Fast-Track Walk-in Window: ${new Date(app.walkin_date).toLocaleDateString('en-PH')} (${app.walkin_time_slot || 'All Day'})`)
+               .text(`Queue Ticket Number: #${app.queue_ticket_number || 'PENDING'}`);
+            doc.font('Helvetica').fillColor('black');
+        }
+
         doc.moveDown(2);
 
         // Requirements
@@ -876,6 +885,156 @@ const getPreparationSummaryPDF = async (req, res) => {
     }
 };
 
+/**
+ * POST /api/applications/:id/schedule-walkin
+ * Schedule a Fast-Track Walk-in Appointment at Roxas City Hall
+ */
+const scheduleWalkin = async (req, res) => {
+    try {
+        const { walkin_date, walkin_time_slot } = req.body;
+        if (!walkin_date || !walkin_time_slot) {
+            return res.status(400).json({ message: 'Walk-in date and batch time slot are required.' });
+        }
+
+        const [rows] = await db.query('SELECT * FROM applications WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ message: 'Application not found.' });
+
+        const app = rows[0];
+        const isOwner = app.user_id === req.user.id;
+        const isAdmin = ['lgu_admin', 'system_admin'].includes(req.user.role);
+        if (!isOwner && !isAdmin) return res.status(403).json({ message: 'Access denied.' });
+
+        // Generate Daily Queue Ticket Number: e.g. RX-YYYY-NNNN
+        const year = new Date(walkin_date).getFullYear();
+        const ticketNum = `RX-${year}-${String(app.id).padStart(4, '0')}`;
+
+        await db.query(
+            `UPDATE applications 
+             SET walkin_date = ?, walkin_time_slot = ?, queue_ticket_number = ?, walkin_status = 'SCHEDULED', updated_at = NOW()
+             WHERE id = ?`,
+            [walkin_date, walkin_time_slot, ticketNum, app.id]
+        );
+
+        // Log history
+        await logHistory(
+            app.id, 
+            req.user.id, 
+            'Walk-in Scheduled', 
+            app.status, 
+            app.status, 
+            `Walk-in scheduled for ${walkin_date} (${walkin_time_slot}) • Queue Ticket #${ticketNum}`
+        );
+
+        // Notify user
+        const notifTitle = 'Fast-Track Walk-in Scheduled';
+        const notifMsg = `Your Roxas City Hall walk-in is scheduled for ${walkin_date} (${walkin_time_slot}). Your Queue Ticket is #${ticketNum}. Please bring your physical clearance folder.`;
+        await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_application_id, status)
+             VALUES (?, 'WALKIN_SCHEDULED', ?, ?, ?, 'Unread')`,
+            [app.user_id, notifTitle, notifMsg, app.id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Walk-in scheduled successfully!',
+            walkin_date,
+            walkin_time_slot,
+            queue_ticket_number: ticketNum
+        });
+    } catch (error) {
+        console.error('scheduleWalkin error:', error);
+        res.status(500).json({ message: 'Unable to schedule walk-in appointment.' });
+    }
+};
+
+/**
+ * GET /api/applications/admin/walkin-roster
+ * Retrieves daily walk-in queue and capacity roster for BPLO
+ */
+const getWalkinRoster = async (req, res) => {
+    try {
+        const { date } = req.query;
+        // Default to today in local date format YYYY-MM-DD
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        const [rows] = await db.query(
+            `SELECT a.id, a.application_number, a.status as app_status,
+                    a.walkin_date, a.walkin_time_slot, a.queue_ticket_number, a.walkin_status,
+                    a.counter_verified_by, a.counter_verified_at,
+                    b.business_name, b.business_type,
+                    u.full_name as owner_name, u.contact_number as owner_contact, u.email as owner_email,
+                    r.full_name as counter_officer_name
+             FROM applications a
+             JOIN businesses b ON a.business_id = b.id
+             JOIN users u ON a.user_id = u.id
+             LEFT JOIN users r ON a.counter_verified_by = r.id
+             WHERE a.walkin_date = ?
+             ORDER BY a.walkin_time_slot ASC, a.queue_ticket_number ASC`,
+            [targetDate]
+        );
+
+        const summary = {
+            targetDate,
+            totalScheduled: rows.length,
+            morningBatch: rows.filter(r => (r.walkin_time_slot || '').toLowerCase().includes('morning') || (r.walkin_time_slot || '').includes('8:00')).length,
+            afternoonBatch: rows.filter(r => (r.walkin_time_slot || '').toLowerCase().includes('afternoon') || (r.walkin_time_slot || '').includes('1:00')).length,
+            attendedCount: rows.filter(r => r.walkin_status === 'ATTENDED').length,
+            pendingCount: rows.filter(r => r.walkin_status === 'SCHEDULED' || r.walkin_status === 'PENDING').length
+        };
+
+        res.json({ summary, roster: rows });
+    } catch (error) {
+        console.error('getWalkinRoster error:', error);
+        res.status(500).json({ message: 'Unable to retrieve walk-in roster.' });
+    }
+};
+
+/**
+ * POST /api/applications/admin/:id/mark-attended
+ * BPLO counter officer marks physical paper sighting complete at Window 1
+ */
+const markWalkinAttended = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM applications WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ message: 'Application not found.' });
+
+        const app = rows[0];
+
+        await db.query(
+            `UPDATE applications 
+             SET walkin_status = 'ATTENDED', counter_verified_by = ?, counter_verified_at = NOW(), updated_at = NOW()
+             WHERE id = ?`,
+            [req.user.id, app.id]
+        );
+
+        await logHistory(
+            app.id,
+            req.user.id,
+            'Physical Sighting Verified at Window 1',
+            app.status,
+            app.status,
+            `Physical document folder sighted and verified by Officer ${req.user.full_name}. Forwarded to City Treasurer Cashier.`
+        );
+
+        // Notify user
+        await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_application_id, status)
+             VALUES (?, 'COUNTER_VERIFIED', 'Physical Documents Sighted', 'Your physical clearance folder has been verified at Window 1. Please proceed to the Cashier for payment.', ?, 'Unread')`,
+            [app.user_id, app.id]
+        );
+
+        res.json({
+            success: true,
+            message: 'In-person sighting verified. Applicant forwarded to Cashier.',
+            walkin_status: 'ATTENDED',
+            counter_officer: req.user.full_name
+        });
+    } catch (error) {
+        console.error('markWalkinAttended error:', error);
+        res.status(500).json({ message: 'Unable to mark walk-in attendance.' });
+    }
+};
+
 module.exports = {
     getMyApplications,
     getApplicationById,
@@ -887,5 +1046,8 @@ module.exports = {
     approveApplication,
     rejectApplication,
     getApplicationHistory,
-    getPreparationSummaryPDF
+    getPreparationSummaryPDF,
+    scheduleWalkin,
+    getWalkinRoster,
+    markWalkinAttended
 };

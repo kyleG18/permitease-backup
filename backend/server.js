@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -5,7 +6,6 @@ const path = require('path');
 const cron = require('node-cron');
 const { processRenewalReminders } = require('./services/renewalReminderService');
 const initDatabase = require('./config/initDb');
-require('dotenv').config();
 
 // Run database health check & auto-initialization
 initDatabase();

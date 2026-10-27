@@ -2,7 +2,7 @@ const mysql = require('mysql2');
 require('dotenv').config();
 
 // Auto-detect Railway MySQL variables (MYSQL_URL, DATABASE_URL, MYSQLHOST, etc.)
-const host = process.env.DB_HOST || process.env.MYSQLHOST || process.env.MYSQL_HOST || 'localhost';
+const host = process.env.DB_HOST || process.env.MYSQLHOST || process.env.MYSQL_HOST || '127.0.0.1';
 const user = process.env.DB_USER || process.env.MYSQLUSER || process.env.MYSQL_USER || 'root';
 const password = process.env.DB_PASSWORD !== undefined 
     ? process.env.DB_PASSWORD 

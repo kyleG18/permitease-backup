@@ -277,6 +277,43 @@ const sendPermitExpiredEmail = async ({ userEmail, userName, businessName, permi
 };
 
 // ─────────────────────────────────────────────────────────
+// I. STATUTORY LGU NOTICE (RA 7160 SEC. 167 & 168)
+// ─────────────────────────────────────────────────────────
+const sendStatutoryNoticeEmail = async ({ userEmail, userName, businessName, permitNumber, expirationDate, noticeTitle, noticeBody, statutoryStage, daysUntilDeadline }) => {
+    const isDelinquent = statutoryStage === 'DELINQUENT';
+    const isWindow = statutoryStage === 'RENEWAL_WINDOW';
+    const urgencyColor = isDelinquent ? '#DC2626' : isWindow ? '#D97706' : '#2563EB';
+    const badgeLabel = isDelinquent ? 'STATUTORY DELINQUENCY NOTICE (RA 7160)' : isWindow ? 'ANNUAL RENEWAL WINDOW (JANUARY 1 - 20)' : 'ANNUAL EXPIRATION REMINDER';
+
+    const html = baseTemplate(`
+        ${greeting(userName)}
+        <div style="background:${isDelinquent ? '#FEE2E2' : '#FEF3C7'};border:1px solid ${urgencyColor};border-radius:8px;padding:16px 20px;margin:20px 0;">
+          <div style="font-size:12px;font-weight:700;color:${urgencyColor};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+            ${badgeLabel}
+          </div>
+          <div style="font-size:18px;font-weight:800;color:#1E293B;">
+            ${noticeTitle}
+          </div>
+        </div>
+        <p style="font-size:14px;color:#334155;line-height:1.6;">${noticeBody}</p>
+        ${infoBlock([
+            ['Business', businessName],
+            ['Permit No.', permitNumber || 'N/A'],
+            ['Expiration Date', expirationDate || 'December 31'],
+            ['Legal Reference', 'Republic Act No. 7160 Sections 167 & 168'],
+            ...(isDelinquent ? [['Statutory Surcharge', '<strong style="color:#DC2626;">25% Surcharge + 2% Monthly Interest Active</strong>']] : []),
+            ...(isWindow && daysUntilDeadline !== undefined ? [['Penalty-Free Window', `<strong>${daysUntilDeadline} day(s) remaining until Jan 20</strong>`]] : [])
+        ])}
+        <p style="font-size:13px;color:#64748B;line-height:1.5;">
+          Under the Local Government Code of 1991, all Philippine business permits expire annually on December 31. Please use PermitEase to prepare your requirements, estimate your fees, and schedule your fast-track City Hall walk-in.
+        </p>
+        ${ctaButton(`${FRONTEND_URL}/renewals`, 'Open Renewal Preparation')}
+        ${closing()}
+    `);
+    return sendEmail(userEmail, `Official Notice — ${noticeTitle} (${businessName})`, html);
+};
+
+// ─────────────────────────────────────────────────────────
 // Legacy function (preserve backward compatibility)
 // ─────────────────────────────────────────────────────────
 const sendPermitStatusEmail = async (userEmail, userName, businessName, permitName, status, remarks) => {
@@ -321,5 +358,6 @@ module.exports = {
     sendApplicationRejectedEmail,
     sendPermitIssuedEmail,
     sendRenewalReminderEmail,
-    sendPermitExpiredEmail
+    sendPermitExpiredEmail,
+    sendStatutoryNoticeEmail
 };
