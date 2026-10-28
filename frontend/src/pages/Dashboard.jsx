@@ -5,7 +5,8 @@ import {
   FileText, CheckCircle, AlertTriangle, XCircle, Clock,
   Building2, ClipboardCheck, Receipt, BarChart2,
   ShieldCheck, AlertCircle, ChevronRight, BrainCircuit, Calendar,
-  TrendingUp, Bell, ArrowRight, Info, MapPin, Zap
+  TrendingUp, Bell, ArrowRight, Info, Zap,
+  Ticket, Scale, CalendarCheck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -250,6 +251,74 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
           </div>
         </div>
       </div>
+
+      {/* ── ACTIVE FAST-TRACK WALK-IN BANNER (IF SCHEDULED) ─────────────── */}
+      {stats?.active_walkin && (
+        <div style={{
+          backgroundColor: stats.active_walkin.walkin_status === 'ATTENDED' ? '#F0FDF4' : '#EFF6FF',
+          border: `1px solid ${stats.active_walkin.walkin_status === 'ATTENDED' ? '#BBF7D0' : '#BFDBFE'}`,
+          borderRadius: '10px',
+          padding: '1rem 1.25rem',
+          marginBottom: '1.25rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.75rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '38px', height: '38px', borderRadius: '8px',
+              backgroundColor: stats.active_walkin.walkin_status === 'ATTENDED' ? '#DCFCE7' : '#DBEAFE',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <Ticket size={20} color={stats.active_walkin.walkin_status === 'ATTENDED' ? '#166534' : '#1D4ED8'} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--government-navy)' }}>
+                  Fast-Track Walk-in: {stats.active_walkin.business_name}
+                </span>
+                {stats.active_walkin.queue_ticket_number && (
+                  <span style={{
+                    backgroundColor: '#1E3A8A', color: 'white', padding: '0.1rem 0.5rem',
+                    borderRadius: '4px', fontSize: '11px', fontWeight: '700', fontFamily: 'monospace'
+                  }}>
+                    #{stats.active_walkin.queue_ticket_number}
+                  </span>
+                )}
+                {stats.active_walkin.walkin_status === 'ATTENDED' ? (
+                  <span style={{ backgroundColor: '#DCFCE7', color: '#166534', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                    ✓ Documents Sighted
+                  </span>
+                ) : (
+                  <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                    Scheduled Window
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '0.2rem' }}>
+                <strong>{new Date(stats.active_walkin.walkin_date).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                {' • '}
+                <span>{stats.active_walkin.walkin_time_slot || 'Morning Window'}</span>
+                {' • '}
+                <span>Window 1, Ground Floor, Roxas Municipal Hall</span>
+              </div>
+            </div>
+          </div>
+          <Link
+            to={`/applications/${stats.active_walkin.id}`}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1',
+              padding: '0.45rem 0.85rem', borderRadius: '6px', fontSize: '12.5px', fontWeight: '600',
+              textDecoration: 'none'
+            }}
+          >
+            View Ticket & Form <ArrowRight size={13} />
+          </Link>
+        </div>
+      )}
 
       {/* ── KPI METRIC CARDS ──────────────────────────────────────────────── */}
       <div className="db-kpi-grid">
@@ -554,140 +623,396 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
 // ===========================================================================
 const AdminDashboard = ({ user, stats, loading }) => {
   const compColor = (stats?.compliance_rate ?? 0) >= 80 ? 'var(--success)' : 'var(--warning)';
+  const today = new Date().toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const firstName = user?.full_name?.split(' ')[0] || 'Officer';
+
+  // Determine current statutory period label
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  let statutoryPeriod = 'ACTIVE SEASON';
+  let statutoryColor = '#166534';
+  let statutoryBg = '#DCFCE7';
+  if (month === 1 && day <= 20) {
+    statutoryPeriod = 'RENEWAL WINDOW (Jan 1–20)';
+    statutoryColor = '#1E40AF';
+    statutoryBg = '#DBEAFE';
+  } else if (month === 1 && day > 20) {
+    statutoryPeriod = 'DELINQUENCY PERIOD';
+    statutoryColor = '#9A3412';
+    statutoryBg = '#FFEDD5';
+  } else if (month === 12) {
+    statutoryPeriod = 'PRE-RENEWAL WATCH (Dec)';
+    statutoryColor = '#92400E';
+    statutoryBg = '#FEF3C7';
+  }
+
+  const fmt = (n) => (n ?? 0).toLocaleString();
 
   return (
-    <div className="animate-fade-in">
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="animate-fade-in" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      {/* ── HEADER ────────────────────────────────────────────────── */}
+      <div style={{
+        background: 'linear-gradient(135deg, var(--government-navy) 0%, #1B4D7E 100%)',
+        borderRadius: '12px', padding: '1.5rem 2rem', marginBottom: '1.5rem',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+        flexWrap: 'wrap', gap: '1rem', color: 'white'
+      }}>
         <div>
-          <h1 style={{ color: 'var(--government-navy)', marginBottom: '0.35rem' }}>BPLO Preparation Support Dashboard</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Municipality of Roxas — Business Permit Management Overview</p>
+          <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem' }}>
+            Municipality of Roxas, Oriental Mindoro • BPLO Command Center
+          </div>
+          <h1 style={{ margin: '0 0 0.25rem', fontSize: '26px', fontWeight: '700', color: 'white' }}>
+            {greeting}, {firstName}!
+          </h1>
+          <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.75)' }}>
+            Business Permit & Licensing Oversight · PermitEase Administration
+          </p>
         </div>
-        <div style={{ 
-          background: 'var(--primary-green-light)', borderRadius: 'var(--radius-full)', 
-          padding: '0.4rem 1rem', fontSize: '0.75rem', color: 'var(--primary-green-dark)', 
-          fontWeight: '600', letterSpacing: '0.03em' 
-        }}>
-          {new Date().toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Calendar size={14} /> {today}
+          </div>
+          <div style={{
+            backgroundColor: statutoryBg, color: statutoryColor,
+            borderRadius: '20px', padding: '0.3rem 0.875rem',
+            fontSize: '11px', fontWeight: '800', letterSpacing: '0.05em'
+          }}>
+            RA 7160 — {statutoryPeriod}
+          </div>
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="stats-grid">
-        <StatCard icon={Building2}     label="Registered MSMEs"       value={loading ? '...' : stats?.total_businesses}              colorClass="navy" />
-        <StatCard icon={ClipboardCheck} label="Pending Verification"   value={loading ? '...' : stats?.pending_pre_assessments}       colorClass="orange" />
-        <StatCard icon={CheckCircle}   label="Verified (This System)"  value={loading ? '...' : stats?.verified_pre_assessments}      colorClass="green" />
-        <StatCard icon={AlertTriangle} label="Avg. Readiness %"        value={loading ? '...' : (stats?.avg_readiness_pct != null ? `${stats.avg_readiness_pct}%` : 'N/A')} colorClass="gold" />
-        <StatCard icon={XCircle}       label="Correction Requests"     value={loading ? '...' : stats?.correction_requests}           colorClass="red" />
-        <StatCard icon={FileText}      label="Total Requirements"      value={loading ? '...' : stats?.total_requirements}            colorClass="navy" />
-      </div>
+      {/* ── ROW 1: KPI STAT CARDS ─────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
 
-      <div className="dashboard-grid">
-        {/* Left */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-          {/* Municipal Preparation Readiness */}
-          <div className="card">
-            <div className="card-header" style={{ marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: 'none' }}>
-              <h3 style={{ margin: 0, color: 'var(--government-navy)' }}>Municipal Compliance Rate</h3>
-            </div>
-            <ScoreBar score={stats?.compliance_rate ?? 0} label="Average Preparation Readiness" color={compColor} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
-              <div style={{ backgroundColor: 'var(--success-light)', padding: '1.25rem 1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid #C3E6D1' }}>
-                <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--success)', lineHeight: 1 }}>{stats?.total_requirements ?? 0}</div>
-                <div style={{ fontSize: '0.75rem', color: '#10592C', fontWeight: '600', marginTop: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Requirements</div>
-              </div>
-              <div style={{ backgroundColor: 'var(--danger-light)', padding: '1.25rem 1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid #F2C7C7' }}>
-                <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--danger)', lineHeight: 1 }}>{stats?.missing_requirements ?? 0}</div>
-                <div style={{ fontSize: '0.75rem', color: '#8B1E1E', fontWeight: '600', marginTop: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Missing Submissions</div>
-              </div>
+        {/* Registered MSMEs */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid var(--government-navy)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>MSMEs Registered</div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(23,32,51,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Building2 size={16} color="var(--government-navy)" />
             </div>
           </div>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--government-navy)', lineHeight: 1 }}>{loading ? '…' : fmt(stats?.total_businesses)}</div>
+          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.35rem' }}>Business profiles in PermitEase</div>
+        </div>
 
-          {/* Recent Applications */}
-          <div className="card">
-            <div className="card-header">
-              <h3 style={{ margin: 0, color: 'var(--government-navy)' }}>Recent Pre-Assessment Submissions</h3>
-              <Link to="/admin/applications" className="btn btn-ghost btn-sm">View All <ChevronRight size={14} /></Link>
+        {/* Pending Review */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #D97706' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Pending Review</div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ClipboardCheck size={16} color="#D97706" />
             </div>
-            {stats?.recent_applications?.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2.5rem 0', fontSize: '0.875rem' }}>No applications yet.</p>
-            ) : (
-              <div className="table-responsive">
-                <table>
-                  <thead>
-                    <tr>
-                      {['Business', 'Preparation Ref.', 'Date', 'Status'].map(h => <th key={h}>{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats?.recent_applications?.map(a => {
-                      const ss = statusStyle(a.status);
-                      return (
-                        <tr key={a.id}>
-                          <td style={{ fontWeight: '600' }}>{a.business_name}</td>
-                          <td style={{ color: 'var(--text-secondary)' }}>{a.permit_name}</td>
-                          <td style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{new Date(a.created_at).toLocaleDateString('en-PH')}</td>
-                          <td>
-                            <span className="badge" style={{ color: ss.color, backgroundColor: ss.bg }}>{a.status}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: '#D97706', lineHeight: 1 }}>{loading ? '…' : fmt(stats?.pending_pre_assessments)}</div>
+          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.35rem' }}>Submitted & under review</div>
+        </div>
+
+        {/* Preparation Verified */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid var(--primary-green)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Prep Verified</div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle size={16} color="var(--primary-green)" />
+            </div>
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--primary-green)', lineHeight: 1 }}>{loading ? '…' : fmt(stats?.verified_pre_assessments)}</div>
+          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.35rem' }}>Pre-assessments approved</div>
+        </div>
+
+        {/* Today's Walk-ins */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #1E40AF' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Today's Walk-ins</div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Ticket size={16} color="#1E40AF" />
+            </div>
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: '#1E40AF', lineHeight: 1 }}>{loading ? '…' : fmt(stats?.todays_walkin_count)}</div>
+          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.35rem' }}>
+            <span style={{ color: 'var(--primary-green)', fontWeight: '600' }}>{fmt(stats?.todays_attended_count)}</span> sighted at Window 1
           </div>
         </div>
 
-        {/* Right Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Delinquent (RA 7160) */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #DC2626' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Delinquent</div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={16} color="#DC2626" />
+            </div>
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: '#DC2626', lineHeight: 1 }}>{loading ? '…' : fmt(stats?.delinquent_count)}</div>
+          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.35rem' }}>Past Jan 20 · RA 7160 Surcharge</div>
+        </div>
 
-          {/* Quick Admin Links */}
-          <div className="card">
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', color: 'var(--government-navy)' }}>Quick Actions</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <Link to="/permits" className="btn btn-primary btn-block" style={{ justifyContent: 'flex-start', fontWeight: '700' }}>
-                <ShieldCheck size={16} /> Verify Requirements Hub
-              </Link>
-              <Link to="/admin/applications" className="btn btn-outline btn-block" style={{ justifyContent: 'flex-start' }}>
-                <ClipboardCheck size={16} /> Review Pre-Assessments
-              </Link>
-              <Link to="/requirements" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
-                <FileText size={16} /> Permit Rules Config
-              </Link>
-              <Link to="/tax-estimation" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
-                <Receipt size={16} /> Tax & Fee Rules
-              </Link>
-              <Link to="/reports" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
-                <BarChart2 size={16} /> View Reports
-              </Link>
-              <Link to="/knowledge" className="btn btn-ghost btn-block" style={{ justifyContent: 'flex-start' }}>
-                <FileText size={16} /> Knowledge Base
-              </Link>
+        {/* Expiring Soon */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #EA580C' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Expiring Soon</div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={16} color="#EA580C" />
+            </div>
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: '#EA580C', lineHeight: 1 }}>{loading ? '…' : fmt(stats?.expiring_soon_count)}</div>
+          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.35rem' }}>Expires Dec 31 · Pre-renewal watch</div>
+        </div>
+
+      </div>
+
+      {/* ── ROW 2: OPERATIONS PANELS ──────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+
+        {/* Walk-in Counter Control */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CalendarCheck size={17} color="#1D4ED8" />
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>Walk-in Roster</div>
+              <div style={{ fontSize: '11px', color: '#64748B' }}>Window 1 · BPLO Counter Control</div>
             </div>
           </div>
 
-          {/* Top Missing Requirements */}
-          <div className="card">
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', color: 'var(--government-navy)' }}>Common Missing Requirements</h3>
-            {stats?.top_missing_requirements?.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>No missing requirements on record.</p>
-            ) : stats?.top_missing_requirements?.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ width: '24px', height: '24px', borderRadius: 'var(--radius-xs)', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
-                  <span style={{ fontWeight: '500', fontSize: '0.875rem' }}>{item.permit_name}</span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '1rem' }}>
+            <div style={{ backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.todays_walkin_count)}</div>
+              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.15rem' }}>Scheduled Today</div>
+            </div>
+            <div style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--primary-green)' }}>{loading ? '…' : fmt(stats?.todays_attended_count)}</div>
+              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.15rem' }}>Sighted ✓</div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '1rem', padding: '0.5rem 0.75rem', backgroundColor: '#F8FAFC', borderRadius: '6px' }}>
+            <span style={{ fontWeight: '600', color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.week_walkins_scheduled)}</span> appointments this week (7-day window)
+          </div>
+
+          <Link to="/admin/applications" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+            backgroundColor: '#1E40AF', color: 'white', borderRadius: '6px', padding: '0.55rem',
+            fontSize: '13px', fontWeight: '600', textDecoration: 'none'
+          }}>
+            <Ticket size={14} /> Open Queue Control
+          </Link>
+        </div>
+
+        {/* Renewal Radar (RA 7160) */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Scale size={17} color="#EA580C" />
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>Renewal Radar</div>
+              <div style={{ fontSize: '11px', color: '#64748B' }}>Statutory Compliance · RA 7160</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+            {[
+              { label: 'Active & Compliant', value: stats?.active_count, color: '#166534', bg: '#F0FDF4', dot: '#22C55E' },
+              { label: 'Expiring Soon (Dec)', value: stats?.expiring_soon_count, color: '#92400E', bg: '#FEF3C7', dot: '#D97706' },
+              { label: 'Jan Renewal Window', value: stats?.renewal_window_count, color: '#1E40AF', bg: '#EFF6FF', dot: '#3B82F6' },
+              { label: 'Delinquent (Post Jan 20)', value: stats?.delinquent_count, color: '#991B1B', bg: '#FEE2E2', dot: '#EF4444' },
+            ].map(item => (
+              <div key={item.label} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                backgroundColor: item.bg, borderRadius: '6px', padding: '0.5rem 0.75rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '12px', color: item.color, fontWeight: '600' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: item.dot, flexShrink: 0 }} />
+                  {item.label}
                 </div>
-                <span className="badge" style={{ backgroundColor: 'var(--background)', color: 'var(--text-secondary)' }}>
-                  {item.missing_count}
-                </span>
+                <span style={{ fontSize: '15px', fontWeight: '800', color: item.color }}>{loading ? '…' : fmt(item.value)}</span>
               </div>
             ))}
           </div>
 
+          <Link to="/admin/renewals" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+            backgroundColor: '#EA580C', color: 'white', borderRadius: '6px', padding: '0.55rem',
+            fontSize: '13px', fontWeight: '600', textDecoration: 'none'
+          }}>
+            <AlertTriangle size={14} /> Open Renewal Monitoring
+          </Link>
+        </div>
+
+        {/* Quick Admin Actions */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={17} color="var(--primary-green)" />
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>Quick Access</div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {[
+              { to: '/admin/applications', icon: ClipboardCheck, label: 'Review Pre-Assessments', color: 'var(--primary-green)', bg: '#F0FDF4' },
+              { to: '/admin/applications', icon: Ticket, label: 'Walk-in Queue Control', color: '#1E40AF', bg: '#EFF6FF' },
+              { to: '/admin/renewals', icon: AlertTriangle, label: 'Renewal & Delinquency Monitor', color: '#EA580C', bg: '#FFEDD5' },
+              { to: '/requirements', icon: Scale, label: 'Municipal Requirements Config', color: '#7C3AED', bg: '#F5F3FF' },
+              { to: '/admin/analytics', icon: BarChart2, label: 'Analytics & Reports', color: '#0284C7', bg: '#F0F9FF' },
+            ].map((action, i) => (
+              <Link key={i} to={action.to} style={{
+                display: 'flex', alignItems: 'center', gap: '0.625rem',
+                padding: '0.55rem 0.75rem', borderRadius: '7px',
+                backgroundColor: action.bg, color: action.color,
+                textDecoration: 'none', fontSize: '13px', fontWeight: '600',
+                transition: 'opacity 0.15s'
+              }}>
+                <action.icon size={14} strokeWidth={2} />
+                {action.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── ROW 3: RECENT SUBMISSIONS + MISSING REQUIREMENTS ─────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+
+        {/* Recent Pre-Assessment Submissions */}
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>Recent Pre-Assessment Submissions</div>
+              <div style={{ fontSize: '12px', color: '#64748B' }}>Latest applications submitted by MSMEs</div>
+            </div>
+            <Link to="/admin/applications" style={{ fontSize: '12px', fontWeight: '600', color: 'var(--primary-green)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              View All <ChevronRight size={13} />
+            </Link>
+          </div>
+
+          {!stats?.recent_applications?.length ? (
+            <div style={{ padding: '2.5rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>No applications submitted yet.</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#F8FAFC' }}>
+                  {['Business', 'Ref #', 'Date', 'Status'].map(h => (
+                    <th key={h} style={{ padding: '0.625rem 1rem', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recent_applications.map((a, i) => {
+                  const STATUS_MAP = {
+                    APPROVED: { label: 'Prep Verified', color: '#166534', bg: '#DCFCE7' },
+                    SUBMITTED: { label: 'Submitted', color: '#1E40AF', bg: '#DBEAFE' },
+                    UNDER_REVIEW: { label: 'Under Review', color: '#92400E', bg: '#FEF3C7' },
+                    NEEDS_CORRECTION: { label: 'Correction Req.', color: '#9A3412', bg: '#FFEDD5' },
+                    REJECTED: { label: 'Corrections', color: '#991B1B', bg: '#FEE2E2' },
+                    DRAFT: { label: 'Draft', color: '#475569', bg: '#F1F5F9' },
+                    COMPLETED: { label: 'Completed', color: '#14532D', bg: '#F0FDF4' },
+                  };
+                  const s = STATUS_MAP[a.status] || { label: a.status, color: '#64748B', bg: '#F1F5F9' };
+                  return (
+                    <tr key={a.id} style={{ borderBottom: i < stats.recent_applications.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--government-navy)', fontSize: '13px' }}>{a.business_name}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: '#64748B', fontSize: '12px', fontFamily: 'monospace' }}>{a.application_number || '—'}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: '#64748B', fontSize: '12px' }}>{new Date(a.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: s.color, backgroundColor: s.bg, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{s.label}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Right column: Readiness stats + Top Missing */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* MSME Readiness Summary */}
+          <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <ShieldCheck size={16} color="var(--primary-green)" /> MSME Readiness Overview
+            </div>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '0.3rem' }}>
+                <span>Avg. Readiness</span>
+                <span style={{ color: compColor }}>{stats?.avg_readiness_pct != null ? `${stats.avg_readiness_pct}%` : 'N/A'}</span>
+              </div>
+              <div style={{ height: '7px', backgroundColor: '#F1F5F9', borderRadius: '20px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${stats?.avg_readiness_pct ?? 0}%`, backgroundColor: compColor, borderRadius: '20px', transition: 'width 0.8s ease' }} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ backgroundColor: '#F0FDF4', borderRadius: '7px', padding: '0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary-green)' }}>{fmt(stats?.total_requirements)}</div>
+                <div style={{ fontSize: '11px', color: '#64748B' }}>Total Reqs</div>
+              </div>
+              <div style={{ backgroundColor: '#FEE2E2', borderRadius: '7px', padding: '0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: '#DC2626' }}>{fmt(stats?.missing_requirements)}</div>
+                <div style={{ fontSize: '11px', color: '#64748B' }}>Missing</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Missing Requirements */}
+          <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', flex: 1 }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <AlertCircle size={16} color="#DC2626" /> Common Missing Clearances
+            </div>
+            {!stats?.top_missing_requirements?.length ? (
+              <div style={{ fontSize: '13px', color: '#64748B', textAlign: 'center', padding: '1rem 0' }}>
+                <CheckCircle size={18} color="var(--primary-green)" style={{ display: 'block', margin: '0 auto 0.4rem' }} />
+                No missing requirements on record.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {stats.top_missing_requirements.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.6rem', backgroundColor: '#F8FAFC', borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ width: '20px', height: '20px', borderRadius: '4px', backgroundColor: '#FEE2E2', color: '#DC2626', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                      <span style={{ fontSize: '12.5px', fontWeight: '500', color: 'var(--government-navy)' }}>{item.permit_name}</span>
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#DC2626', backgroundColor: '#FEE2E2', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>{item.missing_count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
+
+      {/* ── ROW 4: REQUIREMENTS CONFIG SUMMARY ───────────────────── */}
+      <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Scale size={20} color="#7C3AED" />
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>
+              Municipal Requirements Masterlist — <span style={{ color: '#7C3AED' }}>{loading ? '…' : fmt(stats?.configured_requirements)} Clearances Configured</span>
+            </div>
+            <div style={{ fontSize: '12px', color: '#64748B' }}>
+              Statutory prerequisites under RA 11032 (Citizen's Charter) · Add, edit or retire clearances when ordinances change.
+            </div>
+          </div>
+        </div>
+        <Link to="/requirements" style={{
+          display: 'flex', alignItems: 'center', gap: '0.4rem',
+          backgroundColor: '#7C3AED', color: 'white', borderRadius: '7px',
+          padding: '0.55rem 1rem', fontSize: '13px', fontWeight: '600', textDecoration: 'none'
+        }}>
+          <Scale size={14} /> Manage Requirements
+        </Link>
+      </div>
+
     </div>
   );
 };

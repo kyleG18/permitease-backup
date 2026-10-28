@@ -56,6 +56,52 @@ const getDashboardStats = async (req, res) => {
                 ORDER BY a.created_at DESC LIMIT 8
             `);
 
+            // ── PHASE 2: Walk-in Scheduling Stats ──────────────────────────────
+            const today = new Date().toISOString().split('T')[0];
+            const [[{ todays_walkin_count }]] = await db.query(
+                "SELECT COUNT(*) as todays_walkin_count FROM applications WHERE walkin_date = ? AND walkin_status IN ('SCHEDULED','PENDING')",
+                [today]
+            );
+            const [[{ todays_attended_count }]] = await db.query(
+                "SELECT COUNT(*) as todays_attended_count FROM applications WHERE walkin_date = ? AND walkin_status = 'ATTENDED'",
+                [today]
+            );
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            const [[{ week_walkins_scheduled }]] = await db.query(
+                "SELECT COUNT(*) as week_walkins_scheduled FROM applications WHERE walkin_date BETWEEN ? AND ? AND walkin_status IN ('SCHEDULED','PENDING','ATTENDED')",
+                [today, nextWeek.toISOString().split('T')[0]]
+            );
+
+            // ── PHASE 1: Statutory Renewal Radar ───────────────────────────────
+            const now = new Date();
+            const year = now.getFullYear();
+            const jan20 = new Date(`${year}-01-20`);
+            const dec1 = new Date(`${year}-12-01`);
+            const dec31 = new Date(`${year}-12-31`);
+
+            let delinquent_count = 0, expiring_soon_count = 0, renewal_window_count = 0, active_count = 0;
+            try {
+                const [permitRows] = await db.query("SELECT expiration_date FROM permits WHERE status = 'Approved'");
+                permitRows.forEach(p => {
+                    if (!p.expiration_date) return;
+                    const expiry = new Date(p.expiration_date);
+                    const expYear = expiry.getFullYear();
+                    if (now > jan20 && expYear < year) {
+                        delinquent_count++;
+                    } else if (now >= new Date(`${year}-01-01`) && now <= jan20) {
+                        renewal_window_count++;
+                    } else if (now >= dec1 && now <= dec31) {
+                        expiring_soon_count++;
+                    } else {
+                        active_count++;
+                    }
+                });
+            } catch(e) { /* permits table might be empty */ }
+
+            // ── PHASE 3: Configured Requirements ──────────────────────────────
+            const [[{ configured_requirements }]] = await db.query('SELECT COUNT(*) as configured_requirements FROM permit_requirements');
+
             return res.json({
                 role: 'admin',
                 total_businesses,
@@ -67,7 +113,18 @@ const getDashboardStats = async (req, res) => {
                 avg_readiness_pct,
                 assessed_businesses: assessed_count,
                 top_missing_requirements: top_missing,
-                recent_applications
+                recent_applications,
+                // Phase 2 – walk-in queue
+                todays_walkin_count: todays_walkin_count || 0,
+                todays_attended_count: todays_attended_count || 0,
+                week_walkins_scheduled: week_walkins_scheduled || 0,
+                // Phase 1 – renewal radar
+                delinquent_count,
+                expiring_soon_count,
+                renewal_window_count,
+                active_count,
+                // Phase 3 – requirements config
+                configured_requirements
             });
         }
 
@@ -133,6 +190,23 @@ const getDashboardStats = async (req, res) => {
             }
         } catch (e) { /* permits table may not exist */ }
 
+        // Active walk-in appointment (if any)
+        let active_walkin = null;
+        try {
+            const [walkinRows] = await db.query(
+                `SELECT a.id, a.application_number, a.walkin_date, a.walkin_time_slot, a.queue_ticket_number, a.walkin_status,
+                        b.business_name
+                 FROM applications a
+                 JOIN businesses b ON a.business_id = b.id
+                 WHERE a.user_id = ? AND a.walkin_date IS NOT NULL
+                 ORDER BY a.walkin_date DESC LIMIT 1`,
+                [req.user.id]
+            );
+            if (walkinRows.length > 0) {
+                active_walkin = walkinRows[0];
+            }
+        } catch (e) { /* ignore */ }
+
         return res.json({
             role: 'business_owner',
             total_businesses: businessIds.length,
@@ -145,7 +219,8 @@ const getDashboardStats = async (req, res) => {
             assessment_completed: assessment_count > 0,
             next_expiration,
             days_to_expiration,
-            businesses
+            businesses,
+            active_walkin
         });
 
 } catch (error) {
