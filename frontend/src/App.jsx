@@ -100,7 +100,8 @@ function App() {
           <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
 
           {/* LGU Admin + System Admin */}
-          <Route path="/reports" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><Reports /></ProtectedLayout>} />
+          <Route path="/reports" element={<Navigate to="/admin/analytics" replace />} />
+          <Route path="/admin/reports" element={<Navigate to="/admin/analytics" replace />} />
           <Route path="/admin/applications" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><LGUApplications /></ProtectedLayout>} />
           <Route path="/admin/applications/:id" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><LGUApplicationReview /></ProtectedLayout>} />
           <Route path="/admin/renewals" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><AdminRenewals /></ProtectedLayout>} />

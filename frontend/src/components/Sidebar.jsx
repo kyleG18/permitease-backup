@@ -113,18 +113,17 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: (t.nav?.main || 'MAIN'),
           items: [
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
-            { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
-            { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield },
+            { name: 'Applications & Walk-ins', path: '/admin/applications', icon: ClipboardCheck },
+            { name: 'Clearance Verification', path: '/permits', icon: ShieldCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
-            { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
-            { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }
+            { name: 'Permit Registry', path: '/admin/permits', icon: FileText },
+            { name: 'Municipal Requirements', path: '/requirements', icon: CheckSquare }
           ]
         },
         {
-          title: 'ANALYTICS & DATA',
+          title: 'REPORTS & INSIGHTS',
           items: [
-            { name: 'LGU Analytics', path: '/admin/analytics', icon: BarChart },
-            { name: 'Reports', path: '/reports', icon: FileText },
+            { name: 'Reports & Analytics', path: '/admin/analytics', icon: BarChart },
             { name: 'Knowledge Base', path: '/knowledge', icon: Library },
           ]
         }
@@ -137,11 +136,11 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: (t.nav?.main || 'MAIN'),
           items: [
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
-            { name: 'Permit Applications', path: '/admin/applications', icon: ClipboardCheck },
-            { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield },
+            { name: 'Applications & Walk-ins', path: '/admin/applications', icon: ClipboardCheck },
+            { name: 'Clearance Verification', path: '/permits', icon: ShieldCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
-            { name: 'Preparation Records', path: '/admin/permits', icon: Shield },
-            { name: 'Permit Requirements', path: '/requirements', icon: CheckSquare }
+            { name: 'Permit Registry', path: '/admin/permits', icon: FileText },
+            { name: 'Municipal Requirements', path: '/requirements', icon: CheckSquare }
           ]
         },
         {
@@ -152,10 +151,9 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           ]
         },
         {
-          title: 'ANALYTICS & REPORTS',
+          title: 'REPORTS & INSIGHTS',
           items: [
-            { name: 'LGU Analytics', path: '/admin/analytics', icon: BarChart },
-            { name: 'Reports', path: '/reports', icon: FileText },
+            { name: 'Reports & Analytics', path: '/admin/analytics', icon: BarChart },
             { name: 'Knowledge Base', path: '/knowledge', icon: Library }
           ]
         }
