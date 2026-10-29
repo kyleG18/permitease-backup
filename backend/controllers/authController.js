@@ -86,8 +86,10 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
 
-        // Check for user email
-        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        const cleanEmail = String(email).trim().toLowerCase();
+
+        // Check for user email case-insensitively and trimmed
+        const [users] = await db.query('SELECT * FROM users WHERE LOWER(TRIM(email)) = ?', [cleanEmail]);
         const user = users[0];
 
         if (user && (await bcrypt.compare(password, user.password))) {
