@@ -1230,6 +1230,29 @@ const scheduleWalkinByBusiness = async (req, res) => {
             `Preferred visit date submitted: ${walkin_date} (${walkin_time_slot}). Queue Ticket #${ticketNum}. Awaiting BPLO availability check.`
         );
 
+        // 1. Notify the MSME applicant
+        const notifTitle = 'Walk-in Visit Date Submitted';
+        const notifMsg = `Your preferred visit date of ${walkin_date} (${walkin_time_slot}) for ${business.business_name} has been submitted to Roxas BPLO. Your Queue Ticket is #${ticketNum}.`;
+        await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_application_id, status)
+             VALUES (?, 'WALKIN_SCHEDULED', ?, ?, ?, 'Unread')`,
+            [business.user_id, notifTitle, notifMsg, appId]
+        );
+
+        // 2. Notify BPLO Officers for availability check & confirmation
+        try {
+            const [lguAdmins] = await db.query("SELECT id FROM users WHERE role = 'lgu_admin'");
+            for (const admin of lguAdmins) {
+                await db.query(
+                    `INSERT INTO notifications (user_id, type, title, message, related_application_id, status)
+                     VALUES (?, 'WALKIN_REQUESTED', 'New Walk-in Appointment Request', ?, ?, 'Unread')`,
+                    [admin.id, `MSME submitted Window 1 visit date on ${walkin_date} (${walkin_time_slot}) for ${business.business_name}. Ticket #${ticketNum}.`, appId]
+                );
+            }
+        } catch (notifErr) {
+            console.error('LGU admin notification error:', notifErr);
+        }
+
         res.json({
             success: true,
             message: 'Walk-in visit request submitted successfully!',

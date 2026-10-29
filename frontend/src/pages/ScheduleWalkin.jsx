@@ -7,7 +7,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import {
   Calendar, Clock, Ticket, CheckCircle2, AlertCircle, Building2,
   FileText, ShieldCheck, Printer, Download, MapPin, ArrowRight,
-  Info, Sparkles, Send, Check
+  Info, Sparkles, Send, Check, Bell, X
 } from 'lucide-react';
 import UnifiedApplicationFormView from '../components/UnifiedApplicationFormView';
 
@@ -39,6 +39,8 @@ export default function ScheduleWalkin() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [previewingForm, setPreviewingForm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [modalData, setModalData] = useState(null);
 
   // Calculate minimum selectable date (next business day, skipping weekend)
   const getMinDate = () => {
@@ -158,15 +160,28 @@ export default function ScheduleWalkin() {
 
       // Optimistically update activeApp so user immediately sees their ticket
       if (res.data) {
-        setActiveApp(prev => ({
-          ...(prev || {}),
-          id: res.data.application_id || prev?.id,
+        const newApp = {
+          ...(activeApp || {}),
+          id: res.data.application_id || activeApp?.id,
           queue_ticket_number: res.data.queue_ticket_number,
           walkin_date: res.data.walkin_date,
           walkin_time_slot: res.data.walkin_time_slot,
           walkin_status: res.data.walkin_status || 'PENDING'
-        }));
+        };
+        setActiveApp(newApp);
+
+        setModalData({
+          ticket: res.data.queue_ticket_number,
+          date: res.data.walkin_date,
+          slot: res.data.walkin_time_slot,
+          bizName: selectedBiz?.business_name || 'Your Business',
+          appId: res.data.application_id || activeApp?.id
+        });
+        setShowSuccessModal(true);
       }
+
+      // Notify header bell icon to update count
+      window.dispatchEvent(new Event('notificationUpdate'));
 
       setSuccessMsg(isTl 
         ? `Naisumite ang petsa! Ang iyong Ticket ay #${res.data.queue_ticket_number}. Pakisuri ang checklist sa ibaba.`
@@ -726,6 +741,176 @@ export default function ScheduleWalkin() {
             showInstructions={true}
             onBack={() => setPreviewingForm(false)}
           />
+        </div>
+      )}
+
+      {/* ── SUCCESS CONFIRMATION MODAL ────────────────────────────────────── */}
+      {showSuccessModal && modalData && (
+        <div 
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem'
+          }}
+        >
+          <div 
+            className="animate-fade-in"
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              maxWidth: '520px',
+              width: '100%',
+              padding: '2rem',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              border: '1px solid #E2E8F0',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              aria-label="Close modal"
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#64748B',
+                padding: '0.25rem'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: '#DCFCE7',
+              color: '#16A34A',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem'
+            }}>
+              <CheckCircle2 size={36} strokeWidth={2.5} />
+            </div>
+
+            <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#16A34A', marginBottom: '0.25rem' }}>
+              {isTl ? 'Matagumpay na Naisumite' : 'Submission Successful'}
+            </div>
+
+            <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+              {isTl ? 'Nai-schedule ang Walk-in Request!' : 'Walk-in Visit Date Submitted!'}
+            </h2>
+
+            <p style={{ fontSize: '13.5px', color: '#64748B', lineHeight: 1.5, margin: '0 0 1.25rem' }}>
+              {isTl 
+                ? 'Naisumite na sa BPLO ng Roxas Municipal Hall ang iyong piniling petsa. Isang kumpirmasyon ang naipadala sa iyong Notifications.'
+                : 'Your preferred date has been submitted to Roxas BPLO. A confirmation has been sent to your Notifications.'}
+            </p>
+
+            {/* Ticket Card Box */}
+            <div style={{
+              backgroundColor: '#F8FAFC',
+              border: '2px dashed #CBD5E1',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              marginBottom: '1.5rem',
+              textAlign: 'left'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>
+                  Queue Ticket Number
+                </span>
+                <span style={{ backgroundColor: '#FEF3C7', color: '#92400E', padding: '0.15rem 0.55rem', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
+                  Awaiting BPLO Review
+                </span>
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', fontFamily: 'monospace', letterSpacing: '0.04em', marginBottom: '0.65rem' }}>
+                #{modalData.ticket}
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div>🏢 <strong>Business:</strong> {modalData.bizName}</div>
+                <div>📅 <strong>Preferred Date:</strong> {new Date(modalData.date).toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                <div>⏰ <strong>Time Slot:</strong> {modalData.slot}</div>
+                <div>📍 <strong>Location:</strong> Window 1 (Fast-Track), Ground Floor, Roxas Municipal Hall</div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <button
+                onClick={handleDownloadRoutingSlip}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  borderRadius: '8px'
+                }}
+              >
+                <Download size={16} />
+                Download Routing Slip & Checklist (PDF)
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <Link
+                  to="/notifications"
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    color: '#334155',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    backgroundColor: '#FFFFFF'
+                  }}
+                >
+                  <Bell size={14} /> View Notifications
+                </Link>
+
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    color: '#64748B',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    backgroundColor: '#F1F5F9'
+                  }}
+                >
+                  Continue to Checklist
+                </button>
+              </div>
+            </div>
+
+          </div>
         </div>
       )}
 

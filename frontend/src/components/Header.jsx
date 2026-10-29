@@ -22,8 +22,12 @@ const Header = ({ toggleSidebar }) => {
         .catch(() => {});
     };
     fetchCount();
+    window.addEventListener('notificationUpdate', fetchCount);
     const interval = setInterval(fetchCount, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('notificationUpdate', fetchCount);
+      clearInterval(interval);
+    };
   }, [token]);
 
   return (

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { Bell, CheckCheck, Trash2, BellOff, Info, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Bell, CheckCheck, Trash2, BellOff, Info, AlertTriangle, CheckCircle, Clock, Calendar } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
@@ -10,6 +10,9 @@ const getNotificationIcon = (type, status) => {
   const isUnread = status === 'Unread';
   const color = isUnread ? '#fff' : 'var(--text-muted)';
   
+  if (type === 'WALKIN_SCHEDULED' || type === 'WALKIN_CONFIRMED' || type === 'WALKIN_REQUESTED') {
+    return <Calendar size={18} color={color} />;
+  }
   // Preparation Verified (includes legacy APPLICATION_APPROVED / PERMIT_ISSUED)
   if (type === 'APPLICATION_APPROVED' || type === 'PERMIT_ISSUED' || type === 'PREPARATION_VERIFIED') {
     return <CheckCircle size={18} color={color} />;
@@ -25,6 +28,8 @@ const getNotificationIcon = (type, status) => {
 };
 
 const getNotificationLink = (n) => {
+  if (n.type === 'WALKIN_SCHEDULED' || n.type === 'WALKIN_CONFIRMED') return '/schedule-walkin';
+  if (n.type === 'WALKIN_REQUESTED') return '/admin/walkins';
   if (n.related_application_id) return `/applications/${n.related_application_id}`;
   if (n.related_permit_id) return '/applications';
   return null;
