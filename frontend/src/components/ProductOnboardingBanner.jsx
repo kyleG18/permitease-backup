@@ -62,22 +62,23 @@ export default function ProductOnboardingBanner() {
       role="complementary"
       aria-label={`Onboarding step ${currentStep.stepNumber} of ${totalSteps}`}
       style={{
-        backgroundColor: '#0F172A',
+        background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)',
         color: 'white',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid #14532D',
         fontFamily: 'Inter, -apple-system, sans-serif',
         position: 'relative',
         zIndex: 20,
         flexShrink: 0,
+        boxShadow: '0 2px 10px rgba(21, 128, 61, 0.25)'
       }}
     >
       {/* Progress bar at very top */}
-      <div style={{ height: '3px', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+      <div style={{ height: '3px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
         <div
           style={{
             height: '100%',
             width: `${progressPercent}%`,
-            backgroundColor: '#22C55E',
+            backgroundColor: '#4ADE80',
             transition: 'width 0.4s ease',
           }}
           aria-hidden="true"
@@ -102,21 +103,21 @@ export default function ProductOnboardingBanner() {
             width: '24px',
             height: '24px',
             borderRadius: '50%',
-            backgroundColor: '#22C55E',
+            backgroundColor: '#DCFCE7',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '11px',
             fontWeight: '800',
-            color: '#0F172A',
+            color: '#15803D',
             flexShrink: 0,
           }}>
             {currentStep.stepNumber}
           </div>
           <span style={{
             fontSize: '11px',
-            fontWeight: '700',
-            color: '#86EFAC',
+            fontWeight: '800',
+            color: '#DCFCE7',
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
             whiteSpace: 'nowrap',
@@ -126,7 +127,7 @@ export default function ProductOnboardingBanner() {
         </div>
 
         {/* Divider */}
-        <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.15)', flexShrink: 0 }} aria-hidden="true" />
+        <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.25)', flexShrink: 0 }} aria-hidden="true" />
 
         {/* Step title & description */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -205,15 +206,16 @@ export default function ProductOnboardingBanner() {
             onClick={handleNext}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.35rem',
-              backgroundColor: '#22C55E',
-              color: '#0F172A',
+              backgroundColor: '#FFFFFF',
+              color: '#15803D',
               border: 'none',
               borderRadius: '6px',
-              padding: '0.35rem 0.85rem',
+              padding: '0.4rem 0.9rem',
               fontSize: '12.5px',
               fontWeight: '800',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.18)'
             }}
           >
             {isLastStep ? (

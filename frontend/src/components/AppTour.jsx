@@ -306,17 +306,18 @@ export default function AppTour() {
           maxWidth: 'calc(100vw - 24px)',
           pointerEvents: 'all',
           zIndex: 9999,
-          borderRadius: '14px',
+          borderRadius: '16px',
           overflow: 'hidden',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)',
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0 20px 50px -10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
           fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
           transition: `top ${TRANSITION}, left ${TRANSITION}`,
         }}
       >
-        {/* ── Header ── */}
+        {/* ── Header (Municipal Green Theme) ── */}
         <div style={{
-          background: 'linear-gradient(135deg, #14532D 0%, #15803D 60%, #166534 100%)',
-          padding: '1rem 1.1rem 0.85rem',
+          background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
+          padding: '1rem 1.15rem 0.9rem',
           position: 'relative',
         }}>
           {/* Step badge row */}
@@ -324,56 +325,56 @@ export default function AppTour() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '50%',
-                backgroundColor: '#22C55E',
+                backgroundColor: '#DCFCE7',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: '800', color: '#052e16',
-                boxShadow: '0 0 0 3px rgba(34,197,94,0.3)',
+                fontSize: '12px', fontWeight: '800', color: '#166534',
+                boxShadow: '0 0 0 3px rgba(220,252,231,0.3)',
                 flexShrink: 0,
               }}>
                 {currentStep.stepNumber}
               </div>
-              <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#86EFAC', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#DCFCE7', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 Step {currentStep.stepNumber} of {totalSteps}
               </span>
             </div>
             <button
               onClick={handleClose}
               aria-label="Close tour"
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', borderRadius: '4px' }}
-              onMouseEnter={e => e.currentTarget.style.color = 'white'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', borderRadius: '4px' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#FFFFFF'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
             >
               <X size={15} />
             </button>
           </div>
 
-          <h3 style={{ margin: '0 0 2px', fontSize: '17px', fontWeight: '800', color: 'white', lineHeight: 1.2 }}>
+          <h3 style={{ margin: '0 0 2px', fontSize: '16.5px', fontWeight: '800', color: '#FFFFFF', lineHeight: 1.25 }}>
             {currentStep.title}
           </h3>
-          <div style={{ fontSize: '12px', color: 'rgba(134,239,172,0.85)', fontWeight: '500' }}>
+          <div style={{ fontSize: '12px', color: 'rgba(220,252,231,0.9)', fontWeight: '500' }}>
             {currentStep.subtitle}
           </div>
         </div>
 
         {/* ── Progress bar ── */}
-        <div style={{ height: '4px', backgroundColor: '#052e16', position: 'relative' }}>
+        <div style={{ height: '4px', backgroundColor: '#14532D', position: 'relative' }}>
           <div style={{
             height: '100%',
             width: `${progress}%`,
-            background: 'linear-gradient(90deg, #22C55E, #4ADE80)',
+            background: 'linear-gradient(90deg, #4ADE80, #22C55E)',
             transition: `width ${TRANSITION}`,
-            boxShadow: '0 0 8px rgba(34,197,94,0.6)',
+            boxShadow: '0 0 8px rgba(74,222,128,0.6)',
           }} />
         </div>
 
-        {/* ── Body ── */}
-        <div style={{ backgroundColor: '#0F172A', padding: '1rem 1.1rem 0.75rem' }}>
-          <p style={{ margin: '0 0 1rem', fontSize: '13.5px', color: '#CBD5E1', lineHeight: 1.6 }}>
+        {/* ── Contents Body (Crisp Clean White) ── */}
+        <div style={{ backgroundColor: '#FFFFFF', padding: '1.1rem 1.15rem 0.9rem' }}>
+          <p style={{ margin: '0 0 1.1rem', fontSize: '13.5px', color: '#334155', lineHeight: 1.6, fontWeight: 400 }}>
             {currentStep.description}
           </p>
 
           {/* Step dots */}
-          <div style={{ display: 'flex', gap: '5px', marginBottom: '1rem' }} aria-hidden="true">
+          <div style={{ display: 'flex', gap: '5px', marginBottom: '1.1rem' }} aria-hidden="true">
             {steps.map((s, i) => {
               const visited = onboardingState?.visitedSteps?.includes(s.id);
               const isCur = s.id === currentStep.id;
@@ -382,7 +383,7 @@ export default function AppTour() {
                   height: '4px',
                   width: isCur ? '22px' : '8px',
                   borderRadius: '2px',
-                  backgroundColor: visited ? '#22C55E' : isCur ? '#4ADE80' : 'rgba(255,255,255,0.15)',
+                  backgroundColor: visited ? '#15803D' : isCur ? '#22C55E' : '#E2E8F0',
                   transition: `width ${TRANSITION}, background-color ${TRANSITION}`,
                   flexShrink: 0,
                 }} />
@@ -396,10 +397,12 @@ export default function AppTour() {
               onClick={() => { dismiss(); setTourOpen(false); }}
               style={{
                 background: 'none', border: 'none',
-                color: 'rgba(100,116,139,0.8)',
-                fontSize: '12px', cursor: 'pointer', padding: '0.25rem 0',
+                color: '#64748B',
+                fontSize: '12px', fontWeight: '500', cursor: 'pointer', padding: '0.25rem 0',
                 textDecoration: 'underline', textUnderlineOffset: '2px',
               }}
+              onMouseEnter={e => e.currentTarget.style.color = '#0F172A'}
+              onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
             >
               Skip tour
             </button>
@@ -410,13 +413,13 @@ export default function AppTour() {
                   onClick={handlePrev}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '3px',
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                    color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)',
+                    backgroundColor: '#F8FAFC',
+                    color: '#475569', border: '1px solid #E2E8F0',
                     borderRadius: '8px', padding: '0.45rem 0.75rem',
                     fontSize: '12.5px', fontWeight: '600', cursor: 'pointer',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.13)'; e.currentTarget.style.color = 'white'; }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#94A3B8'; }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F1F5F9'; e.currentTarget.style.color = '#0F172A'; }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.color = '#475569'; }}
                 >
                   <ChevronLeft size={13} /> Back
                 </button>
@@ -426,16 +429,16 @@ export default function AppTour() {
                 onClick={handleNext}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '4px',
-                  background: 'linear-gradient(135deg, #22C55E, #16A34A)',
-                  color: '#052e16',
+                  background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
+                  color: '#FFFFFF',
                   border: 'none', borderRadius: '8px',
-                  padding: '0.45rem 0.9rem',
-                  fontSize: '12.5px', fontWeight: '800', cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(34,197,94,0.4)',
+                  padding: '0.45rem 0.95rem',
+                  fontSize: '12.5px', fontWeight: '700', cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(21, 128, 61, 0.35)',
                   transition: 'transform 0.1s, box-shadow 0.1s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(34,197,94,0.55)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(34,197,94,0.4)'; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(21, 128, 61, 0.5)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(21, 128, 61, 0.35)'; }}
               >
                 {isLast
                   ? <><CheckCircle size={13} /> Finish</>
