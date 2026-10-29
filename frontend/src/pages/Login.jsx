@@ -1,7 +1,5 @@
-import AsymmetricalAuth from '../components/AsymmetricalAuth';
+import Landing from './Landing';
 
-const Login = () => {
-  return <AsymmetricalAuth defaultMode="login" />;
-};
-
-export default Login;
+export default function Login() {
+  return <Landing initialAuthModal="login" />;
+}

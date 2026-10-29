@@ -3,14 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, RefreshCw, ListChecks, Coins, ShieldCheck, Landmark, User, BarChart3, CheckCircle, ArrowRight, Menu, X } from 'lucide-react';
 import Footer from '../components/Footer';
 import LanguageSwitchButton from '../components/LanguageSwitchButton';
+import AuthModal from '../components/AuthModal';
 import { useTranslation } from '../context/LanguageContext';
 
-const Landing = () => {
+const Landing = ({ initialAuthModal = null }) => {
   const { t } = useTranslation();
-  const [showModal, setShowModal] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(Boolean(initialAuthModal));
+  const [authMode, setAuthMode] = useState(initialAuthModal || 'login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (initialAuthModal) {
+      setAuthMode(initialAuthModal);
+      setAuthModalOpen(true);
+    }
+  }, [initialAuthModal]);
+
+  const openAuth = (mode = 'login') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setAuthModalOpen(false);
+    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+      navigate('/', { replace: true });
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -167,7 +188,7 @@ const Landing = () => {
           <a href="#" style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: '600', textDecoration: 'none', position: 'relative', paddingBottom: '4px', borderBottom: '3px solid #16A34A' }}>Home</a>
           <a href="#services" style={{ color: '#475569', fontSize: '0.95rem', fontWeight: '600', textDecoration: 'none' }}>Services</a>
           <a href="#how-it-works" style={{ color: '#475569', fontSize: '0.95rem', fontWeight: '600', textDecoration: 'none' }}>About</a>
-          <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.6rem 1.4rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803D'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16A34A'}>
+          <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.6rem 1.4rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803D'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16A34A'}>
             <User size={15} /> Login
           </button>
         </nav>
@@ -175,7 +196,7 @@ const Landing = () => {
         {/* Mobile Nav Toggle */}
         <div className="nav-mobile">
           <LanguageSwitchButton variant="landing" style={{ padding: '0.45rem 0.65rem' }} />
-          <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#16A34A', color: 'white', padding: '0.55rem 1rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}>
+          <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#16A34A', color: 'white', padding: '0.55rem 1rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}>
             <User size={14} /> Login
           </button>
           <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#1E3A8A' }}>
@@ -193,7 +214,7 @@ const Landing = () => {
           <a href="#" onClick={() => setMobileMenuOpen(false)} style={{ color: 'white', fontSize: '1.5rem', fontWeight: '700', textDecoration: 'none' }}>Home</a>
           <a href="#services" onClick={() => setMobileMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.5rem', fontWeight: '600', textDecoration: 'none' }}>Services</a>
           <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.5rem', fontWeight: '600', textDecoration: 'none' }}>About</a>
-          <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} style={{ backgroundColor: '#16A34A', color: 'white', padding: '0.85rem 2.5rem', borderRadius: '8px', border: 'none', fontWeight: '700', fontSize: '1.1rem', cursor: 'pointer', marginTop: '1rem' }}>
+          <button onClick={() => { setMobileMenuOpen(false); openAuth('login'); }} style={{ backgroundColor: '#16A34A', color: 'white', padding: '0.85rem 2.5rem', borderRadius: '8px', border: 'none', fontWeight: '700', fontSize: '1.1rem', cursor: 'pointer', marginTop: '1rem' }}>
             Login to Portal
           </button>
         </div>
@@ -235,13 +256,13 @@ const Landing = () => {
           </p>
 
           <div className="hero-btns">
-            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#072216'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0B2C1D'}>
+            <button onClick={() => openAuth('register')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}>
               <FileText size={17} /> {t.landing.startNewBtn} &rarr;
             </button>
-            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#16A34A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1.5px solid #16A34A', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(11, 44, 29, 0.05)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+            <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#15803D', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1.5px solid #15803D', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(21, 128, 61, 0.08)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
               <RefreshCw size={17} /> {t.landing.prepareRenewalBtn} &rarr;
             </button>
-            <button onClick={() => navigate('/login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#1E3A8A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer' }}>
+            <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#1E3A8A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
               <User size={17} /> {t.landing.loginPortalBtn}
             </button>
           </div>
@@ -340,42 +361,11 @@ const Landing = () => {
       <Footer />
 
       {/* ── AUTH MODAL ── */}
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
-          <div className="card animate-slide-up" style={{ width: '100%', maxWidth: '420px', textAlign: 'center', padding: '2.5rem', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
-            <h2 style={{ color: '#1E3A8A', marginBottom: '0.5rem', fontWeight: '800', fontSize: '1.4rem' }}>{t.landing.modalTitle}</h2>
-            <p style={{ color: '#64748B', marginBottom: '2rem', fontSize: '0.95rem' }}>{t.landing.modalSubtitle}</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <button 
-                onClick={() => navigate('/login')} 
-                style={{ padding: '1rem', backgroundColor: '#16A34A', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#072216'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0B2C1D'}
-              >
-                {t.landing.modalLoginBtn}
-              </button>
-              <button 
-                onClick={() => navigate('/register')} 
-                style={{ padding: '1rem', backgroundColor: 'transparent', color: '#16A34A', border: '1.5px solid #16A34A', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(11, 44, 29, 0.05)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-              >
-                {t.landing.modalRegisterBtn}
-              </button>
-            </div>
-
-            <button 
-              onClick={() => setShowModal(false)} 
-              style={{ marginTop: '1.5rem', background: 'none', border: 'none', color: '#94A3B8', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#16A34A'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}
-            >
-              {t.landing.modalCancel}
-            </button>
-          </div>
-        </div>
-      )}
+      <AuthModal
+        isOpen={authModalOpen}
+        initialMode={authMode}
+        onClose={handleCloseAuthModal}
+      />
 
     </div>
   );
