@@ -8,7 +8,6 @@ import {
   Building2, 
   FileText, 
   CheckSquare, 
-  CalendarClock, 
   Calendar,
   MessageSquare, 
   Library,
@@ -16,12 +15,9 @@ import {
   BrainCircuit,
   Bell,
   Users,
-  ShieldAlert,
   BarChart,
   ClipboardCheck,
   Receipt,
-  ShieldCheck,
-  Shield,
   Rocket,
   X,
   History,
@@ -85,13 +81,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           items: [
             { name: (t.nav?.prepareApplication || 'Prepare Application'), path: '/applications', icon: ClipboardCheck, tour: 'prepare-application' },
             { name: (t.nav?.scheduleWalkin || 'Schedule Walk-in'), path: '/schedule-walkin', icon: Calendar, tour: 'schedule-walkin' },
-            { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield, tour: 'my-permits' },
-          ]
-        },
-        {
-          title: (t.nav?.renewals || 'RENEWALS'),
-          items: [
-            { name: (t.nav?.renewalMonitoring || 'Renewals'), path: '/renewals', icon: CalendarClock, tour: 'renewals' },
           ]
         },
         {
@@ -117,9 +106,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
             { name: 'Application Forms', path: '/admin/applications', icon: FileText },
             { name: 'Walk-in Schedule', path: '/admin/walkins', icon: Calendar },
-            { name: 'Clearance Verification', path: '/permits', icon: ShieldCheck },
-            { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
-            { name: 'Permit Registry', path: '/admin/permits', icon: FileText },
             { name: 'Municipal Requirements', path: '/requirements', icon: CheckSquare }
           ]
         },
@@ -141,9 +127,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
             { name: 'Application Forms', path: '/admin/applications', icon: FileText },
             { name: 'Walk-in Schedule', path: '/admin/walkins', icon: Calendar },
-            { name: 'Clearance Verification', path: '/permits', icon: ShieldCheck },
-            { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
-            { name: 'Permit Registry', path: '/admin/permits', icon: FileText },
             { name: 'Municipal Requirements', path: '/requirements', icon: CheckSquare }
           ]
         },

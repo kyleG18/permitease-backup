@@ -316,9 +316,9 @@ export default function LGUApplicationReview() {
           </>
         )}
         {app.status === 'APPROVED' && (
-          <Link to="/admin/permits" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', textDecoration: 'none', fontSize: '0.9rem' }}>
-            <Shield size={16} /> View Verification Record
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', fontSize: '0.9rem' }}>
+            <CheckCircle size={16} /> Pre-Assessment Verified
+          </div>
         )}
       </div>
 
@@ -361,12 +361,7 @@ export default function LGUApplicationReview() {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Checklist</h3>
-              {app.business_id && (
-                <Link to={`/permits?businessId=${app.business_id}`} style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary-green)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                  Verify in Hub <ChevronRight size={13} />
-                </Link>
-              )}
+              <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Required Clearances</h3>
             </div>
             {app.requirements.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No requirements linked to this business yet.</p>

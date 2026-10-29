@@ -119,7 +119,7 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val || 0);
 
   // KPI metric cards data
-  const docsSubmitted = stats?.docs_submitted_count ?? 0;
+  const selfDeclaredReady = reqHave;
   const kpiCards = [
     {
       icon: Building2,
@@ -133,38 +133,29 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
     {
       icon: ShieldCheck,
       label: 'Permit Readiness',
-      value: loading ? '…' : `${stats?.compliance_score ?? 0}%`,
+      value: loading ? '…' : `${readScore}%`,
       sub: readScore >= 80 ? 'On track' : readScore >= 50 ? 'In progress' : 'Needs attention',
       accent: readScore >= 80 ? 'var(--success)' : readScore >= 50 ? 'var(--warning)' : 'var(--danger)',
       accentBg: readScore >= 80 ? 'var(--success-light)' : readScore >= 50 ? 'var(--warning-light)' : 'var(--danger-light)',
-      to: '/permits',
+      to: '/assessment',
     },
     {
       icon: CheckCircle,
-      label: 'BPLO Verified',
-      value: loading ? '…' : (stats?.bplo_verified_count ?? 0),
-      sub: (stats?.bplo_verified_count ?? 0) > 0 ? 'Confirmed by officer' : 'Awaiting BPLO review',
-      accent: (stats?.bplo_verified_count ?? 0) > 0 ? 'var(--success)' : 'var(--text-secondary)',
-      accentBg: (stats?.bplo_verified_count ?? 0) > 0 ? 'var(--success-light)' : 'var(--border-light)',
-      to: '/permits',
-    },
-    {
-      icon: FileText,
-      label: 'Docs Submitted',
-      value: loading ? '…' : docsSubmitted,
-      sub: docsSubmitted > 0 ? 'Uploaded & submitted' : 'No uploads yet',
-      accent: docsSubmitted > 0 ? 'var(--info)' : 'var(--text-secondary)',
-      accentBg: docsSubmitted > 0 ? 'var(--info-light)' : 'var(--border-light)',
-      to: '/permits',
+      label: 'Self-Declared Ready',
+      value: loading ? '…' : selfDeclaredReady,
+      sub: selfDeclaredReady > 0 ? `of ${totalReqs} clearances marked` : 'Mark items in AI Assessment',
+      accent: selfDeclaredReady > 0 ? 'var(--success)' : 'var(--text-secondary)',
+      accentBg: selfDeclaredReady > 0 ? 'var(--success-light)' : 'var(--border-light)',
+      to: '/assessment',
     },
     {
       icon: AlertCircle,
-      label: 'Missing Items',
+      label: 'Still Needed',
       value: loading ? '…' : (stats?.missing_requirements ?? 0),
       sub: (stats?.missing_requirements ?? 0) === 0 ? 'All clear!' : 'Action needed',
       accent: (stats?.missing_requirements ?? 0) === 0 ? 'var(--success)' : 'var(--danger)',
       accentBg: (stats?.missing_requirements ?? 0) === 0 ? 'var(--success-light)' : 'var(--danger-light)',
-      to: '/permits',
+      to: '/assessment',
     },
     {
       icon: BrainCircuit,
@@ -180,24 +171,24 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   // Quick action tiles
   const quickActions = [
     {
-      icon: ShieldCheck,
-      label: 'Verify Requirements',
-      desc: 'BPLO checklist, remarks & upload proofs',
-      to: '/permits',
-      primary: true,
-    },
-    {
       icon: ClipboardCheck,
       label: 'Prepare Application',
-      desc: 'Document readiness & Form BPLO-01',
+      desc: 'Fill Form BPLO-01 & plan walk-in',
       to: '/applications',
-      primary: false,
+      primary: true,
     },
     {
       icon: BrainCircuit,
       label: 'AI Assessment',
       desc: 'Identify permits with AI guidance',
       to: '/assessment',
+      primary: false,
+    },
+    {
+      icon: CalendarCheck,
+      label: 'Schedule Walk-in',
+      desc: 'Book your slot at BPLO Window 1',
+      to: '/schedule-walkin',
       primary: false,
     },
     {
@@ -210,11 +201,11 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   ];
 
   const timelineSteps = [
-    { title: 'AI Assessment',      desc: 'Identify clearances for your business', done: !!stats?.assessment_completed, to: '/assessment' },
-    { title: 'Verify Requirements', desc: 'BPLO review & upload document proofs', done: (stats?.bplo_verified_count ?? 0) > 0 || (stats?.ready_requirements ?? 0) > 0, to: '/permits' },
-    { title: 'Cost Estimation',    desc: 'Estimate municipal taxes & fees',       done: !!estimate, to: '/tax-estimation' },
-    { title: 'Prepare Application', desc: 'Review Form BPLO-01 & readiness',      done: readScore >= 80, to: '/applications' },
-    { title: 'Submit at BOSS / eBPLS', desc: 'File at Municipal Hall or online', done: false, to: '/applications' },
+    { title: 'AI Assessment',         desc: 'Identify clearances needed for your business', done: !!stats?.assessment_completed, to: '/assessment' },
+    { title: 'Cost Estimation',        desc: 'Estimate municipal taxes & fees',               done: !!estimate, to: '/tax-estimation' },
+    { title: 'Prepare Application',    desc: 'Fill & download Form BPLO-01',                  done: readScore >= 80, to: '/applications' },
+    { title: 'Schedule Walk-in',       desc: 'Book your slot at BPLO Window 1',               done: !!stats?.active_walkin, to: '/schedule-walkin' },
+    { title: 'Walk in to BPLO',        desc: 'File at Municipal Hall (Window 1)',              done: stats?.active_walkin?.walkin_status === 'ATTENDED', to: '/schedule-walkin' },
   ];
 
   const stepsCompleted = timelineSteps.filter(s => s.done).length;
@@ -397,22 +388,17 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
                 <Clock size={14} />
                 <span><strong>{reqNotChecked}</strong> Unchecked</span>
               </div>
-              {(stats?.bplo_verified_count ?? 0) > 0 && (
-                <div style={{ fontSize: '0.75rem', color: '#166534', backgroundColor: '#DCFCE7', padding: '0.25rem 0.6rem', borderRadius: '4px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: '0.25rem 0' }}>
-                  <ShieldCheck size={12} /> {stats.bplo_verified_count} BPLO Verified
-                </div>
-              )}
               <p className="db-readiness-v2__desc">
                 {readScore === 100
-                  ? "All requirements are in order. You're ready to proceed."
-                  : 'Track and verify missing clearances with BPLO to reach 100% readiness.'}
+                  ? "All requirements are in order. You're ready to walk in to BPLO."
+                  : 'Run the AI Assessment and mark the items you already have to track your readiness.'}
               </p>
               <div style={{ marginTop: 'auto', paddingTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <Link to={readScore === 0 && !readiness ? '/assessment' : '/applications'} className="db-readiness-v2__cta-btn" style={{ flex: 1, minWidth: '130px', textAlign: 'center', justifyContent: 'center' }}>
                   {readScore === 0 && !readiness ? 'Start AI Assessment' : 'Prepare Application'} <ArrowRight size={14} />
                 </Link>
-                <Link to="/permits" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', color: 'var(--text-dark)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'white' }}>
-                  <ShieldCheck size={14} color="var(--primary-green)" /> Verify
+                <Link to="/assessment" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', color: 'var(--text-dark)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'white' }}>
+                  <BrainCircuit size={14} color="var(--primary-green)" /> Assessment
                 </Link>
               </div>
             </div>
@@ -563,22 +549,15 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
         {/* Right col: Renewal + Notifications */}
         <div className="db-right-col">
 
-          {stats?.next_expiration && (
-            <div className={`card db-renewal-v2${stats?.days_to_expiration <= 30 ? ' db-renewal-v2--urgent' : ''}`}>
-              <div className="db-renewal-v2__title">
-                <AlertTriangle size={15} />
-                Renewal Alert
-              </div>
-              <p className="db-renewal-v2__body">
-                {stats?.days_to_expiration < 0
-                  ? 'Your business permit has expired. Review your renewal requirements.'
-                  : `Your business permit expires in ${stats?.days_to_expiration} days.`}
-              </p>
-              <Link to="/renewals" className="db-renewal-v2__link">
-                View Renewals <ArrowRight size={13} />
-              </Link>
+          <div className="card db-renewal-v2">
+            <div className="db-renewal-v2__title">
+              <Calendar size={15} />
+              Annual Renewal Reminder
             </div>
-          )}
+            <p className="db-renewal-v2__body">
+              Under RA 7160, business permits in the Municipality of Roxas are renewed annually every January 1–20 at Window 1.
+            </p>
+          </div>
 
           <div className="card db-notif-v2">
             <div className="db-notif-v2__header">
@@ -795,12 +774,12 @@ const AdminDashboard = ({ user, stats, loading }) => {
             <span style={{ fontWeight: '600', color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.week_walkins_scheduled)}</span> appointments this week (7-day window)
           </div>
 
-          <Link to="/admin/applications" style={{
+          <Link to="/admin/walkins" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
             backgroundColor: '#1E40AF', color: 'white', borderRadius: '6px', padding: '0.55rem',
             fontSize: '13px', fontWeight: '600', textDecoration: 'none'
           }}>
-            <Ticket size={14} /> Open Queue Control
+            <Calendar size={14} /> Manage Walk-in Appointments
           </Link>
         </div>
 
@@ -811,8 +790,8 @@ const AdminDashboard = ({ user, stats, loading }) => {
               <Scale size={17} color="#EA580C" />
             </div>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>Renewal Radar</div>
-              <div style={{ fontSize: '11px', color: '#64748B' }}>Statutory Compliance · RA 7160</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--government-navy)' }}>Renewal Calendar</div>
+              <div style={{ fontSize: '11px', color: '#64748B' }}>Statutory Schedule · RA 7160</div>
             </div>
           </div>
 
@@ -836,12 +815,12 @@ const AdminDashboard = ({ user, stats, loading }) => {
             ))}
           </div>
 
-          <Link to="/admin/renewals" style={{
+          <Link to="/admin/analytics" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-            backgroundColor: '#EA580C', color: 'white', borderRadius: '6px', padding: '0.55rem',
+            backgroundColor: '#0284C7', color: 'white', borderRadius: '6px', padding: '0.55rem',
             fontSize: '13px', fontWeight: '600', textDecoration: 'none'
           }}>
-            <AlertTriangle size={14} /> Open Renewal Monitoring
+            <BarChart2 size={14} /> View Analytics & Reports
           </Link>
         </div>
 
@@ -856,9 +835,8 @@ const AdminDashboard = ({ user, stats, loading }) => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {[
-              { to: '/admin/applications', icon: ClipboardCheck, label: 'Review Pre-Assessments', color: 'var(--primary-green)', bg: '#F0FDF4' },
-              { to: '/admin/applications', icon: Ticket, label: 'Walk-in Queue Control', color: '#1E40AF', bg: '#EFF6FF' },
-              { to: '/admin/renewals', icon: AlertTriangle, label: 'Renewal & Delinquency Monitor', color: '#EA580C', bg: '#FFEDD5' },
+              { to: '/admin/applications', icon: ClipboardCheck, label: 'Form BPLO-01 Pre-Assessments', color: 'var(--primary-green)', bg: '#F0FDF4' },
+              { to: '/admin/walkins', icon: Calendar, label: 'Walk-in Schedule & Roster', color: '#1E40AF', bg: '#EFF6FF' },
               { to: '/requirements', icon: Scale, label: 'Municipal Requirements Config', color: '#7C3AED', bg: '#F5F3FF' },
               { to: '/admin/analytics', icon: BarChart2, label: 'Analytics & Reports', color: '#0284C7', bg: '#F0F9FF' },
             ].map((action, i) => (

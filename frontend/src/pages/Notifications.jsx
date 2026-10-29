@@ -25,8 +25,8 @@ const getNotificationIcon = (type, status) => {
 };
 
 const getNotificationLink = (n) => {
-  if (n.related_permit_id) return `/permits/${n.related_permit_id}`;
   if (n.related_application_id) return `/applications/${n.related_application_id}`;
+  if (n.related_permit_id) return '/applications';
   return null;
 };
 
