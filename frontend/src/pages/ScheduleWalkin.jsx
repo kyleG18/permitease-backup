@@ -247,7 +247,7 @@ export default function ScheduleWalkin() {
   const currentStatus = activeApp?.walkin_status ? (statusCfg[activeApp.walkin_status] || statusCfg.PENDING) : null;
 
   return (
-    <div className="page-container schedule-walkin-page" style={{ maxWidth: '1100px', margin: '0 auto', paddingBottom: '4rem', fontFamily: 'Inter, sans-serif' }}>
+    <div className="page-container schedule-walkin-page" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem', fontFamily: 'Inter, sans-serif' }}>
       
       {/* ── MINIMALIST HEADER ────────────────────────────────────────────── */}
       <header className="no-print" style={{ marginBottom: '1.75rem' }}>
@@ -340,7 +340,7 @@ export default function ScheduleWalkin() {
       )}
 
       {/* ── TWO-COLUMN WORKFLOW LAYOUT ────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.75rem', alignItems: 'start' }}>
+      <div className="walkin-workflow-grid">
 
         {/* ── LEFT COLUMN: COMBINED APPOINTMENT BOOKING & CHECKLIST CARD ──── */}
         <div style={{
@@ -404,7 +404,7 @@ export default function ScheduleWalkin() {
                 Batch Window (Oras) *
               </label>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
                 {[
                   {
                     slot: 'Morning (8:00 AM - 11:00 AM)',

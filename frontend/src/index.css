@@ -902,6 +902,21 @@ tbody td {
   }
 }
 
+/* Two-column layout for Schedule Walk-in (Wider left card for scheduling & checklist) */
+.walkin-workflow-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .walkin-workflow-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
 /* ==========================================================================
    RESPONSIVE — Sidebar + Layout & Mobile Optimization
    ========================================================================== */
