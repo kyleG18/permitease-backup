@@ -473,10 +473,108 @@ export default function ScheduleWalkin() {
             </div>
           </div>
 
+          {/* ── SECTION DIVIDER ── */}
+          <div style={{ margin: '2rem 0 1.5rem', borderTop: '2px dashed #E2E8F0' }} />
+
+          {/* ── STEP 2 - PREPARATION CHECKLIST ("WHAT TO BRING") ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--primary-green, #15803D)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>
+              2
+            </span>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
+              {isTl ? 'Checklist ng mga Dadalhin sa Munisipyo' : 'Preparation Checklist (What to Bring)'}
+            </h3>
+          </div>
+
+          <p style={{ fontSize: '12.5px', color: '#64748B', lineHeight: 1.4, margin: '0 0 1rem' }}>
+            {isTl 
+              ? 'Siguraduhing kumpleto ang mga sumusunod bago pumunta sa Window 1 upang masuri agad sa loob ng 2 minuto:'
+              : 'Bring these physical documents in a folder to ensure 2-minute fast-track verification at Window 1:'}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            {[
+              {
+                title: '1. Signed Form BPLO-01 (2 printed copies)',
+                sub: 'Pre-filled from PermitEase with owner signature over printed name.',
+                tag: 'Mandatory',
+                actionText: 'Print Form',
+                actionLink: () => setPreviewingForm(true)
+              },
+              {
+                title: '2. Barangay Business Clearance',
+                sub: 'Original clearance issued by the Barangay Captain where your store/office is located.',
+                tag: 'Mandatory'
+              },
+              {
+                title: '3. Business Name Certificate (DTI / SEC / CDA)',
+                sub: 'DTI Certificate of Registration (Sole Prop) or SEC/CDA registration.',
+                tag: 'Mandatory'
+              },
+              {
+                title: '4. Two (2) Valid Government-Issued IDs',
+                sub: 'Driver’s License, Passport, PhilID/National ID, UMID, or Voter’s ID.',
+                tag: 'Mandatory'
+              },
+              {
+                title: '5. Contract of Lease / Title of Land',
+                sub: selectedBiz?.premises_type === 'Rented' ? 'Notarized Contract of Lease with lessor details.' : 'Proof of ownership (TCT or Tax Declaration) if owned.',
+                tag: 'Mandatory'
+              },
+              {
+                title: '6. Community Tax Certificate (Cedula)',
+                sub: 'Current taxable year Cedula from Roxas Municipal Treasury or Barangay.',
+                tag: 'Mandatory'
+              }
+            ].map((item, idx) => (
+              <div key={idx} style={{
+                padding: '0.75rem 0.9rem',
+                backgroundColor: '#F8FAFC',
+                borderRadius: '6px',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: '0.75rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <CheckCircle2 size={16} color="var(--primary-green, #15803D)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--government-navy, #0F172A)' }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
+                      {item.sub}
+                    </div>
+                  </div>
+                </div>
+
+                {item.actionText && (
+                  <button
+                    onClick={item.actionLink}
+                    style={{
+                      background: '#EFF6FF',
+                      border: '1px solid #BFDBFE',
+                      color: '#1D4ED8',
+                      padding: '0.25rem 0.55rem',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {item.actionText}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
         </div>
 
-        {/* ── RIGHT COLUMN: STEP 2 & 3 - CONFIRMATION TICKET & CHECKLIST ──── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* ── RIGHT COLUMN: ACTIVE WALK-IN APPOINTMENT CARD ──── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '1.5rem' }}>
 
           {/* ACTIVE WALK-IN APPOINTMENT CARD */}
           {activeApp?.walkin_date ? (
@@ -613,104 +711,6 @@ export default function ScheduleWalkin() {
               </p>
             </div>
           )}
-
-          {/* STEP 3 - PREPARATION CHECKLIST ("WHAT TO BRING") */}
-          <div className="card" style={{ padding: '1.5rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--primary-green, #15803D)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>
-                2
-              </span>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
-                {isTl ? 'Checklist ng mga Dadalhin sa Munisipyo' : 'Preparation Checklist (What to Bring)'}
-              </h3>
-            </div>
-
-            <p style={{ fontSize: '12.5px', color: '#64748B', lineHeight: 1.4, margin: '0 0 1rem' }}>
-              {isTl 
-                ? 'Siguraduhing kumpleto ang mga sumusunod bago pumunta sa Window 1 upang masuri agad sa loob ng 2 minuto:'
-                : 'Bring these physical documents in a folder to ensure 2-minute fast-track verification at Window 1:'}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {[
-                {
-                  title: '1. Signed Form BPLO-01 (2 printed copies)',
-                  sub: 'Pre-filled from PermitEase with owner signature over printed name.',
-                  tag: 'Mandatory',
-                  actionText: 'Print Form',
-                  actionLink: () => setPreviewingForm(true)
-                },
-                {
-                  title: '2. Barangay Business Clearance',
-                  sub: 'Original clearance issued by the Barangay Captain where your store/office is located.',
-                  tag: 'Mandatory'
-                },
-                {
-                  title: '3. Business Name Certificate (DTI / SEC / CDA)',
-                  sub: 'DTI Certificate of Registration (Sole Prop) or SEC/CDA registration.',
-                  tag: 'Mandatory'
-                },
-                {
-                  title: '4. Two (2) Valid Government-Issued IDs',
-                  sub: 'Driver’s License, Passport, PhilID/National ID, UMID, or Voter’s ID.',
-                  tag: 'Mandatory'
-                },
-                {
-                  title: '5. Contract of Lease / Title of Land',
-                  sub: selectedBiz?.premises_type === 'Rented' ? 'Notarized Contract of Lease with lessor details.' : 'Proof of ownership (TCT or Tax Declaration) if owned.',
-                  tag: 'Mandatory'
-                },
-                {
-                  title: '6. Community Tax Certificate (Cedula)',
-                  sub: 'Current taxable year Cedula from Roxas Municipal Treasury or Barangay.',
-                  tag: 'Mandatory'
-                }
-              ].map((item, idx) => (
-                <div key={idx} style={{
-                  padding: '0.75rem 0.9rem',
-                  backgroundColor: '#F8FAFC',
-                  borderRadius: '6px',
-                  border: '1px solid #E2E8F0',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <CheckCircle2 size={16} color="var(--primary-green, #15803D)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--government-navy, #0F172A)' }}>
-                        {item.title}
-                      </div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
-                        {item.sub}
-                      </div>
-                    </div>
-                  </div>
-
-                  {item.actionText && (
-                    <button
-                      onClick={item.actionLink}
-                      style={{
-                        background: '#EFF6FF',
-                        border: '1px solid #BFDBFE',
-                        color: '#1D4ED8',
-                        padding: '0.25rem 0.55rem',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {item.actionText}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-          </div>
 
         </div>
 
