@@ -263,21 +263,13 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
               backgroundColor: stats.active_walkin.walkin_status === 'ATTENDED' ? '#DCFCE7' : '#DBEAFE',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <Ticket size={20} color={stats.active_walkin.walkin_status === 'ATTENDED' ? '#166534' : '#1D4ED8'} />
+              <Calendar size={20} color={stats.active_walkin.walkin_status === 'ATTENDED' ? '#166534' : '#1D4ED8'} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--government-navy)' }}>
-                  Fast-Track Walk-in: {stats.active_walkin.business_name}
+                  Scheduled Walk-in: {stats.active_walkin.business_name}
                 </span>
-                {stats.active_walkin.queue_ticket_number && (
-                  <span style={{
-                    backgroundColor: '#1E3A8A', color: 'white', padding: '0.1rem 0.5rem',
-                    borderRadius: '4px', fontSize: '11px', fontWeight: '700', fontFamily: 'monospace'
-                  }}>
-                    #{stats.active_walkin.queue_ticket_number}
-                  </span>
-                )}
                 {stats.active_walkin.walkin_status === 'ATTENDED' ? (
                   <span style={{ backgroundColor: '#DCFCE7', color: '#166534', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
                     ✓ Documents Sighted
@@ -298,7 +290,7 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
             </div>
           </div>
           <Link
-            to={`/applications/${stats.active_walkin.id}`}
+            to="/schedule-walkin"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
               backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1',
@@ -306,7 +298,7 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
               textDecoration: 'none'
             }}
           >
-            View Ticket & Form <ArrowRight size={13} />
+            View Appointment & Form <ArrowRight size={13} />
           </Link>
         </div>
       )}

@@ -171,10 +171,10 @@ export default function ScheduleWalkin() {
         setActiveApp(newApp);
 
         setModalData({
-          ticket: res.data.queue_ticket_number,
           date: res.data.walkin_date,
           slot: res.data.walkin_time_slot,
           bizName: selectedBiz?.business_name || 'Your Business',
+          ownerName: user?.full_name || selectedBiz?.owner_name || 'Business Owner',
           appId: res.data.application_id || activeApp?.id
         });
         setShowSuccessModal(true);
@@ -184,8 +184,8 @@ export default function ScheduleWalkin() {
       window.dispatchEvent(new Event('notificationUpdate'));
 
       setSuccessMsg(isTl 
-        ? `Naisumite ang petsa! Ang iyong Ticket ay #${res.data.queue_ticket_number}. Pakisuri ang checklist sa ibaba.`
-        : `Preferred visit date submitted! Your Queue Ticket is #${res.data.queue_ticket_number}. Please check your preparation checklist below.`);
+        ? `Naisumite ang petsa para sa ${selectedBiz?.business_name || 'iyong negosyo'}! Pakisuri ang checklist sa ibaba.`
+        : `Preferred visit date submitted for ${selectedBiz?.business_name || 'your business'}! Please check your preparation checklist below.`);
       
       fetchActiveApp();
     } catch (err) {
@@ -210,7 +210,8 @@ export default function ScheduleWalkin() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PermitEase_RoutingSlip_${activeApp.queue_ticket_number || 'Ticket'}.pdf`;
+      const safeName = (selectedBiz?.business_name || 'Business').replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.download = `PermitEase_RoutingSlip_${safeName}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -256,7 +257,7 @@ export default function ScheduleWalkin() {
           </div>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-green, #15803D)' }}>
-              WINDOW 1 FAST-TRACK QUEUE CONTROL • ROXAS MUNICIPAL HALL
+              WINDOW 1 APPOINTMENTS • ROXAS MUNICIPAL HALL
             </span>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
               Schedule Walk-in Appointment
@@ -265,8 +266,8 @@ export default function ScheduleWalkin() {
         </div>
         <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
           {isTl 
-            ? 'Piliin ang iyong nais na petsa ng pagbisita sa Munisipyo ng Roxas. Kukumpirmahin ng BPLO ang iyong slot at bibigyan ka ng opisyal na Queue Ticket at checklist ng mga dadalhin.'
-            : 'Submit your preferred visit date for Window 1 at Roxas Municipal Hall. BPLO checks availability and confirms your slot with an official Queue Ticket and preparation checklist.'}
+            ? 'Piliin ang iyong nais na petsa ng pagbisita sa Munisipyo ng Roxas. Kukumpirmahin ng BPLO ang iyong appointment at bibigyan ka ng checklist ng mga dadalhin.'
+            : 'Submit your preferred visit date for Window 1 at Roxas Municipal Hall. BPLO checks availability and confirms your appointment and preparation checklist.'}
         </p>
       </header>
 
@@ -477,8 +478,8 @@ export default function ScheduleWalkin() {
         {/* ── RIGHT COLUMN: STEP 2 & 3 - CONFIRMATION TICKET & CHECKLIST ──── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-          {/* ACTIVE QUEUE TICKET CARD */}
-          {activeApp?.queue_ticket_number ? (
+          {/* ACTIVE WALK-IN APPOINTMENT CARD */}
+          {activeApp?.walkin_date ? (
             <div style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '12px',
@@ -487,7 +488,7 @@ export default function ScheduleWalkin() {
               overflow: 'hidden'
             }}>
               
-              {/* Ticket Top Ribbon */}
+              {/* Ribbon */}
               <div style={{
                 backgroundColor: currentStatus ? currentStatus.bg : '#F0FDF4',
                 padding: '0.85rem 1.25rem',
@@ -497,9 +498,9 @@ export default function ScheduleWalkin() {
                 borderBottom: `1px solid ${currentStatus ? currentStatus.border : '#BBF7D0'}`
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Ticket size={18} color={currentStatus ? currentStatus.color : '#166534'} />
+                  <Calendar size={18} color={currentStatus ? currentStatus.color : '#166534'} />
                   <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: currentStatus ? currentStatus.color : '#166534', letterSpacing: '0.04em' }}>
-                    Window 1 Fast-Track Ticket
+                    Window 1 Walk-in Appointment
                   </span>
                 </div>
 
@@ -515,13 +516,16 @@ export default function ScheduleWalkin() {
                 </span>
               </div>
 
-              {/* Ticket Body */}
+              {/* Card Body: Names prominently displayed instead of Ticket # */}
               <div style={{ padding: '1.25rem 1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Queue Ticket Number</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--government-navy, #0F172A)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
-                      #{activeApp.queue_ticket_number}
+                    <div style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Registered Business</div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--government-navy, #0F172A)', letterSpacing: '0.01em', marginTop: '2px' }}>
+                      {selectedBiz?.business_name || activeApp.business_name || 'Your Business'}
+                    </div>
+                    <div style={{ fontSize: '12.5px', color: '#64748B', fontWeight: 600, marginTop: '2px' }}>
+                      Applicant: <span style={{ color: 'var(--government-navy, #0F172A)' }}>{user?.full_name || selectedBiz?.owner_name || 'Business Owner'}</span>
                     </div>
                   </div>
 
@@ -550,7 +554,7 @@ export default function ScheduleWalkin() {
                   <strong>BPLO Status:</strong> {currentStatus ? currentStatus.desc : 'Your visit is scheduled.'}
                 </div>
 
-                {/* Action Buttons for Ticket */}
+                {/* Action Buttons */}
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <button
                     onClick={handleDownloadRoutingSlip}
@@ -600,12 +604,12 @@ export default function ScheduleWalkin() {
               padding: '2rem',
               textAlign: 'center'
             }}>
-              <Ticket size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
+              <Calendar size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--government-navy, #0F172A)', margin: '0 0 0.35rem' }}>
                 No Walk-in Scheduled Yet
               </h3>
               <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
-                Pick your preferred date on the left and submit to generate your Window 1 queue ticket.
+                Pick your preferred date on the left and submit to book your Window 1 appointment.
               </p>
             </div>
           )}
@@ -820,7 +824,7 @@ export default function ScheduleWalkin() {
                 : 'Your preferred date has been submitted to Roxas BPLO. A confirmation has been sent to your Notifications.'}
             </p>
 
-            {/* Ticket Card Box */}
+            {/* Appointment Card Box */}
             <div style={{
               backgroundColor: '#F8FAFC',
               border: '2px dashed #CBD5E1',
@@ -831,20 +835,20 @@ export default function ScheduleWalkin() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>
-                  Queue Ticket Number
+                  Window 1 Appointment Details
                 </span>
                 <span style={{ backgroundColor: '#FEF3C7', color: '#92400E', padding: '0.15rem 0.55rem', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>
                   Awaiting BPLO Review
                 </span>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', fontFamily: 'monospace', letterSpacing: '0.04em', marginBottom: '0.65rem' }}>
-                #{modalData.ticket}
+              <div style={{ fontSize: '1.65rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.01em', marginBottom: '0.35rem' }}>
+                {modalData.bizName}
               </div>
-              <div style={{ fontSize: '12.5px', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div>🏢 <strong>Business:</strong> {modalData.bizName}</div>
+              <div style={{ fontSize: '13px', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div>👤 <strong>Applicant:</strong> {modalData.ownerName}</div>
                 <div>📅 <strong>Preferred Date:</strong> {new Date(modalData.date).toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
                 <div>⏰ <strong>Time Slot:</strong> {modalData.slot}</div>
-                <div>📍 <strong>Location:</strong> Window 1 (Fast-Track), Ground Floor, Roxas Municipal Hall</div>
+                <div>📍 <strong>Location:</strong> Window 1 (Fast-Track Counter), Ground Floor, Roxas Municipal Hall</div>
               </div>
             </div>
 

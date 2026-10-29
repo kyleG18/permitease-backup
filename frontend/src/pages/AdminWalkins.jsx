@@ -149,7 +149,7 @@ export default function AdminWalkins() {
             </div>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-green, #15803D)' }}>
-                BPLO MUNICIPAL DESK • WINDOW 1 QUEUE CONTROL
+                BPLO MUNICIPAL DESK • WINDOW 1 APPOINTMENT ROSTER
               </span>
               <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
                 Walk-in Schedule
@@ -299,7 +299,7 @@ export default function AdminWalkins() {
           <Search size={16} color="#64748B" />
           <input
             type="text"
-            placeholder="Search ticket #, business name, or applicant..."
+            placeholder="Search business name, owner, or applicant..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13.5px', width: '100%' }}
@@ -383,7 +383,7 @@ export default function AdminWalkins() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
                 <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.05em' }}>
-                  <th style={{ padding: '0.85rem 1rem' }}>Ticket #</th>
+                  <th style={{ padding: '0.85rem 1rem', width: '50px' }}>#</th>
                   <th style={{ padding: '0.85rem 1rem' }}>Batch Slot</th>
                   <th style={{ padding: '0.85rem 1rem' }}>Business Name</th>
                   <th style={{ padding: '0.85rem 1rem' }}>Applicant / Contact</th>
@@ -392,7 +392,7 @@ export default function AdminWalkins() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRoster.map((item) => {
+                {filteredRoster.map((item, index) => {
                   const isAttended = item.walkin_status === 'ATTENDED';
                   const isConfirmed = item.walkin_status === 'CONFIRMED' || item.walkin_status === 'SCHEDULED';
                   const isPending = !item.walkin_status || item.walkin_status === 'PENDING';
@@ -406,18 +406,17 @@ export default function AdminWalkins() {
                         transition: 'background 0.15s ease'
                       }}
                     >
-                      {/* Ticket # */}
+                      {/* Row Index # */}
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <span style={{
-                          fontFamily: 'monospace',
-                          fontWeight: 800,
-                          fontSize: '13px',
-                          color: 'var(--government-navy, #0F172A)',
+                          fontWeight: 700,
+                          fontSize: '12px',
+                          color: '#64748B',
                           backgroundColor: '#F1F5F9',
-                          padding: '0.2rem 0.5rem',
+                          padding: '0.2rem 0.55rem',
                           borderRadius: '4px'
                         }}>
-                          #{item.queue_ticket_number || 'PENDING'}
+                          {index + 1}
                         </span>
                       </td>
 
@@ -618,7 +617,7 @@ export default function AdminWalkins() {
                   Form BPLO-01 • {previewApp.business_name}
                 </h3>
                 <span style={{ fontSize: '12px', color: '#64748B' }}>
-                  Queue Ticket #{previewApp.queue_ticket_number || 'PENDING'}
+                  Walk-in Applicant: <strong>{previewApp.owner_name || previewApp.applicant_name || 'Business Owner'}</strong>
                 </span>
               </div>
 
