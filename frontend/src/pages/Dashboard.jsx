@@ -625,34 +625,113 @@ const AdminDashboard = ({ user, stats, loading }) => {
   return (
     <div className="animate-fade-in" style={{ fontFamily: 'Inter, sans-serif' }}>
 
-      {/* ── HEADER ────────────────────────────────────────────────── */}
+      {/* ── HERO BANNER ────────────────────────────────────────────── */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--government-navy) 0%, #1B4D7E 100%)',
-        borderRadius: '12px', padding: '1.5rem 2rem', marginBottom: '1.5rem',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        flexWrap: 'wrap', gap: '1rem', color: 'white'
+        position: 'relative',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        backgroundImage: "url('/images/roxas-hall.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center 38%',
+        marginBottom: '1.5rem',
+        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.25)',
+        minHeight: '160px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}>
-        <div>
-          <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem' }}>
-            Municipality of Roxas, Oriental Mindoro • BPLO Command Center
+        {/* Cinematic Government Dark Overlay with Forest Municipal Accent */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.94) 0%, rgba(20, 83, 45, 0.82) 48%, rgba(15, 23, 42, 0.58) 100%)',
+          zIndex: 1
+        }} />
+
+        {/* Inner Content */}
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          padding: '1.75rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1.25rem',
+          color: 'white'
+        }}>
+          <div>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.14)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              padding: '0.3rem 0.85rem',
+              borderRadius: '20px',
+              fontSize: '11.5px',
+              fontWeight: '800',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: '#DCFCE7',
+              marginBottom: '0.65rem'
+            }}>
+              <img src="/images/roxas-seal.png" alt="Roxas Seal" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+              Municipality of Roxas, Oriental Mindoro • {user?.role === 'system_admin' ? 'Admin Command Center' : 'BPLO Command Center'}
+            </div>
+            <h1 style={{
+              margin: '0 0 0.35rem',
+              fontSize: '28px',
+              fontWeight: '800',
+              color: '#FFFFFF',
+              letterSpacing: '-0.02em',
+              textShadow: '0 2px 4px rgba(0,0,0,0.35)'
+            }}>
+              {greeting}, {firstName}!
+            </h1>
+            <p style={{
+              margin: 0,
+              fontSize: '14px',
+              color: 'rgba(255, 255, 255, 0.9)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.35)'
+            }}>
+              {user?.role === 'system_admin'
+                ? 'System Administration & Security · User Access & Municipal Audit Logs'
+                : 'Business Permit & Licensing Oversight · PermitEase Administration'}
+            </p>
           </div>
-          <h1 style={{ margin: '0 0 0.25rem', fontSize: '26px', fontWeight: '700', color: 'white' }}>
-            {greeting}, {firstName}!
-          </h1>
-          <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.75)' }}>
-            Business Permit & Licensing Oversight · PermitEase Administration
-          </p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Calendar size={14} /> {today}
-          </div>
-          <div style={{
-            backgroundColor: statutoryBg, color: statutoryColor,
-            borderRadius: '20px', padding: '0.3rem 0.875rem',
-            fontSize: '11px', fontWeight: '800', letterSpacing: '0.05em'
-          }}>
-            RA 7160 — {statutoryPeriod}
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+            <div style={{
+              fontSize: '12.5px',
+              color: '#FFFFFF',
+              backgroundColor: 'rgba(0, 0, 0, 0.35)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '0.4rem 0.9rem',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontWeight: '600'
+            }}>
+              <Calendar size={14} color="#86EFAC" /> {today}
+            </div>
+            <div style={{
+              backgroundColor: statutoryBg,
+              color: statutoryColor,
+              borderRadius: '20px',
+              padding: '0.35rem 0.95rem',
+              fontSize: '11px',
+              fontWeight: '800',
+              letterSpacing: '0.05em',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+            }}>
+              RA 7160 — {statutoryPeriod}
+            </div>
           </div>
         </div>
       </div>
