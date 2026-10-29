@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { BusinessContext } from '../context/BusinessContext';
 import { LanguageContext } from '../context/LanguageContext';
 import {
   Calendar, Clock, Ticket, CheckCircle2, AlertCircle, Building2,
@@ -14,9 +15,14 @@ const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 export default function ScheduleWalkin() {
   const { user, token } = useContext(AuthContext);
+  const { businesses: contextBusinesses, loadingBusinesses: contextLoadingBiz } = useContext(BusinessContext);
   const { lang } = useContext(LanguageContext);
   const isTl = lang === 'tl';
-  const headers = { Authorization: `Bearer ${token}` };
+
+  // Helper to reliably retrieve current auth token
+  const getAuthToken = () => {
+    return token || user?.token || JSON.parse(localStorage.getItem('user') || '{}')?.token || '';
+  };
 
   const [businesses, setBusinesses] = useState([]);
   const [selectedBizId, setSelectedBizId] = useState('');
@@ -34,76 +40,138 @@ export default function ScheduleWalkin() {
   const [successMsg, setSuccessMsg] = useState('');
   const [previewingForm, setPreviewingForm] = useState(false);
 
-  // Compute minimum selectable date (tomorrow)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDateStr = tomorrow.toISOString().split('T')[0];
+  // Calculate minimum selectable date (next business day, skipping weekend)
+  const getMinDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() === 6) d.setDate(d.getDate() + 2); // Saturday -> Monday
+    else if (d.getDay() === 0) d.setDate(d.getDate() + 1); // Sunday -> Monday
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const minDateStr = getMinDate();
 
-  // 1. Fetch businesses
+  // 1. Sync businesses from context or fetch directly with fresh token
   useEffect(() => {
-    fetch(`${API}/businesses`, { headers })
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data) ? data : [];
+    if (contextBusinesses && contextBusinesses.length > 0) {
+      setBusinesses(contextBusinesses);
+      setSelectedBizId(prev => prev || String(contextBusinesses[0].id));
+      setLoadingBiz(false);
+      return;
+    }
+
+    const activeToken = getAuthToken();
+    if (!activeToken) {
+      setLoadingBiz(contextLoadingBiz);
+      return;
+    }
+
+    axios.get(`${API}/businesses`, {
+      headers: { Authorization: `Bearer ${activeToken}` }
+    })
+      .then(res => {
+        const list = Array.isArray(res.data) ? res.data : [];
         setBusinesses(list);
-        if (list.length > 0) setSelectedBizId(String(list[0].id));
+        if (list.length > 0) {
+          setSelectedBizId(prev => prev || String(list[0].id));
+        }
         setLoadingBiz(false);
       })
       .catch(() => setLoadingBiz(false));
-  }, []);
+  }, [contextBusinesses, contextLoadingBiz, token, user]);
 
   // 2. Fetch active application for selected business
-  const fetchActiveApp = () => {
+  const fetchActiveApp = useCallback(() => {
     if (!selectedBizId) return;
+    const activeToken = getAuthToken();
+    if (!activeToken) return;
+
     setLoadingApp(true);
-    fetch(`${API}/applications`, { headers })
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data) ? data : [];
+    axios.get(`${API}/applications`, {
+      headers: { Authorization: `Bearer ${activeToken}` }
+    })
+      .then(res => {
+        const list = Array.isArray(res.data) ? res.data : [];
         const match = list.find(a => String(a.business_id) === String(selectedBizId) && a.status !== 'CANCELLED');
         setActiveApp(match || null);
         if (match?.walkin_date) {
-          setWalkinDate(match.walkin_date.split('T')[0]);
+          const dateOnly = typeof match.walkin_date === 'string' ? match.walkin_date.split('T')[0] : '';
+          setWalkinDate(dateOnly);
           if (match.walkin_time_slot) setWalkinSlot(match.walkin_time_slot);
         }
         setLoadingApp(false);
       })
       .catch(() => setLoadingApp(false));
-  };
+  }, [selectedBizId, token, user]);
 
   useEffect(() => {
     fetchActiveApp();
-  }, [selectedBizId]);
+  }, [fetchActiveApp]);
 
   const selectedBiz = businesses.find(b => String(b.id) === String(selectedBizId)) || businesses[0];
 
   // 3. Handle submit preferred visit date
   const handleSubmitDate = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!selectedBizId) {
+      setErrorMsg(isTl ? 'Pumili muna ng profile ng negosyo.' : 'Please select a business profile first.');
+      return;
+    }
+
     if (!walkinDate) {
       setErrorMsg(isTl ? 'Pumili ng petsa ng pagbisita.' : 'Please select your preferred visit date.');
       return;
     }
-    const day = new Date(walkinDate).getDay();
+
+    // Accurate local day-of-week validation
+    const [y, m, d] = walkinDate.split('-').map(Number);
+    const selectedDate = new Date(y, m - 1, d);
+    const day = selectedDate.getDay();
     if (day === 0 || day === 6) {
-      setErrorMsg(isTl ? 'Lunes hanggang Biyernes lamang ang opisina ng Munisipyo.' : 'Roxas Municipal Hall is open Monday to Friday only.');
+      setErrorMsg(isTl 
+        ? 'Lunes hanggang Biyernes lamang ang opisina ng Munisipyo (sarado tuwing Sabado at Linggo).' 
+        : 'Roxas Municipal Hall is open Monday to Friday only (closed on weekends).');
+      return;
+    }
+
+    const activeToken = getAuthToken();
+    if (!activeToken) {
+      setErrorMsg(isTl ? 'Mangyaring mag-log in muli.' : 'Session expired. Please log in again.');
       return;
     }
 
     setSubmitting(true);
-    setErrorMsg('');
-    setSuccessMsg('');
 
     try {
       const res = await axios.post(`${API}/applications/schedule-walkin-by-business`, {
-        business_id: selectedBizId,
+        business_id: Number(selectedBizId) || selectedBizId,
         walkin_date: walkinDate,
         walkin_time_slot: walkinSlot
-      }, { headers });
+      }, {
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+
+      // Optimistically update activeApp so user immediately sees their ticket
+      if (res.data) {
+        setActiveApp(prev => ({
+          ...(prev || {}),
+          id: res.data.application_id || prev?.id,
+          queue_ticket_number: res.data.queue_ticket_number,
+          walkin_date: res.data.walkin_date,
+          walkin_time_slot: res.data.walkin_time_slot,
+          walkin_status: res.data.walkin_status || 'PENDING'
+        }));
+      }
 
       setSuccessMsg(isTl 
         ? `Naisumite ang petsa! Ang iyong Ticket ay #${res.data.queue_ticket_number}. Pakisuri ang checklist sa ibaba.`
         : `Preferred visit date submitted! Your Queue Ticket is #${res.data.queue_ticket_number}. Please check your preparation checklist below.`);
+      
       fetchActiveApp();
     } catch (err) {
       setErrorMsg(err.response?.data?.message || 'Failed to submit visit date. Please try again.');
@@ -114,8 +182,11 @@ export default function ScheduleWalkin() {
 
   const handleDownloadRoutingSlip = async () => {
     if (!activeApp?.id) return;
+    const activeToken = getAuthToken();
     try {
-      const res = await fetch(`${API}/applications/${activeApp.id}/preparation-summary`, { headers });
+      const res = await fetch(`${API}/applications/${activeApp.id}/preparation-summary`, {
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
       if (!res.ok) {
         alert('Failed to download routing slip.');
         return;

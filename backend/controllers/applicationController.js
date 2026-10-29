@@ -1168,8 +1168,13 @@ const scheduleWalkinByBusiness = async (req, res) => {
             return res.status(400).json({ message: 'Business, walk-in date, and time slot are required.' });
         }
 
-        // Check business ownership
-        const [bizRows] = await db.query('SELECT * FROM businesses WHERE id = ? AND user_id = ?', [business_id, req.user.id]);
+        // Check business ownership (system_admin can test any business)
+        let bizRows;
+        if (req.user.role === 'system_admin') {
+            [bizRows] = await db.query('SELECT * FROM businesses WHERE id = ?', [business_id]);
+        } else {
+            [bizRows] = await db.query('SELECT * FROM businesses WHERE id = ? AND user_id = ?', [business_id, req.user.id]);
+        }
         if (bizRows.length === 0) {
             return res.status(404).json({ message: 'Business not found or unauthorized.' });
         }
@@ -1201,7 +1206,7 @@ const scheduleWalkinByBusiness = async (req, res) => {
             const [createRes] = await db.query(
                 `INSERT INTO applications (application_number, user_id, business_id, application_type, status)
                  VALUES (?, ?, ?, ?, 'DRAFT')`,
-                [appNumber, req.user.id, business.id, (business.business_status || '').includes('Renewal') ? 'RENEWAL' : 'NEW']
+                [appNumber, business.user_id, business.id, (business.business_status || '').includes('Renewal') ? 'RENEWAL' : 'NEW']
             );
             appId = createRes.insertId;
         }
