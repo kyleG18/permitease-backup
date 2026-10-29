@@ -104,12 +104,37 @@ const updateUserStatus = async (req, res) => {
     }
 };
 
-// @desc    Get all audit logs
+// @desc    Get all audit logs (with optional period and role filters)
 // @route   GET /api/admin/audit-logs
 // @access  System Admin
 const getAuditLogs = async (req, res) => {
     try {
-        const [logs] = await db.query('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 500');
+        const { period, role, limit = 500 } = req.query;
+        let query = 'SELECT * FROM audit_logs WHERE 1=1';
+        const params = [];
+
+        if (role && role !== 'ALL') {
+            query += ' AND user_role = ?';
+            params.push(role);
+        }
+
+        if (period && period !== 'ALL') {
+            const p = period.toUpperCase();
+            if (p === 'DAY' || p === '1D') {
+                query += ' AND created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)';
+            } else if (p === 'WEEK' || p === '1W') {
+                query += ' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+            } else if (p === 'MONTH' || p === '1M') {
+                query += ' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+            } else if (p === 'YEAR' || p === '1Y') {
+                query += ' AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)';
+            }
+        }
+
+        query += ' ORDER BY created_at DESC LIMIT ?';
+        params.push(Math.min(parseInt(limit, 10) || 500, 1000));
+
+        const [logs] = await db.query(query, params);
         res.json(logs);
     } catch (error) {
         console.error('Server error:', error);
