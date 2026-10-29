@@ -1305,7 +1305,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
 
         {/* Registered MSMEs */}
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid var(--government-navy)' }}>
+        <div style={{ backgroundColor: 'white', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', borderTop: '3px solid var(--government-navy)', borderRadius: '10px', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>MSMEs Registered</div>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(23,32,51,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1317,7 +1317,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
         </div>
 
         {/* Pending Review */}
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #D97706' }}>
+        <div style={{ backgroundColor: 'white', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', borderTop: '3px solid #D97706', borderRadius: '10px', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Pending Review</div>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1329,7 +1329,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
         </div>
 
         {/* Preparation Verified */}
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid var(--primary-green)' }}>
+        <div style={{ backgroundColor: 'white', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', borderTop: '3px solid var(--primary-green)', borderRadius: '10px', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Prep Verified</div>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1341,7 +1341,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
         </div>
 
         {/* Today's Walk-ins */}
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #1E40AF' }}>
+        <div style={{ backgroundColor: 'white', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', borderTop: '3px solid #1E40AF', borderRadius: '10px', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Today's Walk-ins</div>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1355,7 +1355,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
         </div>
 
         {/* Delinquent (RA 7160) */}
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #DC2626' }}>
+        <div style={{ backgroundColor: 'white', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', borderTop: '3px solid #DC2626', borderRadius: '10px', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Delinquent</div>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1367,7 +1367,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
         </div>
 
         {/* Expiring Soon */}
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem', borderTop: '3px solid #EA580C' }}>
+        <div style={{ backgroundColor: 'white', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', borderTop: '3px solid #EA580C', borderRadius: '10px', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase' }}>Expiring Soon</div>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
