@@ -1035,6 +1035,212 @@ const markWalkinAttended = async (req, res) => {
     }
 };
 
+/**
+ * POST /api/applications/admin/:id/confirm-walkin
+ * BPLO officer checks availability and confirms the walk-in appointment
+ */
+const confirmWalkinAppointment = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM applications WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ message: 'Application not found.' });
+
+        const app = rows[0];
+
+        await db.query(
+            `UPDATE applications 
+             SET walkin_status = 'CONFIRMED', updated_at = NOW()
+             WHERE id = ?`,
+            [app.id]
+        );
+
+        await logHistory(
+            app.id,
+            req.user.id,
+            'Walk-in Appointment Confirmed by BPLO',
+            app.status,
+            app.status,
+            `Walk-in appointment on ${app.walkin_date} (${app.walkin_time_slot || 'Window 1'}) confirmed by BPLO Officer ${req.user.full_name}. Slot secured.`
+        );
+
+        const dateStr = app.walkin_date ? new Date(app.walkin_date).toLocaleDateString('en-PH') : 'your chosen date';
+        await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_application_id, status)
+             VALUES (?, 'WALKIN_CONFIRMED', 'Walk-in Slot Confirmed by BPLO', ?, ?, 'Unread')`,
+            [
+                app.user_id,
+                `Your walk-in appointment on ${dateStr} (${app.walkin_time_slot || 'Window 1'}) has been CONFIRMED by BPLO. Queue Ticket: #${app.queue_ticket_number}. Please bring your 2 printed copies of Form BPLO-01 and clearances.`,
+                app.id
+            ]
+        );
+
+        res.json({
+            success: true,
+            message: 'Walk-in appointment confirmed. Applicant notified.',
+            walkin_status: 'CONFIRMED'
+        });
+    } catch (error) {
+        console.error('confirmWalkinAppointment error:', error);
+        res.status(500).json({ message: 'Unable to confirm appointment.' });
+    }
+};
+
+/**
+ * PUT /api/applications/admin/:id/form-data
+ * BPLO personnel or owner saves/edits all Form BPLO-01 fields
+ */
+const updateApplicationFormData = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await db.query('SELECT * FROM applications WHERE id = ?', [id]);
+        if (rows.length === 0) return res.status(404).json({ message: 'Application not found.' });
+        const app = rows[0];
+
+        const data = req.body || {};
+
+        if (app.business_id) {
+            await db.query(
+                `UPDATE businesses SET 
+                    business_name = COALESCE(?, business_name),
+                    ownership_type = COALESCE(?, ownership_type),
+                    address = COALESCE(?, address),
+                    barangay = COALESCE(?, barangay),
+                    floor_area = COALESCE(?, floor_area),
+                    employees = COALESCE(?, employees),
+                    capitalization = COALESCE(?, capitalization),
+                    gross_sales = COALESCE(?, gross_sales),
+                    owner_name = COALESCE(?, owner_name),
+                    contact_number = COALESCE(?, contact_number),
+                    email = COALESCE(?, email),
+                    industry_category = COALESCE(?, industry_category),
+                    business_type = COALESCE(?, business_type),
+                    primary_products = COALESCE(?, primary_products)
+                 WHERE id = ?`,
+                [
+                    data.business_name || null,
+                    data.ownership_type || null,
+                    data.address || data.street || null,
+                    data.barangay || null,
+                    data.floor_area !== undefined && data.floor_area !== '' ? Number(data.floor_area) : null,
+                    data.employees !== undefined && data.employees !== '' ? Number(data.employees) : null,
+                    data.capitalization !== undefined && data.capitalization !== '' ? Number(data.capitalization) : null,
+                    data.gross_sales !== undefined && data.gross_sales !== '' ? Number(data.gross_sales) : null,
+                    data.owner_name || (data.owner_given_name ? `${data.owner_given_name} ${data.owner_surname || ''}`.trim() : null),
+                    data.contact_number || null,
+                    data.email || null,
+                    data.industry_category || null,
+                    data.business_type || null,
+                    data.primary_products || null,
+                    app.business_id
+                ]
+            );
+        }
+
+        if (req.user.role === 'lgu_admin' || req.user.role === 'system_admin') {
+            await logHistory(
+                app.id,
+                req.user.id,
+                'Form BPLO-01 Updated by BPLO',
+                app.status,
+                app.status,
+                `Official Form BPLO-01 fields updated and verified by BPLO Officer ${req.user.full_name}.`
+            );
+        }
+
+        res.json({
+            success: true,
+            message: 'Application form details updated and reflected successfully.',
+            formData: data
+        });
+    } catch (error) {
+        console.error('updateApplicationFormData error:', error);
+        res.status(500).json({ message: 'Unable to update form data.' });
+    }
+};
+
+/**
+ * POST /api/applications/schedule-walkin-by-business
+ * MSME submits preferred walk-in visit date from the Schedule Walk-in page
+ */
+const scheduleWalkinByBusiness = async (req, res) => {
+    try {
+        const { business_id, walkin_date, walkin_time_slot } = req.body;
+        if (!business_id || !walkin_date || !walkin_time_slot) {
+            return res.status(400).json({ message: 'Business, walk-in date, and time slot are required.' });
+        }
+
+        // Check business ownership
+        const [bizRows] = await db.query('SELECT * FROM businesses WHERE id = ? AND user_id = ?', [business_id, req.user.id]);
+        if (bizRows.length === 0) {
+            return res.status(404).json({ message: 'Business not found or unauthorized.' });
+        }
+        const business = bizRows[0];
+
+        // Find existing application or create a new draft
+        let [appRows] = await db.query(
+            'SELECT * FROM applications WHERE business_id = ? AND status != "CANCELLED" ORDER BY id DESC LIMIT 1',
+            [business.id]
+        );
+
+        let appId;
+        let appNumber;
+        if (appRows.length > 0) {
+            appId = appRows[0].id;
+            appNumber = appRows[0].application_number;
+        } else {
+            const year = new Date().getFullYear();
+            const [lastApp] = await db.query(
+                "SELECT application_number FROM applications WHERE application_number LIKE ? ORDER BY id DESC LIMIT 1",
+                [`BP-ROXAS-${year}-%`]
+            );
+            let seq = 1;
+            if (lastApp.length > 0 && lastApp[0].application_number) {
+                const parts = lastApp[0].application_number.split('-');
+                seq = parseInt(parts[parts.length - 1], 10) + 1;
+            }
+            appNumber = `BP-ROXAS-${year}-${String(seq).padStart(4, '0')}`;
+            const [createRes] = await db.query(
+                `INSERT INTO applications (application_number, user_id, business_id, application_type, status)
+                 VALUES (?, ?, ?, ?, 'DRAFT')`,
+                [appNumber, req.user.id, business.id, (business.business_status || '').includes('Renewal') ? 'RENEWAL' : 'NEW']
+            );
+            appId = createRes.insertId;
+        }
+
+        const year = new Date(walkin_date).getFullYear();
+        const ticketNum = `RX-${year}-${String(appId).padStart(4, '0')}`;
+
+        await db.query(
+            `UPDATE applications 
+             SET walkin_date = ?, walkin_time_slot = ?, queue_ticket_number = ?, walkin_status = 'PENDING', updated_at = NOW()
+             WHERE id = ?`,
+            [walkin_date, walkin_time_slot, ticketNum, appId]
+        );
+
+        await logHistory(
+            appId,
+            req.user.id,
+            'Walk-in Requested by MSME',
+            'DRAFT',
+            'DRAFT',
+            `Preferred visit date submitted: ${walkin_date} (${walkin_time_slot}). Queue Ticket #${ticketNum}. Awaiting BPLO availability check.`
+        );
+
+        res.json({
+            success: true,
+            message: 'Walk-in visit request submitted successfully!',
+            application_id: appId,
+            application_number: appNumber,
+            queue_ticket_number: ticketNum,
+            walkin_date,
+            walkin_time_slot,
+            walkin_status: 'PENDING'
+        });
+    } catch (error) {
+        console.error('scheduleWalkinByBusiness error:', error);
+        res.status(500).json({ message: 'Unable to schedule walk-in.' });
+    }
+};
+
 module.exports = {
     getMyApplications,
     getApplicationById,
@@ -1048,6 +1254,9 @@ module.exports = {
     getApplicationHistory,
     getPreparationSummaryPDF,
     scheduleWalkin,
+    scheduleWalkinByBusiness,
     getWalkinRoster,
-    markWalkinAttended
+    confirmWalkinAppointment,
+    markWalkinAttended,
+    updateApplicationFormData
 };

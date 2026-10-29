@@ -9,6 +9,7 @@ import {
   FileText, 
   CheckSquare, 
   CalendarClock, 
+  Calendar,
   MessageSquare, 
   Library,
   Settings,
@@ -83,6 +84,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: (t.nav?.permitPreparation || 'PERMIT PREPARATION'),
           items: [
             { name: (t.nav?.prepareApplication || 'Prepare Application'), path: '/applications', icon: ClipboardCheck, tour: 'prepare-application' },
+            { name: (t.nav?.scheduleWalkin || 'Schedule Walk-in'), path: '/schedule-walkin', icon: Calendar, tour: 'schedule-walkin' },
             { name: (t.nav?.myPermits || 'Verify Requirements'), path: '/permits', icon: Shield, tour: 'my-permits' },
           ]
         },
@@ -113,7 +115,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: (t.nav?.main || 'MAIN'),
           items: [
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
-            { name: 'Applications & Walk-ins', path: '/admin/applications', icon: ClipboardCheck },
+            { name: 'Application Forms', path: '/admin/applications', icon: FileText },
+            { name: 'Walk-in Schedule', path: '/admin/walkins', icon: Calendar },
             { name: 'Clearance Verification', path: '/permits', icon: ShieldCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
             { name: 'Permit Registry', path: '/admin/permits', icon: FileText },
@@ -136,7 +139,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: (t.nav?.main || 'MAIN'),
           items: [
             { name: (t.nav?.dashboard || 'Dashboard'), path: '/dashboard', icon: LayoutDashboard },
-            { name: 'Applications & Walk-ins', path: '/admin/applications', icon: ClipboardCheck },
+            { name: 'Application Forms', path: '/admin/applications', icon: FileText },
+            { name: 'Walk-in Schedule', path: '/admin/walkins', icon: Calendar },
             { name: 'Clearance Verification', path: '/permits', icon: ShieldCheck },
             { name: 'Renewal Monitoring', path: '/admin/renewals', icon: CalendarClock },
             { name: 'Permit Registry', path: '/admin/permits', icon: FileText },

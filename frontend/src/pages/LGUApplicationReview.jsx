@@ -1,19 +1,20 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { CheckCircle, XCircle, AlertCircle, Clock, Building2, FileText, ChevronRight, Play, RotateCcw, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Clock, FileText, ChevronRight, Play, RotateCcw, Shield, Edit3, Printer, Eye } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
 import UnifiedApplicationFormView from '../components/UnifiedApplicationFormView';
+import FormBPLOEditModal from '../components/FormBPLOEditModal';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const STATUS_CONFIG = {
-  DRAFT:            { label: 'Draft',            color: '#64748B', bg: '#F1F5F9' },
-  SUBMITTED:        { label: 'Submitted',        color: '#2563EB', bg: '#DBEAFE' },
-  UNDER_REVIEW:     { label: 'Under Review',     color: '#D97706', bg: '#FEF3C7' },
-  NEEDS_CORRECTION: { label: 'Needs Correction', color: '#DC2626', bg: '#FEE2E2' },
-  APPROVED:         { label: 'Verified',             color: '#16A34A', bg: '#DCFCE7' },
-  REJECTED:         { label: 'Corrections Requested', color: '#991B1B', bg: '#FEE2E2' },
+  DRAFT:            { label: 'Draft',                   color: '#64748B', bg: '#F1F5F9' },
+  SUBMITTED:        { label: 'Submitted',               color: '#2563EB', bg: '#DBEAFE' },
+  UNDER_REVIEW:     { label: 'Under Review',            color: '#D97706', bg: '#FEF3C7' },
+  NEEDS_CORRECTION: { label: 'Needs Correction',        color: '#DC2626', bg: '#FEE2E2' },
+  APPROVED:         { label: 'Verified',                color: '#16A34A', bg: '#DCFCE7' },
+  REJECTED:         { label: 'Corrections Requested',   color: '#991B1B', bg: '#FEE2E2' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -60,16 +61,21 @@ export default function LGUApplicationReview() {
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [resolvedLocation, setResolvedLocation] = useState(null);
+  const [modal, setModal] = useState(null); // 'review' | 'correction' | 'approve' | 'reject'
+
+  // Form edit & preview state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isFormPreviewOpen, setIsFormPreviewOpen] = useState(false);
+  const [formBploData, setFormBploData] = useState(null);
+
+  const headers = { Authorization: `Bearer ${token}` };
 
   const handleDownload = async (docId, docName) => {
     try {
-      const res = await fetch(`${API}/documents/download/${docId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) {
-        alert('Failed to download document.');
-        return;
-      }
+      const res = await fetch(`${API}/documents/download/${docId}`, { headers });
+      if (!res.ok) { alert('Failed to download document.'); return; }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -84,35 +90,103 @@ export default function LGUApplicationReview() {
     }
   };
 
-  const [actionLoading, setActionLoading] = useState(false);
-  const [resolvedLocation, setResolvedLocation] = useState(null);
-  const [modal, setModal] = useState(null); // 'review' | 'correction' | 'approve' | 'reject'
-  const headers = { Authorization: `Bearer ${token}` };
-
   const load = () => {
     setLoading(true);
     fetch(`${API}/applications/${id}`, { headers })
       .then(r => r.json())
-      .then(async data => { 
-          if (data.message && !data.id) { 
-            setError(data.message); 
-            setLoading(false); 
-          } else { 
-            setApp(data); 
-            if (data.island_group_id) {
-                try {
-                  const locRes = await fetch(`${API}/locations/resolve?islandGroup=${data.island_group_id}&region=${data.region_id}&province=${data.province_id || ''}&city=${data.city_municipality_id}&barangay=${data.barangay_id}`);
-                  const locData = await locRes.json();
-                  setResolvedLocation(locData);
-                } catch(e){}
-            }
-            setLoading(false); 
-          } 
-        })
+      .then(async data => {
+        if (data.message && !data.id) {
+          setError(data.message);
+          setLoading(false);
+        } else {
+          setApp(data);
+          if (data.island_group_id) {
+            try {
+              const locRes = await fetch(`${API}/locations/resolve?islandGroup=${data.island_group_id}&region=${data.region_id}&province=${data.province_id || ''}&city=${data.city_municipality_id}&barangay=${data.barangay_id}`);
+              const locData = await locRes.json();
+              setResolvedLocation(locData);
+            } catch (e) {}
+          }
+          setLoading(false);
+        }
+      })
       .catch(() => { setError('Unable to load application.'); setLoading(false); });
   };
 
   useEffect(() => { load(); }, [id]);
+
+  // Initialize editable form data from the loaded application
+  useEffect(() => {
+    if (!app) return;
+    const savedKey = `bplo_form_data_admin_${app.id}`;
+    let savedLocal = {};
+    try {
+      const stored = localStorage.getItem(savedKey);
+      if (stored) savedLocal = JSON.parse(stored);
+    } catch (e) {}
+
+    const ownerParts = (app.owner_name || '').trim().split(' ');
+    const merged = {
+      business_id: app.business_id,
+      application_number: app.application_number,
+      application_type: app.application_type || 'NEW',
+      payment_mode: app.payment_mode || 'Annually',
+      tax_year: app.tax_year || new Date().getFullYear(),
+      application_date: app.created_at
+        ? new Date(app.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
+        : new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }),
+      business_name: app.business_name || '',
+      trade_name: app.trade_name || app.business_name || '',
+      ownership_type: app.ownership_type || 'Sole Proprietorship',
+      owner_gender: app.owner_gender || 'Male',
+      corp_nationality: app.corp_nationality || 'Filipino',
+      dti_sec_cda_number: app.dti_sec_cda_number || app.registration_number || '',
+      tin: app.tin || '',
+      owner_name: app.owner_name || '',
+      owner_surname: ownerParts.length > 1 ? ownerParts.slice(-1)[0] : '',
+      owner_given_name: ownerParts.length > 1 ? ownerParts.slice(0, -1).join(' ') : (ownerParts[0] || ''),
+      owner_middle_name: '',
+      owner_suffix: '',
+      signatory_title: (app.ownership_type || '').toLowerCase().includes('corp') ? 'PRESIDENT / CEO' : 'OWNER / PROPRIETOR',
+      house_bldg_no: '', building_name: '', lot_no: '', block_no: '',
+      street: app.address || '',
+      address: app.address || '',
+      barangay: app.barangay || 'Poblacion',
+      subdivision: '',
+      city_municipality: 'Roxas',
+      province: 'Oriental Mindoro',
+      zip_code: '5212',
+      contact_number: app.contact_number || '',
+      telephone_no: '',
+      email: app.email || '',
+      business_area: app.floor_area || '',
+      floor_area: app.floor_area || '',
+      employees: app.employees || 0,
+      employees_male: Math.ceil((app.employees || 0) / 2),
+      employees_female: Math.floor((app.employees || 0) / 2),
+      employees_residing_lgu: app.employees || 0,
+      delivery_trucks: 0, delivery_motorcycles: 0,
+      is_owned: !(app.premises_type || '').toLowerCase().includes('rent'),
+      tax_dec_no: '', pin_no: '', monthly_rental: '', lessor_name: '',
+      has_tax_incentives: false, incentive_details: '',
+      business_activity: 'Main Office',
+      industry_category: app.industry_category || app.business_type || '',
+      business_type: app.business_type || app.industry_category || '',
+      primary_products: app.primary_products || 'Commercial Operations',
+      units_count: '1',
+      capitalization: app.capitalization || '',
+      gross_sales: app.gross_sales || '',
+      ...savedLocal
+    };
+    setFormBploData(merged);
+  }, [app]);
+
+  const handleSaveFormData = (updatedData) => {
+    setFormBploData(updatedData);
+    if (app?.id) {
+      localStorage.setItem(`bplo_form_data_admin_${app.id}`, JSON.stringify(updatedData));
+    }
+  };
 
   const doAction = async (endpoint, body = {}) => {
     setActionLoading(true);
@@ -137,11 +211,9 @@ export default function LGUApplicationReview() {
   const canStartReview = app.status === 'SUBMITTED';
   const canAct = app.status === 'UNDER_REVIEW';
 
-  // Derived Dates from History
   const submittedEvent = app.history?.find(h => h.new_status === 'SUBMITTED' || h.action.includes('Submitted'));
   const submittedDate = submittedEvent ? new Date(submittedEvent.created_at) : null;
   const decisionEvent = app.history?.find(h => ['APPROVED', 'REJECTED'].includes(h.new_status));
-  const decisionDate = decisionEvent ? new Date(decisionEvent.created_at) : null;
 
   const getStepperState = () => {
     if (app.status === 'DRAFT') return { step: 1 };
@@ -150,6 +222,7 @@ export default function LGUApplicationReview() {
     if (['APPROVED', 'REJECTED'].includes(app.status)) return { step: 4 };
     return { step: 1 };
   };
+
   const totalReqs = app.requirements?.length || 0;
   const readyReqs = app.requirements?.filter(r => ['Submitted', 'Approved'].includes(r.req_status)).length || 0;
   const readScore = totalReqs > 0 ? Math.round((readyReqs / totalReqs) * 100) : 0;
@@ -160,8 +233,9 @@ export default function LGUApplicationReview() {
   const formatDateTime = (date) => date ? new Date(date).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
   return (
-    <div className="lgu-review-container animate-fade-in" className="lgu-review-container animate-fade-in" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Modals */}
+    <div className="lgu-review-container animate-fade-in" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+
+      {/* Confirmation Modals */}
       {modal === 'review' && (
         <ConfirmModal title="Start Review" description={`Are you sure you want to start reviewing application ${app.application_number}?`} confirmText="Start Review" onCancel={() => setModal(null)} loading={actionLoading} onConfirm={() => doAction('start-review')} />
       )}
@@ -182,7 +256,7 @@ export default function LGUApplicationReview() {
         <span>{app.application_number}</span>
       </div>
 
-      {/* STEP 10 - LGU Review Summary */}
+      {/* Header Summary Card */}
       <div className="lgu-review-header-card" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Pre-Assessment Ref.</div>
@@ -203,7 +277,26 @@ export default function LGUApplicationReview() {
       </div>
 
       {/* Action Buttons */}
-      <div className="lgu-review-actions" style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+      <div className="lgu-review-actions" style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+
+        {/* ── FORM ACTIONS (Edit & Print) — always visible ── */}
+        <button
+          onClick={() => setIsEditModalOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', color: 'var(--government-navy)', border: '1.5px solid #CBD5E1', padding: '0.7rem 1.25rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+        >
+          <Edit3 size={15} /> Edit Form Info
+        </button>
+        <button
+          onClick={() => setIsFormPreviewOpen(prev => !prev)}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: isFormPreviewOpen ? 'var(--government-navy)' : 'white', color: isFormPreviewOpen ? 'white' : 'var(--government-navy)', border: '1.5px solid var(--government-navy)', padding: '0.7rem 1.25rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+        >
+          {isFormPreviewOpen ? <Eye size={15} /> : <Printer size={15} />}
+          {isFormPreviewOpen ? 'Hide Form' : 'View & Print Form BPLO-01'}
+        </button>
+
+        <div style={{ height: '32px', width: '1px', backgroundColor: '#E2E8F0', margin: '0 0.25rem' }} />
+
+        {/* ── REVIEW WORKFLOW ACTIONS ── */}
         {canStartReview && (
           <button onClick={() => setModal('review')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#2563EB', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
             <Play size={16} /> Start Review
@@ -229,15 +322,22 @@ export default function LGUApplicationReview() {
         )}
       </div>
 
+      {/* ── PRINTABLE FORM PREVIEW (toggled) ─────────────────────────────── */}
+      {isFormPreviewOpen && formBploData && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <UnifiedApplicationFormView
+            app={formBploData}
+            printable={true}
+            showInstructions={false}
+            onEditInfo={() => setIsEditModalOpen(true)}
+          />
+        </div>
+      )}
+
       <div className="lgu-review-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
-        
+
         {/* LEFT COLUMN */}
         <div>
-          {/* Official Unified Application Form View */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <UnifiedApplicationFormView app={app} printable={true} showInstructions={false} />
-          </div>
-
           {/* Permit Readiness Score */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -246,8 +346,8 @@ export default function LGUApplicationReview() {
               </h3>
               <span style={{ fontWeight: '700', fontSize: '1.25rem', color: readColor }}>{readScore}%</span>
             </div>
-            
-            {totalReqs > 0 ? (
+
+            {totalReqs > 0 && (
               <>
                 <div style={{ backgroundColor: '#F1F5F9', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.75rem' }}>
                   <div style={{ backgroundColor: readColor, height: '100%', width: `${readScore}%`, transition: 'width 0.3s' }}></div>
@@ -258,7 +358,7 @@ export default function LGUApplicationReview() {
                   <span>{totalReqs} Total</span>
                 </div>
               </>
-            ) : null}
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Checklist</h3>
@@ -299,25 +399,25 @@ export default function LGUApplicationReview() {
                       <FileText size={16} color="var(--primary-green)" />
                       <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{doc.document_name}</span>
                     </div>
-                    <button onClick={(e) => { e.preventDefault(); handleDownload(doc.id, doc.document_name); }} style={{ fontSize: '0.82rem', color: 'var(--primary-green)', textDecoration: 'none', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View File</button>
+                    <button onClick={(e) => { e.preventDefault(); handleDownload(doc.id, doc.document_name); }} style={{ fontSize: '0.82rem', color: 'var(--primary-green)', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View File</button>
                   </div>
                 ))}
               </div>
             )}
           </div>
         </div>
-        
+
         {/* RIGHT COLUMN */}
         <div>
-          {/* STEP 3 - Professional Application Stepper */}
+          {/* Progress Tracker */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem', marginBottom: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem' }}>Progress Tracker</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               {[
                 { num: 1, title: 'Application', isDone: step > 1, isActive: step === 1, sub: step > 1 ? 'Completed' : step === 1 ? 'Current' : '' },
-                { num: 2, title: 'Submitted', isDone: step > 2, isActive: step === 2, sub: step > 2 ? formatDate(submittedDate) : step === 2 ? 'In Progress' : 'Pending' },
-                { num: 3, title: 'LGU Review', isDone: step > 3, isActive: step === 3, sub: step > 3 ? 'Completed' : step === 3 ? 'Currently being reviewed' : 'Pending' },
-                { num: 4, title: 'Decision', isDone: step === 4 && ['APPROVED', 'REJECTED'].includes(app.status), isActive: step === 4, sub: step === 4 ? (app.status === 'APPROVED' ? 'Approved' : 'Rejected') : 'Pending' }
+                { num: 2, title: 'Submitted',   isDone: step > 2, isActive: step === 2, sub: step > 2 ? formatDate(submittedDate) : step === 2 ? 'In Progress' : 'Pending' },
+                { num: 3, title: 'LGU Review',  isDone: step > 3, isActive: step === 3, sub: step > 3 ? 'Completed' : step === 3 ? 'Currently being reviewed' : 'Pending' },
+                { num: 4, title: 'Decision',    isDone: step === 4 && ['APPROVED', 'REJECTED'].includes(app.status), isActive: step === 4, sub: step === 4 ? (app.status === 'APPROVED' ? 'Approved' : 'Rejected') : 'Pending' }
               ].map((s, i, arr) => (
                 <div key={s.title} style={{ display: 'flex', gap: '1rem', minHeight: '3.5rem' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px' }}>
@@ -335,12 +435,12 @@ export default function LGUApplicationReview() {
             </div>
           </div>
 
-          {/* Fee Assessment Card — System Estimate */}
+          {/* Fee Assessment Card */}
           <div style={{ marginBottom: '1.5rem' }}>
             <FeeAssessmentCard applicationId={app.id} isAdminView />
           </div>
 
-          {/* STEP 6 & 7 - Application Activity Timeline */}
+          {/* Application Activity Timeline */}
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Clock size={18} color="var(--primary-green)" /> Application Activity</h3>
             {!app.history || app.history.length === 0 ? (
@@ -360,12 +460,9 @@ export default function LGUApplicationReview() {
                       <div style={{ paddingBottom: '1.5rem' }}>
                         <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-dark)' }}>{h.action}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{formatDateTime(h.created_at)}</div>
-                        
                         {h.remarks && (
                           <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#475569', backgroundColor: isActionRequired ? '#FEF3C7' : '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${isActionRequired ? '#D97706' : '#CBD5E1'}` }}>
-                            <div style={{ fontSize: '0.7rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
-                              By {h.actor_name}
-                            </div>
+                            <div style={{ fontSize: '0.7rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>By {h.actor_name}</div>
                             "{h.remarks}"
                           </div>
                         )}
@@ -373,11 +470,10 @@ export default function LGUApplicationReview() {
                     </div>
                   );
                 })}
-                {/* Append current state visually if under review but history stops */}
                 {app.status === 'UNDER_REVIEW' && (
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '20px' }}>
-                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--primary-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 2 }} />
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--primary-green)', flexShrink: 0 }} />
                     </div>
                     <div style={{ paddingBottom: '0.5rem' }}>
                       <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--primary-green)' }}>Currently Under Review</div>
@@ -389,6 +485,16 @@ export default function LGUApplicationReview() {
           </div>
         </div>
       </div>
+
+      {/* BPLO Form Edit Modal */}
+      <FormBPLOEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        initialData={formBploData}
+        onSave={handleSaveFormData}
+        isTl={false}
+      />
+
     </div>
   );
 }

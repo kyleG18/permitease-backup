@@ -32,6 +32,8 @@ import ComplianceHistory from './pages/ComplianceHistory';
 import Applications from './pages/Applications';
 import StartApplication from './pages/StartApplication';
 import ApplicationDetail from './pages/ApplicationDetail';
+import ScheduleWalkin from './pages/ScheduleWalkin';
+import AdminWalkins from './pages/AdminWalkins';
 import LGUApplications from './pages/LGUApplications';
 import LGUApplicationReview from './pages/LGUApplicationReview';
 import AdminRenewals from './pages/AdminRenewals';
@@ -91,7 +93,7 @@ function App() {
           
           <Route path="/applications" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Applications /></ProtectedLayout>} />
           <Route path="/applications/new" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><StartApplication /></ProtectedLayout>} />
-          <Route path="/applications/:id" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><ApplicationDetail /></ProtectedLayout>} />
+          <Route path="/applications/:id" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><ApplicationDetail /></ProtectedLayout>} />`r`n          <Route path="/schedule-walkin" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><ScheduleWalkin /></ProtectedLayout>} />`r`n          <Route path="/walkin" element={<Navigate to="/schedule-walkin" replace />} />
           
           {/* All Authenticated Users */}
           <Route path="/requirements" element={<ProtectedLayout><Requirements /></ProtectedLayout>} />
@@ -102,7 +104,7 @@ function App() {
           {/* LGU Admin + System Admin */}
           <Route path="/reports" element={<Navigate to="/admin/analytics" replace />} />
           <Route path="/admin/reports" element={<Navigate to="/admin/analytics" replace />} />
-          <Route path="/admin/applications" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><LGUApplications /></ProtectedLayout>} />
+          <Route path="/admin/applications" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><LGUApplications /></ProtectedLayout>} />`r`n          <Route path="/admin/walkins" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><AdminWalkins /></ProtectedLayout>} />`r`n          <Route path="/admin/walkin-schedule" element={<Navigate to="/admin/walkins" replace />} />
           <Route path="/admin/applications/:id" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><LGUApplicationReview /></ProtectedLayout>} />
           <Route path="/admin/renewals" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><AdminRenewals /></ProtectedLayout>} />
           <Route path="/admin/analytics" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><AdminAnalytics /></ProtectedLayout>} />

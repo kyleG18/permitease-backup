@@ -14,8 +14,11 @@ const {
     getApplicationHistory,
     getPreparationSummaryPDF,
     scheduleWalkin,
+    scheduleWalkinByBusiness,
     getWalkinRoster,
-    markWalkinAttended
+    confirmWalkinAppointment,
+    markWalkinAttended,
+    updateApplicationFormData
 } = require('../controllers/applicationController');
 const { calculateApplicationFees } = require('../controllers/feeController');
 
@@ -26,11 +29,14 @@ router.post('/admin/:id/start-review', protect, requireRole(['lgu_admin', 'syste
 router.post('/admin/:id/request-correction', protect, requireRole(['lgu_admin', 'system_admin']), requestCorrection);
 router.post('/admin/:id/approve', protect, requireRole(['lgu_admin', 'system_admin']), approveApplication);
 router.post('/admin/:id/reject', protect, requireRole(['lgu_admin', 'system_admin']), rejectApplication);
+router.post('/admin/:id/confirm-walkin', protect, requireRole(['lgu_admin', 'system_admin']), confirmWalkinAppointment);
 router.post('/admin/:id/mark-attended', protect, requireRole(['lgu_admin', 'system_admin']), markWalkinAttended);
+router.put('/admin/:id/form-data', protect, requireRole(['lgu_admin', 'system_admin', 'business_owner']), updateApplicationFormData);
 
 // ─── Business Owner Routes ───────────────────
 router.get('/', protect, getMyApplications);
 router.post('/', protect, requireRole(['business_owner']), createDraft);
+router.post('/schedule-walkin-by-business', protect, requireRole(['business_owner', 'system_admin']), scheduleWalkinByBusiness);
 // NOTE: fee route must come before /:id to avoid Express matching 'fees' as an id param
 router.get('/:id/fees', protect, calculateApplicationFees);
 router.get('/:id/history', protect, getApplicationHistory);
