@@ -249,43 +249,27 @@ export default function ScheduleWalkin() {
   return (
     <div className="page-container schedule-walkin-page" style={{ maxWidth: '1100px', margin: '0 auto', paddingBottom: '4rem', fontFamily: 'Inter, sans-serif' }}>
       
-      {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <header style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--primary-green-light, #DCFCE7)', color: 'var(--primary-green, #15803D)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Calendar size={22} strokeWidth={2.3} />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-green, #15803D)' }}>
-              WINDOW 1 APPOINTMENTS • ROXAS MUNICIPAL HALL
-            </span>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
-              Schedule Walk-in Appointment
-            </h1>
-          </div>
-        </div>
-        <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
+      {/* ── MINIMALIST HEADER ────────────────────────────────────────────── */}
+      <header className="no-print" style={{ marginBottom: '1.75rem' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.35rem', color: '#0F172A', letterSpacing: '-0.02em' }}>
+          Schedule Walk-in Appointment
+        </h1>
+        <p style={{ color: '#64748B', fontSize: '14.5px', margin: '0 0 1.25rem' }}>
           {isTl 
-            ? 'Piliin ang iyong nais na petsa ng pagbisita sa Munisipyo ng Roxas. Kukumpirmahin ng BPLO ang iyong appointment at bibigyan ka ng checklist ng mga dadalhin.'
-            : 'Submit your preferred visit date for Window 1 at Roxas Municipal Hall. BPLO checks availability and confirms your appointment and preparation checklist.'}
+            ? 'Piliin ang iyong nais na petsa ng pagbisita para sa Window 1 sa Munisipyo ng Roxas.' 
+            : 'Submit your preferred visit date for Window 1 fast-track counter at Roxas Municipal Hall.'}
         </p>
-      </header>
 
-      {/* ── BUSINESS SELECTOR ────────────────────────────────────────────── */}
-      <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '260px' }}>
-          <Building2 size={20} color="var(--primary-green, #15803D)" />
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748B', display: 'block', marginBottom: '2px' }}>
-              Select Business Profile
-            </label>
-            {loadingBiz ? (
-              <span style={{ fontSize: '13px', color: '#64748B' }}>Loading businesses...</span>
-            ) : businesses.length === 0 ? (
-              <span style={{ fontSize: '13px', color: '#64748B' }}>
-                No registered business. <Link to="/onboarding" style={{ color: 'var(--primary-green, #15803D)', fontWeight: 600 }}>Set up your business &rarr;</Link>
-              </span>
-            ) : (
+        {/* Minimalist Profile Selector + Barangay/Status Pill */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {loadingBiz ? (
+            <span style={{ fontSize: '13px', color: '#64748B' }}>Loading profiles...</span>
+          ) : businesses.length === 0 ? (
+            <span style={{ fontSize: '13px', color: '#64748B' }}>
+              No business registered. <Link to="/onboarding" style={{ color: '#15803D', fontWeight: 600 }}>Create one now &rarr;</Link>
+            </span>
+          ) : (
+            <div style={{ position: 'relative', display: 'inline-block' }}>
               <select
                 value={selectedBizId}
                 onChange={(e) => {
@@ -293,35 +277,52 @@ export default function ScheduleWalkin() {
                   setPreviewingForm(false);
                 }}
                 style={{
-                  padding: '0.45rem 0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #CBD5E1',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  padding: '0.45rem 2.25rem 0.45rem 0.85rem',
+                  borderRadius: '8px',
+                  border: '1px solid #D1D5DB',
                   fontWeight: 600,
-                  fontSize: '14px',
-                  color: 'var(--government-navy, #0F172A)',
-                  width: '100%',
-                  maxWidth: '420px',
-                  backgroundColor: '#F8FAFC'
+                  color: '#0F172A',
+                  backgroundColor: '#FFFFFF',
+                  fontSize: '13.5px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
                 }}
               >
                 {businesses.map(b => (
                   <option key={b.id} value={b.id}>
-                    {b.business_name} ({b.business_type} · {b.industry_category})
+                    {b.business_name} ({b.business_type || b.industry_category || 'Retail'})
                   </option>
                 ))}
               </select>
-            )}
-          </div>
-        </div>
+              <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748B', fontSize: '11px' }}>
+                ▼
+              </span>
+            </div>
+          )}
 
-        {selectedBiz && (
-          <div style={{ fontSize: '12px', color: '#64748B', textAlign: 'right' }}>
-            <span>Barangay: <strong>{selectedBiz.barangay || 'Poblacion'}</strong></span>
-            <span style={{ margin: '0 0.5rem' }}>•</span>
-            <span>Status: <strong>{selectedBiz.business_status || 'New Application'}</strong></span>
-          </div>
-        )}
-      </div>
+          {selectedBiz && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              padding: '0.35rem 0.75rem',
+              borderRadius: '999px',
+              backgroundColor: '#F8FAFC',
+              color: '#475569',
+              border: '1px solid #E2E8F0',
+              fontSize: '12.5px',
+              fontWeight: 600
+            }}>
+              <span>Barangay: <strong style={{ color: '#0F172A' }}>{selectedBiz.barangay || 'Poblacion'}</strong></span>
+              <span style={{ color: '#CBD5E1' }}>•</span>
+              <span style={{ color: '#15803D' }}>{selectedBiz.business_status || 'New Application'}</span>
+            </div>
+          )}
+        </div>
+      </header>
 
       {/* ── ALERTS ───────────────────────────────────────────────────────── */}
       {errorMsg && (
@@ -341,19 +342,27 @@ export default function ScheduleWalkin() {
       {/* ── TWO-COLUMN WORKFLOW LAYOUT ────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.75rem', alignItems: 'start' }}>
 
-        {/* ── LEFT COLUMN: STEP 1 - SUBMIT PREFERRED VISIT DATE ───────────── */}
-        <div className="card" style={{ padding: '1.75rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        {/* ── LEFT COLUMN: COMBINED APPOINTMENT BOOKING & CHECKLIST CARD ──── */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1px solid #E2E8F0',
+          padding: '1.75rem',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+        }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--government-navy, #0F172A)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>
-              1
-            </span>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
-              {isTl ? 'Pumili ng Petsa ng Pagbisita' : 'Submit Preferred Visit Date'}
-            </h2>
+          {/* STEP 1: SUBMIT PREFERRED VISIT DATE */}
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', marginBottom: '0.35rem' }}>
+            Step 1: Appointment Scheduling
           </div>
 
-          <p style={{ fontSize: '13px', color: '#64748B', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.4rem' }}>
+            {isTl ? 'Pumili ng Petsa ng Pagbisita' : 'Submit Preferred Visit Date'}
+          </h2>
+
+          <p style={{ fontSize: '13.5px', color: '#64748B', lineHeight: 1.5, margin: '0 0 1.25rem' }}>
             {isTl 
               ? 'Lunes hanggang Biyernes lamang ang serbisyo ng BPLO. Piliin ang batch time slot upang maiwasan ang pagsisiksikan sa Window 1.'
               : 'Window 1 at Roxas Municipal Hall operates in morning and afternoon batches to maintain fast 2-minute counter processing.'}
@@ -375,15 +384,16 @@ export default function ScheduleWalkin() {
                 style={{
                   width: '100%',
                   padding: '0.65rem 0.85rem',
-                  borderRadius: '6px',
-                  border: '1px solid #CBD5E1',
+                  borderRadius: '8px',
+                  border: '1px solid #D1D5DB',
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: 'var(--government-navy, #0F172A)',
-                  backgroundColor: '#F8FAFC'
+                  color: '#0F172A',
+                  backgroundColor: '#FFFFFF',
+                  outline: 'none'
                 }}
               />
-              <span style={{ fontSize: '11px', color: '#94A3B8', display: 'block', marginTop: '4px' }}>
+              <span style={{ fontSize: '11.5px', color: '#94A3B8', display: 'block', marginTop: '4px' }}>
                 Open Monday to Friday • 8:00 AM – 5:00 PM (Excludes weekends & holidays)
               </span>
             </div>
@@ -415,7 +425,7 @@ export default function ScheduleWalkin() {
                       gap: '0.75rem',
                       padding: '0.85rem 1rem',
                       borderRadius: '8px',
-                      border: walkinSlot === item.slot ? '2px solid var(--primary-green, #15803D)' : '1px solid #CBD5E1',
+                      border: walkinSlot === item.slot ? '2px solid var(--primary-green, #15803D)' : '1px solid #E2E8F0',
                       backgroundColor: walkinSlot === item.slot ? '#F0FDF4' : '#FFFFFF',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
@@ -427,10 +437,10 @@ export default function ScheduleWalkin() {
                       value={item.slot}
                       checked={walkinSlot === item.slot}
                       onChange={(e) => setWalkinSlot(e.target.value)}
-                      style={{ marginTop: '3px' }}
+                      style={{ marginTop: '3px', accentColor: '#15803D' }}
                     />
                     <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--government-navy, #0F172A)' }}>
+                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>
                         {item.title}
                       </div>
                       <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
@@ -445,7 +455,6 @@ export default function ScheduleWalkin() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn btn-primary"
               style={{
                 width: '100%',
                 display: 'flex',
@@ -454,9 +463,19 @@ export default function ScheduleWalkin() {
                 gap: '0.5rem',
                 padding: '0.8rem 1.25rem',
                 fontWeight: 700,
-                fontSize: '14.5px',
+                fontSize: '14px',
                 borderRadius: '8px',
-                cursor: submitting ? 'not-allowed' : 'pointer'
+                border: 'none',
+                backgroundColor: 'var(--primary-green, #15803D)',
+                color: '#FFFFFF',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!submitting) e.currentTarget.style.backgroundColor = '#166534';
+              }}
+              onMouseLeave={(e) => {
+                if (!submitting) e.currentTarget.style.backgroundColor = '#15803D';
               }}
             >
               <Send size={16} />
@@ -466,27 +485,26 @@ export default function ScheduleWalkin() {
           </form>
 
           {/* Sighting Notice */}
-          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #E2E8F0', display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-            <MapPin size={18} color="var(--primary-green, #15803D)" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '12px', color: '#475569', lineHeight: 1.4 }}>
+          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
+            <MapPin size={16} color="var(--primary-green, #15803D)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ fontSize: '12px', color: '#64748B', lineHeight: 1.45 }}>
               <strong>Location:</strong> Window 1 (BPLO Fast-Track Counter), Ground Floor, Roxas Municipal Hall, Oriental Mindoro.
             </div>
           </div>
 
           {/* ── SECTION DIVIDER ── */}
-          <div style={{ margin: '2rem 0 1.5rem', borderTop: '2px dashed #E2E8F0' }} />
+          <div style={{ margin: '1.75rem 0 1.5rem', borderTop: '1px solid #F1F5F9' }} />
 
           {/* ── STEP 2 - PREPARATION CHECKLIST ("WHAT TO BRING") ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--primary-green, #15803D)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>
-              2
-            </span>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
-              {isTl ? 'Checklist ng mga Dadalhin sa Munisipyo' : 'Preparation Checklist (What to Bring)'}
-            </h3>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', marginBottom: '0.35rem' }}>
+            Step 2: Municipal Checklist
           </div>
 
-          <p style={{ fontSize: '12.5px', color: '#64748B', lineHeight: 1.4, margin: '0 0 1rem' }}>
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.4rem' }}>
+            {isTl ? 'Checklist ng mga Dadalhin sa Munisipyo' : 'Preparation Checklist (What to Bring)'}
+          </h3>
+
+          <p style={{ fontSize: '13.5px', color: '#64748B', lineHeight: 1.5, margin: '0 0 1rem' }}>
             {isTl 
               ? 'Siguraduhing kumpleto ang mga sumusunod bago pumunta sa Window 1 upang masuri agad sa loob ng 2 minuto:'
               : 'Bring these physical documents in a folder to ensure 2-minute fast-track verification at Window 1:'}
@@ -530,7 +548,7 @@ export default function ScheduleWalkin() {
               <div key={idx} style={{
                 padding: '0.75rem 0.9rem',
                 backgroundColor: '#F8FAFC',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid #E2E8F0',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -540,7 +558,7 @@ export default function ScheduleWalkin() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
                   <CheckCircle2 size={16} color="var(--primary-green, #15803D)" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--government-navy, #0F172A)' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>
                       {item.title}
                     </div>
                     <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
@@ -553,15 +571,22 @@ export default function ScheduleWalkin() {
                   <button
                     onClick={item.actionLink}
                     style={{
-                      background: '#EFF6FF',
-                      border: '1px solid #BFDBFE',
-                      color: '#1D4ED8',
+                      background: '#F0FDF4',
+                      border: '1px solid #BBF7D0',
+                      color: '#166534',
                       padding: '0.25rem 0.55rem',
                       borderRadius: '4px',
                       fontSize: '11px',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#DCFCE7';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#F0FDF4';
                     }}
                   >
                     {item.actionText}
@@ -581,8 +606,8 @@ export default function ScheduleWalkin() {
             <div style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '12px',
-              border: `2px solid ${currentStatus ? currentStatus.border : '#BBF7D0'}`,
-              boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+              border: `1px solid ${currentStatus ? currentStatus.border : '#BBF7D0'}`,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               overflow: 'hidden'
             }}>
               
@@ -596,8 +621,8 @@ export default function ScheduleWalkin() {
                 borderBottom: `1px solid ${currentStatus ? currentStatus.border : '#BBF7D0'}`
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Calendar size={18} color={currentStatus ? currentStatus.color : '#166534'} />
-                  <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: currentStatus ? currentStatus.color : '#166534', letterSpacing: '0.04em' }}>
+                  <Calendar size={16} color={currentStatus ? currentStatus.color : '#166534'} />
+                  <span style={{ fontSize: '11.5px', fontWeight: 800, textTransform: 'uppercase', color: currentStatus ? currentStatus.color : '#166534', letterSpacing: '0.04em' }}>
                     Window 1 Walk-in Appointment
                   </span>
                 </div>
@@ -619,17 +644,17 @@ export default function ScheduleWalkin() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
                     <div style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Registered Business</div>
-                    <div style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--government-navy, #0F172A)', letterSpacing: '0.01em', marginTop: '2px' }}>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.01em', marginTop: '2px' }}>
                       {selectedBiz?.business_name || activeApp.business_name || 'Your Business'}
                     </div>
                     <div style={{ fontSize: '12.5px', color: '#64748B', fontWeight: 600, marginTop: '2px' }}>
-                      Applicant: <span style={{ color: 'var(--government-navy, #0F172A)' }}>{user?.full_name || selectedBiz?.owner_name || 'Business Owner'}</span>
+                      Applicant: <span style={{ color: '#0F172A' }}>{user?.full_name || selectedBiz?.owner_name || 'Business Owner'}</span>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Scheduled Date</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--government-navy, #0F172A)' }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A' }}>
                       {new Date(activeApp.walkin_date).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--primary-green, #15803D)', fontWeight: 600 }}>
@@ -656,7 +681,30 @@ export default function ScheduleWalkin() {
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <button
                     onClick={handleDownloadRoutingSlip}
-                    className="btn btn-outline"
+                    style={{
+                      flex: 1,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      backgroundColor: '#FFFFFF',
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#94A3B8'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#CBD5E1'}
+                  >
+                    <Download size={14} /> Download Routing Slip (PDF)
+                  </button>
+
+                  <button
+                    onClick={() => setPreviewingForm(prev => !prev)}
                     style={{
                       flex: 1,
                       display: 'inline-flex',
@@ -666,28 +714,17 @@ export default function ScheduleWalkin() {
                       fontWeight: 700,
                       fontSize: '13px',
                       padding: '0.65rem 1rem',
-                      borderColor: 'var(--government-navy, #0F172A)',
-                      color: 'var(--government-navy, #0F172A)'
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: 'var(--primary-green, #15803D)',
+                      color: '#FFFFFF',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s ease'
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}
                   >
-                    <Download size={15} /> Download Routing Slip (PDF)
-                  </button>
-
-                  <button
-                    onClick={() => setPreviewingForm(prev => !prev)}
-                    className="btn btn-primary"
-                    style={{
-                      flex: 1,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.4rem',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      padding: '0.65rem 1rem'
-                    }}
-                  >
-                    <Printer size={15} /> {previewingForm ? 'Hide Form BPLO-01' : 'Print Pre-Filled Form'}
+                    <Printer size={14} /> {previewingForm ? 'Hide Form BPLO-01' : 'Print Pre-Filled Form'}
                   </button>
                 </div>
 
@@ -696,17 +733,17 @@ export default function ScheduleWalkin() {
             </div>
           ) : (
             <div style={{
-              backgroundColor: '#F8FAFC',
+              backgroundColor: '#FFFFFF',
               borderRadius: '12px',
-              border: '2px dashed #CBD5E1',
-              padding: '2rem',
+              border: '1.5px dashed #CBD5E1',
+              padding: '2.5rem 1.5rem',
               textAlign: 'center'
             }}>
-              <Calendar size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--government-navy, #0F172A)', margin: '0 0 0.35rem' }}>
+              <Calendar size={32} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', margin: '0 0 0.35rem' }}>
                 No Walk-in Scheduled Yet
               </h3>
-              <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
                 Pick your preferred date on the left and submit to book your Window 1 appointment.
               </p>
             </div>
