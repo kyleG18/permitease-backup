@@ -84,7 +84,7 @@ const generateRuleBasedAssessment = (biz) => {
 /**
  * Generate a structured JSON assessment from a natural language business description.
  */
-const generateStructuredAssessment = async (business, availablePermits) => {
+const generateStructuredAssessment = async (business, availablePermits, knowledgeDocs = []) => {
     let businessDescription = {};
     if (typeof business === 'string') {
         try {
@@ -122,10 +122,14 @@ const generateStructuredAssessment = async (business, availablePermits) => {
         return generateRuleBasedAssessment(businessDescription);
     }
 
+    const kbSection = (knowledgeDocs && knowledgeDocs.length > 0)
+        ? `\nOfficial Knowledge Base & Municipal Ordinances (Municipality of Roxas):\n${knowledgeDocs.map((d, i) => `${i + 1}. "${d.title}"`).join('\n')}\n*Note: Cite and reference applicable Knowledge Base ordinances or guidelines in your reasoning where appropriate.*\n`
+        : '\nOfficial Knowledge Base: Standard Roxas Citizen\'s Charter, Municipal Revenue Code, and Local Government Code (RA 7160).\n';
+
     const prompt = `You are an AI assistant for the Municipality of Roxas PermitEase system.
 Your task is to analyze the user's business profile and activities to return a STRICT JSON object containing your best assessment.
 DO NOT provide official permit requirements. Only provide an advisory classification.
-
+${kbSection}
 Available Industry Categories configured in PermitEase:
 - Food & Beverage
 - Retail

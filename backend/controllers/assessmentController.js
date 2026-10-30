@@ -58,10 +58,19 @@ const createAssessment = async (req, res) => {
         // 1. Fetch all configured permit requirements
         const [allRequirements] = await db.query('SELECT id, permit_name, description, condition_field, condition_value, applicable_business_type, required_documents, is_mandatory, issuing_agency, ordinance_reference, estimated_fee FROM permit_requirements');
 
-        // 2. Call AI Service to classify and assess
+        // 1b. Fetch active Knowledge Base ordinances & guidelines for contextual grounding
+        let knowledgeDocs = [];
+        try {
+            const [kbRows] = await db.query('SELECT id, title, document_path FROM knowledge_base ORDER BY uploaded_at DESC');
+            knowledgeDocs = kbRows || [];
+        } catch (e) {
+            console.warn('[AssessmentController] Could not fetch knowledge_base docs:', e.message);
+        }
+
+        // 2. Call AI Service to classify and assess, enriched with Knowledge Base context
         let aiResult;
         try {
-            aiResult = await generateStructuredAssessment(bizObject || descriptionToUse, allRequirements);
+            aiResult = await generateStructuredAssessment(bizObject || descriptionToUse, allRequirements, knowledgeDocs);
         } catch (aiError) {
             return res.status(503).json({ message: aiError.message });
         }
@@ -162,7 +171,13 @@ const createAssessment = async (req, res) => {
         const assessmentPayload = {
             ai_assessment: aiResult,
             official_assessment: officialRequirements,
-            total_requirement_expenses: totalRequirementExpenses
+            total_requirement_expenses: totalRequirementExpenses,
+            knowledge_base_references: knowledgeDocs.map(d => ({
+                id: d.id,
+                title: d.title,
+                document_path: d.document_path,
+                url: `/uploads/${d.document_path}`
+            }))
         };
 
         let hasCompScore = false;
@@ -201,7 +216,8 @@ const createAssessment = async (req, res) => {
             id: inserted.insertId,
             ai_assessment: aiResult,
             official_assessment: officialRequirements,
-            total_requirement_expenses: totalRequirementExpenses
+            total_requirement_expenses: totalRequirementExpenses,
+            knowledge_base_references: assessmentPayload.knowledge_base_references
         });
 
     } catch (error) {

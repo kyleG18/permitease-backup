@@ -17,7 +17,11 @@ import {
   ClipboardList,
   CheckCircle2,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  BookOpen,
+  FileText,
+  ExternalLink,
+  Library
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -46,6 +50,7 @@ export default function FeeEstimation() {
   const [assessedChecklist, setAssessedChecklist] = useState([]);
   const [allSystemRequirements, setAllSystemRequirements] = useState([]);
   const [loadingRequirements, setLoadingRequirements] = useState(false);
+  const [knowledgeDocs, setKnowledgeDocs] = useState([]);
 
   // Directly editable form parameters
   const [businessName, setBusinessName] = useState('');
@@ -113,9 +118,13 @@ export default function FeeEstimation() {
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         
-        // 1. Fetch all configured system requirements
-        const reqsRes = await axios.get(`${API}/requirements`, config);
+        // 1. Fetch all configured system requirements and knowledge base
+        const [reqsRes, kbRes] = await Promise.all([
+          axios.get(`${API}/requirements`, config),
+          axios.get(`${API}/knowledge`).catch(() => ({ data: [] }))
+        ]);
         setAllSystemRequirements(reqsRes.data || []);
+        setKnowledgeDocs(Array.isArray(kbRes.data) ? kbRes.data : []);
 
         // 2. If an active business exists, fetch its specific assessed compliance checklist
         const targetBizId = selectedBizId || (activeBiz?.id ? String(activeBiz.id) : null);
@@ -1005,7 +1014,7 @@ export default function FeeEstimation() {
           </div>
 
           {/* Renewal Schedule Advisory */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', backgroundColor: '#FFF7ED', border: '1px solid #FFEDD5', fontSize: '0.8125rem', color: '#9A3412', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', backgroundColor: '#FFF7ED', border: '1px solid #FFEDD5', fontSize: '0.8125rem', color: '#9A3412', marginBottom: '1.25rem' }}>
             <Calendar size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <strong>{isTl ? 'Panahon ng Taunang Renewal:' : 'Official Renewal Period:'}</strong>{' '}
@@ -1013,6 +1022,95 @@ export default function FeeEstimation() {
                 ? 'Ang taunang pagpapanibago ng business permit ay isinasagawa mula Enero 1 hanggang Enero 20 sa Municipal Hall ng Roxas.'
                 : 'Annual business permit renewal takes place from January 1 to January 20 at the Roxas Municipal Hall.'}
             </div>
+          </div>
+
+          {/* ── LEGAL BASIS & KNOWLEDGE BASE ARCHIVE ── */}
+          <div style={{
+            padding: '1.25rem 1.4rem',
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <BookOpen size={18} style={{ color: '#15803D' }} />
+                <div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--government-navy)' }}>
+                    {isTl ? 'Batas at Ordinansang Pinagbabatayan (Knowledge Base)' : 'Legal Basis & Regulatory Archive (Knowledge Base)'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    {isTl
+                      ? 'Ang mga bayarin at panuntunan ay nakabatay sa mga opisyal na ordinansa ng Munisipyo ng Roxas.'
+                      : 'Fee computations and requirements are anchored to official municipal tax ordinances and statutory rules.'}
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                to="/knowledge-base"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  color: '#15803D',
+                  textDecoration: 'none',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '6px',
+                  backgroundColor: '#F0FDF4',
+                  border: '1px solid #BBF7D0'
+                }}
+              >
+                <Library size={13} />
+                <span>{isTl ? 'Tingnan ang Knowledge Base' : 'View Knowledge Base'}</span>
+                <ExternalLink size={12} />
+              </Link>
+            </div>
+
+            {knowledgeDocs && knowledgeDocs.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.65rem', marginTop: '0.5rem' }}>
+                {knowledgeDocs.map((doc) => (
+                  <a
+                    key={doc.id}
+                    href={`${API.replace('/api', '')}/uploads/${doc.document_path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #E2E8F0',
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      transition: 'border-color 0.15s'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#15803D'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                  >
+                    <FileText size={15} color="#15803D" style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {doc.title}
+                    </span>
+                    <span style={{ fontSize: '0.65rem', color: '#15803D', fontWeight: 800, backgroundColor: '#DCFCE7', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                      PDF
+                    </span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.78rem', color: '#64748B', fontStyle: 'italic', marginTop: '0.35rem' }}>
+                {isTl
+                  ? 'Ipinatutupad alinsunod sa Republic Act 7160 (Local Government Code ng 1991) at sa Pinag-isang Kodigo ng Buwis at Bayarin ng Munisipyo ng Roxas.'
+                  : 'Computed pursuant to Republic Act 7160 (Local Government Code of 1991), Fire Code of the Philippines (RA 9514), and the Roxas Municipal Revenue Code.'}
+              </div>
+            )}
           </div>
 
           {/* Action Row */}

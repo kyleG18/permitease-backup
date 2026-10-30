@@ -8,7 +8,7 @@ import {
   BrainCircuit, CheckCircle, CheckCircle2, FileText, ChevronDown, ChevronUp,
   History, Info, Building2, AlertCircle, Sparkles, Send, X,
   ArrowRight, HelpCircle, MapPin, ClipboardList, Loader2, Clock, Printer,
-  PenLine, StickyNote, ShieldCheck
+  PenLine, StickyNote, ShieldCheck, BookOpen, ExternalLink, Library
 } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
@@ -171,6 +171,7 @@ const Assessment = () => {
 
   const [assessments, setAssessments] = useState([]);
   const [currentResult, setCurrentResult] = useState(null);
+  const [knowledgeDocs, setKnowledgeDocs] = useState([]);
   const [checklist, setChecklist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingChecklist, setLoadingChecklist] = useState(false);
@@ -182,17 +183,19 @@ const Assessment = () => {
   // Ask AI state per requirement: { [reqKey]: { isOpen: boolean, loading: boolean, answer: string, question: string, inputVal: string } }
   const [aiHelperState, setAiHelperState] = useState({});
 
-  // 1. Initial Load: businesses and assessment history
+  // 1. Initial Load: businesses, assessment history, and knowledge base
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [bizRes, histRes] = await Promise.all([
+        const [bizRes, histRes, kbRes] = await Promise.all([
           axios.get(`${API}/businesses`, config),
           axios.get(`${API}/assessments`, config),
+          axios.get(`${API}/knowledge`).catch(() => ({ data: [] }))
         ]);
         const bizList = Array.isArray(bizRes.data) ? bizRes.data : [];
         setBusinesses(bizList);
         setAssessments(histRes.data || []);
+        setKnowledgeDocs(Array.isArray(kbRes.data) ? kbRes.data : []);
         if (bizList.length > 0) {
           setSelectedBizId(String(bizList[0].id));
         }
@@ -255,7 +258,8 @@ const Assessment = () => {
       const { data } = await axios.post(`${API}/assessments`, { business_id: selectedBizId }, config);
       setCurrentResult({
         ai_assessment: data.ai_assessment,
-        official_assessment: data.official_assessment
+        official_assessment: data.official_assessment,
+        knowledge_base_references: data.knowledge_base_references
       });
 
       // Refresh assessment history & checklist
@@ -604,6 +608,119 @@ Instructions:
           )}
         </div>
       )}
+
+      {/* ── KNOWLEDGE BASE & REGULATORY REFERENCES BANNER ────────────────────── */}
+      <div className="card" style={{
+        marginBottom: '1.5rem',
+        padding: '1.25rem 1.5rem',
+        borderRadius: '12px',
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary-green-light)', color: 'var(--primary-green)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen size={17} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--government-navy)', fontWeight: 800 }}>
+                  Regulatory Basis &amp; Knowledge Base
+                </h3>
+                <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.1rem 0.5rem', borderRadius: 'var(--radius-full)', background: '#DCFCE7', color: '#15803D', textTransform: 'uppercase' }}>
+                  Substantiated by Ordinances
+                </span>
+              </div>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Official municipal charters, executive orders, and ordinances guiding this assessment in Roxas City.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            to="/knowledge-base"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              color: '#15803D',
+              textDecoration: 'none',
+              padding: '0.4rem 0.8rem',
+              borderRadius: '8px',
+              backgroundColor: '#F0FDF4',
+              border: '1px solid #BBF7D0',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Library size={13} />
+            <span>Open Knowledge Base Archive</span>
+            <ExternalLink size={12} />
+          </Link>
+        </div>
+
+        {knowledgeDocs && knowledgeDocs.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
+            {knowledgeDocs.map((doc) => (
+              <a
+                key={doc.id}
+                href={`${API.replace('/api', '')}/uploads/${doc.document_path}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  padding: '0.7rem 0.95rem',
+                  borderRadius: '8px',
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  textDecoration: 'none',
+                  color: '#1E293B',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#15803D';
+                  e.currentTarget.style.backgroundColor = '#F0FDF4';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                  e.currentTarget.style.backgroundColor = '#F8FAFC';
+                }}
+              >
+                <FileText size={16} color="#15803D" style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {doc.title}
+                </span>
+                <span style={{ fontSize: '0.65rem', color: '#15803D', fontWeight: 800, backgroundColor: '#DCFCE7', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                  PDF
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div style={{
+            fontSize: '0.8125rem',
+            color: '#64748B',
+            backgroundColor: '#F8FAFC',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            border: '1px dashed #CBD5E1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Info size={16} color="#0284C7" style={{ flexShrink: 0 }} />
+            <span>
+              Assessment is strictly cross-referenced against <strong>Republic Act No. 7160 (Local Government Code)</strong>, <strong>Fire Code of the Philippines (RA 9514)</strong>, and the <strong>Roxas Municipal Revenue Code</strong>. Uploaded municipal documents appear here automatically.
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* ── REQUIREMENTS CHECKLIST WITH "ASK AI" & TOGGLES ─────────────────── */}
       <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>

@@ -71,6 +71,20 @@ const getEstimate = async (req, res) => {
         // Load active rules
         const [rules] = await db.query('SELECT * FROM tax_fee_rules WHERE is_active = 1 ORDER BY category, id');
 
+        // Fetch active Knowledge Base legal references & ordinances
+        let knowledgeBaseReferences = [];
+        try {
+            const [kbDocs] = await db.query('SELECT id, title, document_path, uploaded_at FROM knowledge_base ORDER BY uploaded_at DESC');
+            knowledgeBaseReferences = (kbDocs || []).map(d => ({
+                id: d.id,
+                title: d.title,
+                document_path: d.document_path,
+                url: `/uploads/${d.document_path}`
+            }));
+        } catch (e) {
+            console.warn('[TaxController] Could not fetch knowledge_base docs:', e.message);
+        }
+
         const appTypeStatus = business.business_status || 'New Application';
 
         // DETERMINISTIC CALCULATION — no LLM involvement in arithmetic
@@ -211,6 +225,7 @@ const getEstimate = async (req, res) => {
             penalty_rules: penaltyRules,
             is_incomplete: feeData.is_incomplete,
             missing_info_reasons: feeData.missing_info_reasons,
+            knowledge_base_references: knowledgeBaseReferences,
             disclaimer: 'All amounts are preliminary estimates for preparation purposes only and are based on configured rules for the Municipality of Roxas, Oriental Mindoro and statutory limits under RA 7160 and RA 9514. Final fees, taxes, and assessments are subject to the official assessment and verification of the BPLO and Municipal Treasurer.',
             isEstimate: true
         });
