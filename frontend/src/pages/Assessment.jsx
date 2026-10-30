@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
+import AssessmentChecklistPrint from '../components/AssessmentChecklistPrint';
 import {
   BrainCircuit, CheckCircle, CheckCircle2, FileText, ChevronDown, ChevronUp,
   History, Info, Building2, AlertCircle, Sparkles, Send, X,
@@ -1118,43 +1119,17 @@ Instructions:
         )}
       </div>
 
-      {/* ── PRINT TARGET FOR CHECKLIST (Rendered on window.print) ────────── */}
-      <div id="print-target" style={{ display: 'none' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #0f172a', paddingBottom: '1rem' }}>
-          <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.3rem' }}>Municipality of Roxas</h2>
-          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.1rem', color: '#166534' }}>PermitEase — Preparation Checklist</h3>
-          <p style={{ margin: 0, fontSize: '0.9rem' }}>Business: <strong>{selectedBiz?.business_name}</strong> | Type: {selectedBiz?.business_type}</p>
-          <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: '#475569' }}>Readiness Score: <strong>{score}%</strong> ({haveCount} of {totalReqs} prepared) | Date: {new Date().toLocaleDateString('en-PH')}</p>
-        </div>
-
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-          <thead>
-            <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
-              <th style={{ padding: '0.5rem', width: '35%' }}>Permit / Requirement</th>
-              <th style={{ padding: '0.5rem', width: '20%' }}>Status</th>
-              <th style={{ padding: '0.5rem', width: '45%' }}>What to Bring</th>
-            </tr>
-          </thead>
-          <tbody>
-            {checklist.map((r, i) => {
-              const isHave = r.status === 'Approved' || r.status === 'Submitted';
-              return (
-                <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '0.5rem', fontWeight: 600 }}>{r.permit_name}</td>
-                  <td style={{ padding: '0.5rem' }}>
-                    <span style={{ fontWeight: 700, color: isHave ? '#166534' : '#b45309' }}>
-                      {isHave ? '✓ READY' : '⏳ STILL NEEDED'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '0.5rem', color: '#475569' }}>
-                    {r.required_documents ? `Bring: ${r.required_documents}` : 'Standard requirements'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {/* ── PROFESSIONAL PRINT CHECKLIST (hidden on screen, shown on print) ── */}
+      <AssessmentChecklistPrint
+        checklist={checklist}
+        selectedBiz={selectedBiz}
+        aiAssessment={currentResult?.ai_assessment}
+        totalRequirementExpenses={totalRequirementExpenses}
+        stillNeededExpenses={stillNeededExpenses}
+        haveCount={haveCount}
+        needCount={needCount}
+        score={score}
+      />
 
     </div>
   );
