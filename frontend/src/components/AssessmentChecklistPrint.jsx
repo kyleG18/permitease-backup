@@ -340,18 +340,18 @@ const AssessmentChecklistPrint = ({
             size: Legal portrait;
             margin: 1cm 1.2cm;
           }
-          body > * {
-            display: none !important;
+          body * {
+            visibility: hidden;
           }
           #checklist-print-root {
-            display: block !important;
-            visibility: visible !important;
-            position: fixed;
-            top: 0; left: 0;
+            visibility: visible;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
           }
           #checklist-print-root * {
-            visibility: visible !important;
+            visibility: visible;
           }
           #checklist-print-root table {
             page-break-inside: auto;
@@ -359,6 +359,7 @@ const AssessmentChecklistPrint = ({
           #checklist-print-root tr {
             page-break-inside: avoid;
           }
+          .no-print { display: none !important; }
         }
         @media screen {
           #checklist-print-root {
