@@ -12,7 +12,12 @@ import {
   Info,
   AlertTriangle,
   Save,
-  Check
+  Check,
+  BrainCircuit,
+  ClipboardList,
+  CheckCircle2,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -36,6 +41,11 @@ export default function FeeEstimation() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Requirements from AI Assessment & System
+  const [assessedChecklist, setAssessedChecklist] = useState([]);
+  const [allSystemRequirements, setAllSystemRequirements] = useState([]);
+  const [loadingRequirements, setLoadingRequirements] = useState(false);
 
   // Directly editable form parameters
   const [businessName, setBusinessName] = useState('');
@@ -85,6 +95,49 @@ export default function FeeEstimation() {
       setError('');
     }
   }, [activeBiz?.id]);
+
+  // Sync with URL query parameter ?business_id=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const bId = params.get('business_id');
+    if (bId) {
+      setSelectedBizId(bId);
+    }
+  }, []);
+
+  // Fetch compliance/assessment requirements and all system requirements
+  useEffect(() => {
+    const fetchRequirementsData = async () => {
+      if (!token) return;
+      setLoadingRequirements(true);
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        
+        // 1. Fetch all configured system requirements
+        const reqsRes = await axios.get(`${API}/requirements`, config);
+        setAllSystemRequirements(reqsRes.data || []);
+
+        // 2. If an active business exists, fetch its specific assessed compliance checklist
+        const targetBizId = selectedBizId || (activeBiz?.id ? String(activeBiz.id) : null);
+        if (targetBizId) {
+          try {
+            const compRes = await axios.get(`${API}/compliance/business/${targetBizId}`, config);
+            setAssessedChecklist(compRes.data?.checklist || []);
+          } catch (e) {
+            setAssessedChecklist([]);
+          }
+        } else {
+          setAssessedChecklist([]);
+        }
+      } catch (err) {
+        console.error('Error loading requirements data for fee estimation:', err);
+      } finally {
+        setLoadingRequirements(false);
+      }
+    };
+
+    fetchRequirementsData();
+  }, [selectedBizId, activeBiz?.id, token]);
 
   const handleCapChange = (val) => {
     setCapitalization(val);
@@ -208,6 +261,87 @@ export default function FeeEstimation() {
     .filter(i => i.num !== 5)
     .reduce((sum, i) => sum + i.amount, 0);
   const displayTotal = isRenewal ? renewalTotal : calculation.totalLguFees;
+
+  // ═════════════════════════════════════════════════════════════════════
+  // REQUIREMENT PROCESSING & ACQUISITION EXPENSES ENGINE
+  // ═════════════════════════════════════════════════════════════════════
+  const requirementExpenses = useMemo(() => {
+    // 1. If the business has an AI-assessed checklist, use those official tailored requirements!
+    if (assessedChecklist && assessedChecklist.length > 0) {
+      const items = assessedChecklist.map((r, idx) => ({
+        id: r.requirement_id || r.id || idx,
+        name: r.permit_name,
+        nameTl: r.permit_name,
+        description: r.description,
+        issuingAgency: r.issuing_agency || 'Government Agency',
+        ordinanceRef: r.ordinance_reference,
+        amount: parseFloat(r.estimated_fee) || 0,
+        status: r.status || 'Missing',
+        isMandatory: r.is_mandatory !== 0
+      }));
+
+      const total = items.reduce((sum, item) => sum + item.amount, 0);
+      const stillNeeded = items
+        .filter(item => item.status !== 'Approved' && item.status !== 'Submitted' && item.status !== 'Have')
+        .reduce((sum, item) => sum + item.amount, 0);
+
+      return {
+        items,
+        total,
+        stillNeeded,
+        isSyncedWithAi: true
+      };
+    }
+
+    // 2. Fallback: Filter allSystemRequirements dynamically based on current business parameters!
+    const effectiveCategory = (activeBiz?.industry_category || businessType || '').toLowerCase();
+    const effectiveStatus = (businessStatus || 'New Application').toLowerCase();
+
+    const matched = allSystemRequirements.filter(rule => {
+      const cf = (rule.condition_field || '').trim();
+      const cv = (rule.condition_value || '').trim();
+
+      if (cf === 'always' || !cf) return true;
+
+      if (cf === 'industry_category') {
+        const cvLower = cv.toLowerCase();
+        return (
+          cvLower === effectiveCategory ||
+          effectiveCategory.includes(cvLower) ||
+          cvLower.includes(effectiveCategory)
+        );
+      }
+
+      if (cf === 'business_status') {
+        return cv.toLowerCase() === effectiveStatus;
+      }
+
+      return false;
+    });
+
+    const items = matched.map((r, idx) => ({
+      id: r.id || idx,
+      name: r.permit_name,
+      nameTl: r.permit_name,
+      description: r.description,
+      issuingAgency: r.issuing_agency || 'Municipal / Statutory Office',
+      ordinanceRef: r.ordinance_reference,
+      amount: parseFloat(r.estimated_fee) || 0,
+      status: 'Missing',
+      isMandatory: r.is_mandatory !== 0
+    }));
+
+    const total = items.reduce((sum, item) => sum + item.amount, 0);
+    return {
+      items,
+      total,
+      stillNeeded: total,
+      isSyncedWithAi: false
+    };
+  }, [assessedChecklist, allSystemRequirements, activeBiz?.industry_category, businessType, businessStatus]);
+
+  const grandTotal = displayTotal + requirementExpenses.total;
+  const grandTotalStillNeeded = displayTotal + requirementExpenses.stillNeeded;
 
   return (
     <div className="animate-fade-in page-container" style={{ maxWidth: '820px', margin: '0 auto', paddingBottom: '3rem' }}>
@@ -536,14 +670,203 @@ export default function FeeEstimation() {
           </div>
         )}
 
+        {/* STEP 3: PREREQUISITE REQUIREMENT ACQUISITION EXPENSES */}
+        <div style={{ paddingTop: '0.5rem', borderTop: '2px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-light)' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ClipboardList size={20} style={{ color: 'var(--primary-green)' }} />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--government-navy)', margin: 0 }}>
+                  {isTl ? '3. Gastusin sa Pagkuha ng mga Prerequisite Requirements' : '3. Prerequisite Requirement Acquisition Expenses'}
+                </h2>
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                {isTl
+                  ? `Mga dokumento at clearance na kinakailangan para sa ${businessType} batay sa regulasyon ng ${municipality}.`
+                  : `Clearances and prerequisite documents required for ${businessType} under ${municipality} regulations.`}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {requirementExpenses.isSyncedWithAi ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#DCFCE7', color: '#15803D', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: '700' }}>
+                  <BrainCircuit size={13} /> {isTl ? 'Naka-sync sa AI Assessment' : 'Synced with AI Assessment'}
+                </span>
+              ) : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#E0F2FE', color: '#0369A1', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: '700' }}>
+                  <Sparkles size={13} /> {isTl ? 'Tantiya batay sa Kategorya' : 'Category Rule Benchmark'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* AI Connection Callout */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            padding: '0.85rem 1.15rem',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: requirementExpenses.isSyncedWithAi ? '#F0FDF4' : '#F8FAFC',
+            border: `1px solid ${requirementExpenses.isSyncedWithAi ? '#BBF7D0' : '#E2E8F0'}`,
+            marginBottom: '1.25rem',
+            fontSize: '0.825rem',
+            color: requirementExpenses.isSyncedWithAi ? '#166534' : '#475569'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <BrainCircuit size={16} color={requirementExpenses.isSyncedWithAi ? '#15803D' : '#64748B'} />
+              <span>
+                {requirementExpenses.isSyncedWithAi
+                  ? (isTl
+                      ? `Naka-link sa pinakahuling rekomendasyon ng AI para sa "${businessName || 'iyong negosyo'}". Kasama ang mga gastusin sa diagnostic, pagrerehistro, at inspeksyon.`
+                      : `Linked directly to AI Assessment recommendations for "${businessName || 'your business'}". Includes diagnostic, registration, and inspection fees.`)
+                  : (isTl
+                      ? `Ito ang pamantayang mga gastusin para sa ${businessType}. Maaari mong i-run ang AI Assessment para sa pinasadyang checklist.`
+                      : `Standard prerequisite fees for ${businessType}. Run the AI Assessment to get tailored requirements.`)}
+              </span>
+            </div>
+            <Link
+              to={`/assessment?business_id=${selectedBizId || (activeBiz?.id ? String(activeBiz.id) : '')}`}
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                color: '#15803D',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>{isTl ? 'Buksan ang AI Assessment' : 'Open AI Assessment'}</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          {/* Prerequisite Line Items */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            {requirementExpenses.items.map((req, rIdx) => {
+              const isAcquired = req.status === 'Approved' || req.status === 'Submitted' || req.status === 'Have';
+
+              return (
+                <div
+                  key={req.id || rIdx}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    padding: '0.9rem 1.15rem',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: isAcquired ? '#F0FDF4' : 'var(--background)',
+                    border: `1px solid ${isAcquired ? '#BBF7D0' : 'var(--border-light)'}`,
+                    gap: '1rem'
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: '220px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-dark)' }}>
+                        {rIdx + 1}. {req.name}
+                      </span>
+                      {req.issuingAgency && (
+                        <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.12rem 0.5rem', borderRadius: 'var(--radius-xs)', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE' }}>
+                          {req.issuingAgency}
+                        </span>
+                      )}
+                      {req.isMandatory ? (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: '600', padding: '0.1rem 0.45rem', borderRadius: 'var(--radius-xs)', backgroundColor: 'var(--border-light)', color: 'var(--government-navy)' }}>
+                          Mandatory
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: '600', padding: '0.1rem 0.45rem', borderRadius: 'var(--radius-xs)', backgroundColor: '#FEF3C7', color: '#92400E' }}>
+                          Conditional
+                        </span>
+                      )}
+                      {isAcquired && (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: '700', padding: '0.1rem 0.45rem', borderRadius: 'var(--radius-xs)', backgroundColor: '#DCFCE7', color: '#15803D' }}>
+                          ✓ {isTl ? 'Nakuha Na' : 'Acquired'}
+                        </span>
+                      )}
+                    </div>
+                    {req.description && (
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+                        {req.description}
+                      </div>
+                    )}
+                    {req.ordinanceRef && (
+                      <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.2rem', fontStyle: 'italic' }}>
+                        Ref: {req.ordinanceRef}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{
+                      fontSize: '1.05rem',
+                      fontWeight: '700',
+                      color: isAcquired ? '#15803D' : 'var(--text-dark)'
+                    }}>
+                      {req.amount > 0 ? php(req.amount) : (isTl ? 'Walang Bayad / Libre' : 'No Official Fee')}
+                    </div>
+                    {isAcquired && (
+                      <div style={{ fontSize: '0.72rem', color: '#15803D', fontWeight: 600 }}>
+                        {isTl ? 'Handa na sa file' : 'Ready on file'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Prerequisite Subtotal Box */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '1.15rem 1.4rem',
+            backgroundColor: '#F8FAFC',
+            border: '1.5px solid #E2E8F0',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '2rem',
+            gap: '1rem',
+            flexWrap: 'wrap'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.8125rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#334155' }}>
+                {isTl ? 'Subtotal para sa Prerequisite Requirements' : 'Subtotal for Prerequisite Requirements'}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.2rem' }}>
+                {isTl
+                  ? `Kabuuang bayarin sa mga kinauukulang ahensya (DTI, Barangay, BFP, MHO, atbp.)`
+                  : `Total estimated processing costs across prerequisite issuing agencies for ${businessType}.`}
+              </div>
+              {requirementExpenses.stillNeeded > 0 && requirementExpenses.stillNeeded < requirementExpenses.total && (
+                <div style={{ fontSize: '0.78rem', color: '#D97706', fontWeight: 600, marginTop: '0.2rem' }}>
+                  ⏳ {php(requirementExpenses.stillNeeded)} {isTl ? 'ang nalalabi para sa mga kailangan mo pa.' : 'remaining for items you still need to acquire.'}
+                </div>
+              )}
+            </div>
+
+            <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0F172A', letterSpacing: '-0.02em' }}>
+              {php(requirementExpenses.total)}
+            </div>
+          </div>
+        </div>
+
         {/* STEP 4: ITEMIZED CLEARANCES & PERMIT BREAKDOWN */}
         <div style={{ paddingTop: '0.5rem', borderTop: '2px solid var(--border-light)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-light)' }}>
             <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--government-navy)', margin: 0 }}>
-                {isTl ? '3. Buod ng Tinatayang Bayarin sa Permit' : '3. Estimated Permit Fee Summary'}
-              </h2>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShieldCheck size={20} style={{ color: 'var(--primary-green)' }} />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--government-navy)', margin: 0 }}>
+                  {isTl ? '4. Bayarin sa Permit ng Munisipyo (Municipal Hall)' : '4. Municipal Hall Permit & License Fees'}
+                </h2>
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                 {municipality} • {businessScale} ({operatingSetup === 'physical' ? (isTl ? 'Pisikal na Puwesto' : 'Physical Store') : 'Online'})
               </div>
             </div>
@@ -610,34 +933,74 @@ export default function FeeEstimation() {
             })}
           </div>
 
-          {/* Hero Subtotal Box */}
+          {/* Municipal Permit Subtotal Box */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '1.35rem 1.6rem',
-            backgroundColor: isRenewal ? '#FFFBEB' : 'var(--primary-green-light)',
-            border: `1.5px solid ${isRenewal ? '#FCD34D' : '#A7F3D0'}`,
+            padding: '1.15rem 1.4rem',
+            backgroundColor: isRenewal ? '#FFFBEB' : '#F0FDF4',
+            border: `1.5px solid ${isRenewal ? '#FCD34D' : '#BBF7D0'}`,
             borderRadius: 'var(--radius-md)',
-            marginBottom: '1.5rem',
+            marginBottom: '1.75rem',
             gap: '1rem',
             flexWrap: 'wrap'
           }}>
             <div>
-              <div style={{ fontSize: '0.8125rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: isRenewal ? '#92400E' : 'var(--primary-green-dark)' }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: isRenewal ? '#92400E' : '#166534' }}>
                 {isRenewal
-                  ? (isTl ? 'Subtotal sa Paghahanda (Walang LBT)' : 'Planning Subtotal (LBT Excluded)')
-                  : (isTl ? 'Kabuuang Tinatayang Bayarin sa Permit' : 'Estimated Total Permit Requirements')}
+                  ? (isTl ? 'Subtotal sa Paghahanda sa Munisipyo (Walang LBT)' : 'Municipal Planning Subtotal (LBT Excluded)')
+                  : (isTl ? 'Subtotal sa Bayarin sa Munisipyo' : 'Municipal Hall Clearances Subtotal')}
               </div>
-              <div style={{ fontSize: '0.78rem', color: isRenewal ? '#B45309' : 'var(--primary-green)', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '0.78rem', color: isRenewal ? '#B45309' : '#15803D', marginTop: '0.2rem' }}>
                 {isRenewal
                   ? (isTl ? 'Nakatakdang bayarin para sa renewal. Susuriin ang LBT sa BPLO.' : 'Fixed municipal clearances. LBT computed at BPLO.')
-                  : (isTl ? 'Pangunahing badyet sa pagsunod sa regulasyon para sa bagong negosyo.' : 'Estimated initial municipal compliance budget for new application.')}
+                  : (isTl ? 'Mayor\'s Permit, Sanitary inspection, at base regulatory fees sa Munisipyo.' : 'Mayor\'s Permit, sanitary inspection, and initial local business fees.')}
               </div>
             </div>
 
-            <div style={{ fontSize: '2.2rem', fontWeight: '900', color: isRenewal ? '#92400E' : 'var(--primary-green-dark)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: '900', color: isRenewal ? '#92400E' : '#15803D', letterSpacing: '-0.02em' }}>
               {php(displayTotal)}
+            </div>
+          </div>
+
+          {/* ── STEP 5: COMPREHENSIVE COMBINED TOTAL HERO BOX ── */}
+          <div style={{
+            padding: '1.5rem 1.75rem',
+            background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
+            color: '#FFFFFF',
+            borderRadius: '14px',
+            marginBottom: '1.5rem',
+            boxShadow: '0 4px 16px rgba(21, 128, 61, 0.25)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1.25rem'
+          }}>
+            <div style={{ flex: 1, minWidth: '240px' }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#BBF7D0', marginBottom: '0.35rem' }}>
+                {isTl ? 'KABUUANG TINATAYANG PUHUNAN SA PAGSUNOD' : 'TOTAL ESTIMATED COMPLIANCE & LAUNCH INVESTMENT'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#E2E8F0', lineHeight: 1.5 }}>
+                {isTl
+                  ? `Pinagsamang bayarin para sa lahat ng Prerequisite Requirements (${php(requirementExpenses.total)}) at mga Permit sa Munisipyo (${php(displayTotal)}).`
+                  : `Combined total of all Prerequisite Requirements (${php(requirementExpenses.total)}) plus Municipal Hall Permits (${php(displayTotal)}).`}
+              </div>
+              {requirementExpenses.stillNeeded > 0 && (
+                <div style={{ fontSize: '0.8rem', color: '#FEF08A', fontWeight: 600, marginTop: '0.35rem' }}>
+                  ⏳ {php(grandTotalStillNeeded)} {isTl ? 'ang kailangang ihanda para sa mga natitira pang kailangan.' : 'needed to complete remaining requirements.'}
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '900', color: '#FFFFFF', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {php(grandTotal)}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#BBF7D0', marginTop: '0.3rem', fontWeight: 600 }}>
+                {isTl ? 'Buong Badyet para sa Negosyo' : 'Comprehensive Business Compliance Budget'}
+              </div>
             </div>
           </div>
 
@@ -664,11 +1027,19 @@ export default function FeeEstimation() {
               {isTl ? 'I-print ang Buod' : 'Print Summary'}
             </button>
             <Link
-              to="/readiness"
-              className="btn btn-primary"
-              style={{ flex: 1.2, minHeight: '44px' }}
+              to={`/assessment?business_id=${selectedBizId || (activeBiz?.id ? String(activeBiz.id) : '')}`}
+              className="btn btn-outline"
+              style={{ flex: 1, minHeight: '44px', color: '#15803D', borderColor: '#BBF7D0', backgroundColor: '#F0FDF4' }}
             >
-              {isTl ? 'Tingnan ang Checklist sa Kahandaan' : 'Check Permit Readiness'}
+              <BrainCircuit size={16} />
+              {isTl ? 'Suriin sa AI Assessment' : 'Review AI Assessment'}
+            </Link>
+            <Link
+              to="/applications"
+              className="btn btn-primary"
+              style={{ flex: 1.2, minHeight: '44px', backgroundColor: '#15803D', borderColor: '#15803D' }}
+            >
+              {isTl ? 'Maghanda ng Aplikasyon' : 'Prepare Application'}
               <ChevronRight size={16} />
             </Link>
           </div>

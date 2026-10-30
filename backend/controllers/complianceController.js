@@ -231,7 +231,7 @@ const getCompliance = async (req, res) => {
                    ${bploNotesSelect}
                    ${bploVerifiedAtSelect}
                    ${bploVerifiedBySelect}
-                   pr.permit_name, ${prDescSelect} ${isMandatorySelect}
+                   pr.permit_name, pr.estimated_fee, pr.issuing_agency, pr.ordinance_reference, ${prDescSelect} ${isMandatorySelect}
                    ${docFieldsSelect}
             FROM business_requirements br
             JOIN permit_requirements pr ON br.requirement_id = pr.id
@@ -257,10 +257,13 @@ const getCompliance = async (req, res) => {
             score = Math.round((compliant / checklist.length) * 100);
         }
 
+        const totalRequirementExpenses = checklist.reduce((sum, item) => sum + (parseFloat(item.estimated_fee) || 0), 0);
+
         res.json({
             business_id: businessId,
             compliance_score: score,
-            checklist
+            checklist,
+            total_requirement_expenses: totalRequirementExpenses
         });
 
     } catch (error) {

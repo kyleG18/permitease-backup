@@ -389,6 +389,11 @@ Instructions:
   const score = totalReqs > 0 ? Math.round((haveCount / totalReqs) * 100) : 0;
   const scoreColor = score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
 
+  const totalRequirementExpenses = checklist.reduce((sum, r) => sum + (parseFloat(r.estimated_fee) || 0), 0);
+  const stillNeededExpenses = checklist
+    .filter(r => r.status !== 'Approved' && r.status !== 'Submitted')
+    .reduce((sum, r) => sum + (parseFloat(r.estimated_fee) || 0), 0);
+
   const aiAdvisoryReqs = currentResult?.ai_assessment?.recommended_permits || [];
 
   return (
@@ -612,6 +617,67 @@ Instructions:
           )}
         </div>
 
+        {/* ── REQUIREMENT ACQUISITION & PROCESSING EXPENSES BANNER ── */}
+        {totalReqs > 0 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            padding: '1.15rem 1.4rem',
+            marginBottom: '1.25rem',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+            border: '1.5px solid #86EFAC',
+            boxShadow: '0 2px 8px rgba(22, 101, 52, 0.05)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#166534', background: '#BBF7D0', padding: '0.2rem 0.55rem', borderRadius: '4px' }}>
+                  ESTIMATED REQUIREMENT EXPENSES
+                </span>
+                <span style={{ fontSize: '0.78rem', color: '#15803D', fontWeight: 600 }}>
+                  Tailored for {selectedBiz?.business_type || 'Selected Business'}
+                </span>
+              </div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0F172A' }}>
+                ₱{totalRequirementExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#475569', marginLeft: '0.5rem' }}>
+                  total processing expense for {totalReqs} prerequisite requirements
+                </span>
+              </div>
+              {stillNeededExpenses > 0 && stillNeededExpenses < totalRequirementExpenses && (
+                <div style={{ fontSize: '0.8rem', color: '#B45309', fontWeight: 600, marginTop: '0.2rem' }}>
+                  ⏳ ₱{stillNeededExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })} remaining for {needCount} item(s) you still need.
+                </div>
+              )}
+            </div>
+
+            <Link
+              to={`/fee-estimation?business_id=${selectedBizId}`}
+              className="btn btn-primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                backgroundColor: '#15803D',
+                borderColor: '#15803D',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '0.875rem',
+                padding: '0.65rem 1.15rem',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(21,128,61,0.25)',
+                textDecoration: 'none'
+              }}
+            >
+              <span>Calculate with Fee Estimator</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        )}
+
         {!currentResult && totalReqs === 0 ? (
           <div style={{ padding: '3rem 1.5rem', textAlign: 'center', background: 'var(--background)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-medium)' }}>
             <BrainCircuit size={40} style={{ color: 'var(--primary-green)', marginBottom: '0.75rem', opacity: 0.6 }} />
@@ -662,6 +728,18 @@ Instructions:
                         <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--government-navy)', fontWeight: 700 }}>
                           {req.permit_name}
                         </h4>
+
+                        {req.estimated_fee !== undefined && (
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '0.15rem 0.55rem', borderRadius: 'var(--radius-full)', background: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0' }}>
+                            ₱{Number(req.estimated_fee || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                          </span>
+                        )}
+
+                        {req.issuing_agency && (
+                          <span style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', background: '#F1F5F9', color: '#475569' }}>
+                            {req.issuing_agency}
+                          </span>
+                        )}
 
                         {req.is_mandatory ? (
                           <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', background: 'var(--border-light)', color: 'var(--government-navy)' }}>

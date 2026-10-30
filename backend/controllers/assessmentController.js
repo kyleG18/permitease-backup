@@ -56,7 +56,7 @@ const createAssessment = async (req, res) => {
         }
 
         // 1. Fetch all configured permit requirements
-        const [allRequirements] = await db.query('SELECT id, permit_name, description, condition_field, condition_value, applicable_business_type, required_documents FROM permit_requirements');
+        const [allRequirements] = await db.query('SELECT id, permit_name, description, condition_field, condition_value, applicable_business_type, required_documents, is_mandatory, issuing_agency, ordinance_reference, estimated_fee FROM permit_requirements');
 
         // 2. Call AI Service to classify and assess
         let aiResult;
@@ -140,18 +140,29 @@ const createAssessment = async (req, res) => {
             }
 
             if (applicable) {
-                officialRequirements.push({ requirement_id: reqRule.id,
+                officialRequirements.push({
+                    requirement_id: reqRule.id,
                     permit_name: reqRule.permit_name,
                     description: reqRule.description,
-                    required_documents: reqRule.required_documents
+                    required_documents: reqRule.required_documents,
+                    is_mandatory: reqRule.is_mandatory,
+                    issuing_agency: reqRule.issuing_agency,
+                    ordinance_reference: reqRule.ordinance_reference,
+                    estimated_fee: parseFloat(reqRule.estimated_fee) || 0
                 });
             }
         }
 
+        const totalRequirementExpenses = officialRequirements.reduce(
+            (sum, r) => sum + (parseFloat(r.estimated_fee) || 0),
+            0
+        );
+
         // 4. Save assessment — linked to business if business_id was given
         const assessmentPayload = {
             ai_assessment: aiResult,
-            official_assessment: officialRequirements
+            official_assessment: officialRequirements,
+            total_requirement_expenses: totalRequirementExpenses
         };
 
         let hasCompScore = false;
@@ -189,7 +200,8 @@ const createAssessment = async (req, res) => {
         res.status(201).json({
             id: inserted.insertId,
             ai_assessment: aiResult,
-            official_assessment: officialRequirements
+            official_assessment: officialRequirements,
+            total_requirement_expenses: totalRequirementExpenses
         });
 
     } catch (error) {
