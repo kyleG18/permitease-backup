@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { CheckCircle, XCircle, AlertCircle, Clock, FileText, ChevronRight, Play, RotateCcw, Shield, Edit3, Printer, Eye } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Clock, FileText, ChevronRight, Play, RotateCcw, Shield, Edit3, Printer, Eye, ClipboardList } from 'lucide-react';
 import FeeAssessmentCard from '../components/FeeAssessmentCard';
 import UnifiedApplicationFormView from '../components/UnifiedApplicationFormView';
 import FormBPLOEditModal from '../components/FormBPLOEditModal';
+import AssessmentChecklistPrint from '../components/AssessmentChecklistPrint';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
@@ -69,6 +70,7 @@ export default function LGUApplicationReview() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFormPreviewOpen, setIsFormPreviewOpen] = useState(false);
   const [formBploData, setFormBploData] = useState(null);
+  const [isPrintChecklistReady, setIsPrintChecklistReady] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -293,6 +295,12 @@ export default function LGUApplicationReview() {
           {isFormPreviewOpen ? <Eye size={15} /> : <Printer size={15} />}
           {isFormPreviewOpen ? 'Hide Form' : 'View & Print Form BPLO-01'}
         </button>
+        <button
+          onClick={() => { setIsPrintChecklistReady(true); setTimeout(() => window.print(), 150); }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: '#FFFFFF', border: 'none', padding: '0.65rem 1.15rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.875rem', boxShadow: '0 2px 8px rgba(21,128,61,0.25)', transition: 'all 0.15s ease' }}
+        >
+          <ClipboardList size={15} /> Print Requirements Checklist
+        </button>
 
         <div style={{ height: '32px', width: '1px', backgroundColor: '#E2E8F0', margin: '0 0.25rem' }} />
 
@@ -489,6 +497,49 @@ export default function LGUApplicationReview() {
         onSave={handleSaveFormData}
         isTl={false}
       />
+
+      {/* Print Requirements Checklist — hidden on screen, shown on print */}
+      {isPrintChecklistReady && (() => {
+        const mapped = (app.requirements || []).map(r => ({
+          requirement_id: r.id,
+          permit_name: r.permit_name,
+          description: r.description || '',
+          required_documents: r.required_documents || '',
+          issuing_agency: r.issuing_agency || '',
+          estimated_fee: r.estimated_fee || 0,
+          is_mandatory: r.is_mandatory !== false,
+          status: ['Submitted', 'Approved'].includes(r.req_status) ? 'Approved' : 'Missing',
+        }));
+        const haveCount = mapped.filter(r => r.status === 'Approved').length;
+        const needCount = mapped.length - haveCount;
+        const score = mapped.length > 0 ? Math.round((haveCount / mapped.length) * 100) : 0;
+        const totalFees = mapped.reduce((s, r) => s + (parseFloat(r.estimated_fee) || 0), 0);
+        const stillFees = mapped.filter(r => r.status !== 'Approved').reduce((s, r) => s + (parseFloat(r.estimated_fee) || 0), 0);
+        return (
+          <AssessmentChecklistPrint
+            checklist={mapped}
+            selectedBiz={{
+              business_name: app.business_name,
+              business_type: app.business_type || app.industry_category || '',
+              owner_name: app.owner_name,
+              industry_category: app.industry_category || app.business_type || '',
+              barangay: app.barangay || '',
+              municipality: 'Roxas',
+              application_type: app.application_type === 'NEW' ? 'New Application' : 'Renewal',
+            }}
+            aiAssessment={{
+              industry_category: app.industry_category || app.business_type || '',
+              confidence: null,
+              reasoning: `Requirements checklist for ${app.application_type === 'NEW' ? 'new' : 'renewal'} business permit application ref. ${app.application_number}. Verified by BPLO officer via PermitEase system.`,
+            }}
+            totalRequirementExpenses={totalFees}
+            stillNeededExpenses={stillFees}
+            haveCount={haveCount}
+            needCount={needCount}
+            score={score}
+          />
+        );
+      })()}
 
     </div>
   );

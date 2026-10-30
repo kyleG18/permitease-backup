@@ -418,8 +418,14 @@ Instructions:
           {totalReqs > 0 && (
             <button
               onClick={() => window.print()}
-              className="btn btn-outline btn-sm no-print"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', borderColor: '#CBD5E1', color: 'var(--government-navy)' }}
+              className="btn btn-sm no-print"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                backgroundColor: '#15803D', color: '#fff',
+                border: 'none', borderRadius: '8px',
+                padding: '0.5rem 1rem', fontWeight: 700,
+                cursor: 'pointer', boxShadow: '0 2px 8px rgba(21,128,61,0.25)'
+              }}
             >
               <Printer size={14} /> Print Checklist
             </button>
