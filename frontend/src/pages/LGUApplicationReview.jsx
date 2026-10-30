@@ -347,145 +347,127 @@ export default function LGUApplicationReview() {
         {/* LEFT COLUMN */}
         <div>
           {/* ── REQUIREMENTS CHECKLIST ─────────────────────────────────── */}
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', marginBottom: '1.5rem', overflow: 'hidden' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', marginBottom: '1.5rem', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
 
             {/* Card Header */}
-            <div style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', padding: '1rem 1.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', padding: '0.9rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ClipboardList size={18} color="#fff" />
-                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1rem' }}>Permit Requirements Checklist</span>
+                <ClipboardList size={17} color="#fff" />
+                <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>Permit Requirements Checklist</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
-                  {readyReqs} Ready &nbsp;·&nbsp; {totalReqs - readyReqs} Needed &nbsp;·&nbsp; {totalReqs} Total
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
+                  {readyReqs} Ready · {totalReqs - readyReqs} Needed · {totalReqs} Total
                 </span>
-                <span style={{
-                  fontSize: '1.1rem', fontWeight: 900, color: '#fff',
-                  background: 'rgba(255,255,255,0.15)', padding: '0.2rem 0.65rem',
-                  borderRadius: '8px', border: '1.5px solid rgba(255,255,255,0.3)'
-                }}>
+                <span style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.18)', padding: '0.15rem 0.6rem', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.35)' }}>
                   {readScore}%
                 </span>
               </div>
             </div>
 
             {/* Progress Bar */}
-            {totalReqs > 0 && (
-              <div style={{ height: '5px', backgroundColor: '#E2E8F0' }}>
-                <div style={{ height: '100%', width: `${readScore}%`, backgroundColor: readColor, transition: 'width 0.4s ease' }} />
-              </div>
-            )}
+            <div style={{ height: '4px', backgroundColor: '#D1FAE5' }}>
+              <div style={{ height: '100%', width: `${readScore}%`, background: 'linear-gradient(90deg,#15803D,#22C55E)', transition: 'width 0.4s ease' }} />
+            </div>
 
-            {/* Checklist Body */}
+            {/* Table */}
             {app.requirements.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 No requirements linked to this business yet.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {/* Column Headers */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '28px 1fr 120px 80px 90px',
-                  gap: '0',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#F8FAFC',
-                  borderBottom: '1px solid #E2E8F0',
-                  fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase',
-                  letterSpacing: '0.07em', color: '#64748B'
-                }}>
-                  <span>#</span>
-                  <span>Requirement</span>
-                  <span>Issuing Agency</span>
-                  <span style={{ textAlign: 'right' }}>Est. Fee</span>
-                  <span style={{ textAlign: 'center' }}>Status</span>
-                </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#F0FDF4', borderBottom: '2px solid #BBF7D0' }}>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#166534', border: '1px solid #D1FAE5', width: '36px' }}>#</th>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left',   fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#166534', border: '1px solid #D1FAE5' }}>Requirement</th>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left',   fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#166534', border: '1px solid #D1FAE5', width: '130px' }}>Issuing Agency</th>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right',  fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#166534', border: '1px solid #D1FAE5', width: '90px' }}>Est. Fee</th>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#166534', border: '1px solid #D1FAE5', width: '100px' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {app.requirements.map((req, idx) => {
+                      const done = ['Submitted', 'Approved'].includes(req.req_status);
+                      const rowBg = done ? '#F0FDF4' : idx % 2 === 0 ? '#FFFFFF' : '#FAFAFA';
+                      return (
+                        <tr key={req.id} style={{ backgroundColor: rowBg, borderBottom: '1px solid #E2E8F0' }}>
 
-                {/* Rows */}
-                {app.requirements.map((req, idx) => {
-                  const done = ['Submitted', 'Approved'].includes(req.req_status);
-                  return (
-                    <div
-                      key={req.id}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '28px 1fr 120px 80px 90px',
-                        gap: '0',
-                        padding: '0.75rem 1rem',
-                        borderBottom: idx < app.requirements.length - 1 ? '1px solid #F1F5F9' : 'none',
-                        backgroundColor: done ? '#FAFFFE' : '#FFFFF8',
-                        alignItems: 'center',
-                        transition: 'background 0.15s'
-                      }}
-                    >
-                      {/* Row number */}
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8' }}>{idx + 1}</span>
+                          {/* # */}
+                          <td style={{ padding: '0.7rem 0.75rem', textAlign: 'center', border: '1px solid #E2E8F0', color: '#94A3B8', fontWeight: 700, fontSize: '0.8rem' }}>
+                            {idx + 1}
+                          </td>
 
-                      {/* Requirement name + docs hint */}
-                      <div style={{ paddingRight: '0.75rem' }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', marginBottom: req.required_documents ? '0.2rem' : 0 }}>
-                          {req.permit_name}
-                          {req.is_mandatory === false && (
-                            <span style={{ marginLeft: '6px', fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', background: '#EFF6FF', color: '#1E40AF', border: '0.5px solid #BFDBFE', textTransform: 'uppercase' }}>
-                              Conditional
+                          {/* Requirement name + docs hint */}
+                          <td style={{ padding: '0.7rem 0.75rem', border: '1px solid #E2E8F0' }}>
+                            <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.875rem', marginBottom: req.required_documents ? '0.25rem' : 0 }}>
+                              {req.permit_name}
+                              {req.is_mandatory === false && (
+                                <span style={{ marginLeft: '6px', fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', background: '#EFF6FF', color: '#1E40AF', border: '0.5px solid #BFDBFE', textTransform: 'uppercase' }}>
+                                  Conditional
+                                </span>
+                              )}
+                            </div>
+                            {req.required_documents && (
+                              <div style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: 1.4 }}>
+                                📎 {req.required_documents}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Issuing Agency */}
+                          <td style={{ padding: '0.7rem 0.75rem', border: '1px solid #E2E8F0', fontSize: '0.8rem', fontWeight: 600, color: req.issuing_agency ? '#1D4ED8' : '#CBD5E1' }}>
+                            {req.issuing_agency || '—'}
+                          </td>
+
+                          {/* Est. Fee */}
+                          <td style={{ padding: '0.7rem 0.75rem', border: '1px solid #E2E8F0', textAlign: 'right', fontWeight: 700, fontSize: '0.82rem', color: req.estimated_fee > 0 ? '#15803D' : '#CBD5E1' }}>
+                            {req.estimated_fee > 0
+                              ? `₱${Number(req.estimated_fee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
+                              : '—'}
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '0.7rem 0.75rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              padding: '0.25rem 0.6rem', borderRadius: '999px',
+                              fontSize: '0.72rem', fontWeight: 800,
+                              backgroundColor: done ? '#DCFCE7' : '#FEF3C7',
+                              color: done ? '#166534' : '#92400E',
+                              border: `1px solid ${done ? '#BBF7D0' : '#FDE68A'}`,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {done ? '☑ Ready' : '☐ Needed'}
                             </span>
-                          )}
-                        </div>
-                        {req.required_documents && (
-                          <div style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: 1.35 }}>
-                            📎 {req.required_documents}
-                          </div>
-                        )}
-                      </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
 
-                      {/* Issuing Agency */}
-                      <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1E40AF' }}>
-                        {req.issuing_agency || <span style={{ color: '#CBD5E1' }}>—</span>}
-                      </div>
-
-                      {/* Estimated Fee */}
-                      <div style={{ textAlign: 'right', fontSize: '0.8rem', fontWeight: 700, color: req.estimated_fee > 0 ? '#15803D' : '#CBD5E1' }}>
-                        {req.estimated_fee > 0
-                          ? `₱${Number(req.estimated_fee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
-                          : '—'}
-                      </div>
-
-                      {/* Status badge */}
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '4px',
-                          padding: '0.28rem 0.65rem', borderRadius: '999px',
-                          fontSize: '0.72rem', fontWeight: 800,
-                          backgroundColor: done ? '#DCFCE7' : '#FEF3C7',
-                          color: done ? '#166534' : '#92400E',
-                          border: `1px solid ${done ? '#BBF7D0' : '#FDE68A'}`
-                        }}>
-                          {done ? '☑ Ready' : '☐ Needed'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Totals footer */}
-                {totalReqs > 0 && (() => {
-                  const totalFee = app.requirements.reduce((s, r) => s + (parseFloat(r.estimated_fee) || 0), 0);
-                  return totalFee > 0 ? (
-                    <div style={{
-                      display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.75rem',
-                      padding: '0.65rem 1rem',
-                      borderTop: '2px solid #E2E8F0',
-                      backgroundColor: '#F0FDF4'
-                    }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Total Estimated Acquisition Cost:
-                      </span>
-                      <span style={{ fontSize: '1rem', fontWeight: 900, color: '#15803D' }}>
-                        ₱{totalFee.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  ) : null;
-                })()}
+                  {/* Totals Footer Row */}
+                  {(() => {
+                    const totalFee = app.requirements.reduce((s, r) => s + (parseFloat(r.estimated_fee) || 0), 0);
+                    return (
+                      <tfoot>
+                        <tr style={{ backgroundColor: '#F0FDF4', borderTop: '2px solid #BBF7D0' }}>
+                          <td colSpan={3} style={{ padding: '0.65rem 0.75rem', border: '1px solid #D1FAE5', textAlign: 'right', fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            Total Estimated Acquisition Cost:
+                          </td>
+                          <td style={{ padding: '0.65rem 0.75rem', border: '1px solid #D1FAE5', textAlign: 'right', fontWeight: 900, fontSize: '0.95rem', color: totalFee > 0 ? '#15803D' : '#94A3B8' }}>
+                            {totalFee > 0 ? `₱${totalFee.toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '—'}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.75rem', border: '1px solid #D1FAE5', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#166534' }}>
+                            {readyReqs}/{totalReqs}<br />
+                            <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>Complete</span>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    );
+                  })()}
+                </table>
               </div>
             )}
           </div>
