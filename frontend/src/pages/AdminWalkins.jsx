@@ -143,15 +143,15 @@ export default function AdminWalkins() {
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <header style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--government-navy, #0F172A)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Calendar size={20} strokeWidth={2.4} />
             </div>
             <div>
-              <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-green, #15803D)' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#15803D' }}>
                 BPLO MUNICIPAL DESK • WINDOW 1 APPOINTMENT ROSTER
               </span>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
                 Walk-in Schedule
               </h1>
             </div>
@@ -179,7 +179,7 @@ export default function AdminWalkins() {
               border: 'none',
               fontSize: '14px',
               fontWeight: 700,
-              color: 'var(--government-navy, #0F172A)',
+              color: '#0F172A',
               padding: '0.2rem 0.4rem',
               outline: 'none',
               background: 'transparent'
@@ -197,7 +197,7 @@ export default function AdminWalkins() {
           <button
             onClick={() => setSelectedDate(todayStr)}
             style={{
-              background: selectedDate === todayStr ? 'var(--primary-green, #15803D)' : '#F1F5F9',
+              background: selectedDate === todayStr ? '#15803D' : '#F1F5F9',
               color: selectedDate === todayStr ? '#FFFFFF' : '#475569',
               border: 'none',
               borderRadius: '6px',
@@ -232,11 +232,11 @@ export default function AdminWalkins() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
         
         {/* Total Scheduled */}
-        <div className="card" style={{ padding: '1.1rem 1.25rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', borderLeft: '4px solid var(--government-navy, #0F172A)' }}>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeft: '4px solid #15803D', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
           <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748B', marginBottom: '4px' }}>
             Total Roster for Date
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#15803D' }}>
             {summary.totalScheduled || 0}
           </div>
           <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
@@ -319,12 +319,13 @@ export default function AdminWalkins() {
               style={{
                 padding: '0.4rem 0.75rem',
                 borderRadius: '6px',
-                border: filterBatch === b.id ? '1px solid var(--government-navy, #0F172A)' : '1px solid #CBD5E1',
-                backgroundColor: filterBatch === b.id ? 'var(--government-navy, #0F172A)' : '#FFFFFF',
+                border: filterBatch === b.id ? '1px solid #15803D' : '1px solid #E2E8F0',
+                backgroundColor: filterBatch === b.id ? '#15803D' : '#FFFFFF',
                 color: filterBatch === b.id ? '#FFFFFF' : '#475569',
                 fontSize: '12px',
                 fontWeight: 700,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
               {b.label}
@@ -346,12 +347,13 @@ export default function AdminWalkins() {
               style={{
                 padding: '0.4rem 0.75rem',
                 borderRadius: '6px',
-                border: filterStatus === s.id ? '1px solid var(--primary-green, #15803D)' : '1px solid #CBD5E1',
-                backgroundColor: filterStatus === s.id ? 'var(--primary-green, #15803D)' : '#FFFFFF',
+                border: filterStatus === s.id ? '1px solid #15803D' : '1px solid #E2E8F0',
+                backgroundColor: filterStatus === s.id ? '#15803D' : '#FFFFFF',
                 color: filterStatus === s.id ? '#FFFFFF' : '#475569',
                 fontSize: '12px',
                 fontWeight: 700,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
               {s.label}
@@ -362,7 +364,7 @@ export default function AdminWalkins() {
       </div>
 
       {/* ── ROSTER TABLE ─────────────────────────────────────────────────── */}
-      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
         
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
@@ -371,7 +373,7 @@ export default function AdminWalkins() {
         ) : filteredRoster.length === 0 ? (
           <div style={{ padding: '3.5rem', textAlign: 'center' }}>
             <Calendar size={38} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--government-navy, #0F172A)', margin: '0 0 0.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', margin: '0 0 0.25rem' }}>
               No Walk-ins Scheduled
             </h3>
             <p style={{ color: '#64748B', fontSize: '13px', margin: 0 }}>
@@ -382,13 +384,13 @@ export default function AdminWalkins() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.05em' }}>
-                  <th style={{ padding: '0.85rem 1rem', width: '50px' }}>#</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Batch Slot</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Business Name</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Applicant / Contact</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Walk-in Status</th>
-                  <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>Actions</th>
+                <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                  <th style={{ padding: '0.85rem 1rem', width: '50px', fontWeight: 700 }}>#</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Batch Slot</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Business Name</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Applicant / Contact</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Walk-in Status</th>
+                  <th style={{ padding: '0.85rem 1rem', textAlign: 'right', fontWeight: 700 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -531,12 +533,13 @@ export default function AdminWalkins() {
                               gap: '0.25rem',
                               padding: '0.35rem 0.6rem',
                               borderRadius: '6px',
-                              border: '1px solid #CBD5E1',
-                              backgroundColor: '#FFFFFF',
-                              color: 'var(--government-navy, #0F172A)',
+                              border: '1px solid #BBF7D0',
+                              backgroundColor: '#F0FDF4',
+                              color: '#15803D',
                               fontSize: '11.5px',
-                              fontWeight: 600,
-                              cursor: 'pointer'
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
                             }}
                             title="Preview pre-filled Form BPLO-01"
                           >
@@ -555,12 +558,13 @@ export default function AdminWalkins() {
                               gap: '0.25rem',
                               padding: '0.35rem 0.6rem',
                               borderRadius: '6px',
-                              border: '1px solid #CBD5E1',
+                              border: '1px solid #E2E8F0',
                               backgroundColor: '#FFFFFF',
-                              color: 'var(--government-navy, #0F172A)',
+                              color: '#334155',
                               fontSize: '11.5px',
                               fontWeight: 600,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
                             }}
                             title="Edit Form BPLO-01 fields"
                           >

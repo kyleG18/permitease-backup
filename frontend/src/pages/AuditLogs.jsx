@@ -170,8 +170,13 @@ const AuditLogs = () => {
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 audit-header-row" style={{ gap: '1rem' }}>
         <div>
-          <h2 className="m-0" style={{ fontWeight: 800, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '1.65rem' }}>
-            <Activity size={28} color="var(--primary-green, #16A34A)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+            <div style={{ padding: '0.45rem', backgroundColor: '#DCFCE7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Activity size={20} color="#15803D" />
+            </div>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.08em' }}>SECURITY & COMPLIANCE</span>
+          </div>
+          <h2 className="m-0" style={{ fontWeight: 800, color: '#0F172A', fontSize: '1.65rem' }}>
             System Audit Trail
           </h2>
           <p className="text-muted m-0 mt-1" style={{ fontSize: '0.9rem' }}>
@@ -198,22 +203,22 @@ const AuditLogs = () => {
 
       {/* Metric Cards */}
       <div className="audit-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #16A34A' }}>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #15803D', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#15803D', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Total Events</span>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-dark)', marginTop: '0.2rem' }}>{logs.length}</div>
+          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', marginTop: '0.2rem' }}>{logs.length}</div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Security audit records</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #0284C7' }}>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #0284C7', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#0284C7', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Filtered Results</span>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0284C7', marginTop: '0.2rem' }}>{filteredLogs.length}</div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Matching active filters</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #F59E0B' }}>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #F59E0B', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#F59E0B', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Logged Today</span>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#D97706', marginTop: '0.2rem' }}>{todayCount}</div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Activity in last 24 hrs</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #8B5CF6' }}>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #8B5CF6', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#8B5CF6', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Active Actors</span>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#6D28D9', marginTop: '0.2rem' }}>{uniqueUsers}</div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Distinct users logged</span>
@@ -402,16 +407,16 @@ const AuditLogs = () => {
       </div>
 
       {/* Audit Log Table */}
-      <div className="card" style={{ borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div className="card" style={{ borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
         <div className="table-responsive">
           <table className="table" style={{ margin: 0 }}>
             <thead>
-              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.78rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Timestamp</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '0.78rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Operator & Role</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '0.78rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Action</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '0.78rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Details</th>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.78rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Origin IP</th>
+              <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Timestamp</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Operator & Role</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Action</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Details</th>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Origin IP</th>
               </tr>
             </thead>
             <tbody>

@@ -159,10 +159,10 @@ const Requirements = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#15803D', marginBottom: '0.25rem' }}>
             Regulatory Compliance Masterlist
           </div>
-          <h1 style={{ color: 'var(--government-navy)', margin: 0, fontSize: '28px', fontWeight: '700' }}>
+          <h1 style={{ color: '#0F172A', margin: 0, fontSize: '28px', fontWeight: '800' }}>
             Permit Requirements & Local Ordinances
           </h1>
           <p style={{ margin: '0.25rem 0 0', color: '#64748B', fontSize: '14px' }}>
@@ -173,7 +173,7 @@ const Requirements = () => {
           <button 
             className="btn btn-primary" 
             onClick={openAddModal}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', borderRadius: '6px', fontWeight: '600', fontSize: '14px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', borderRadius: '8px', fontWeight: '700', fontSize: '13.5px', backgroundColor: '#15803D', boxShadow: '0 2px 8px rgba(21,128,61,0.25)' }}
           >
             <Plus size={18} /> Configure New Requirement
           </button>
@@ -182,35 +182,35 @@ const Requirements = () => {
 
       {/* KPI Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderLeft: '4px solid #15803D', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#15803D', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
             Total Clearances
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--government-navy)' }}>{totalCount}</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#15803D' }}>{totalCount}</div>
           <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.25rem' }}>Monitored in PermitEase Masterlist</div>
         </div>
         
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#B45309', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderLeft: '4px solid #D97706', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#B45309', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
             Mandatory Prerequisites
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#B45309' }}>{mandatoryCount}</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#B45309' }}>{mandatoryCount}</div>
           <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.25rem' }}>Required for permit issuance</div>
         </div>
 
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#1E40AF', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderLeft: '4px solid #1E40AF', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#1E40AF', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
             Conditional Clearances
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#1E40AF' }}>{conditionalCount}</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#1E40AF' }}>{conditionalCount}</div>
           <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.25rem' }}>Triggered by industry/status</div>
         </div>
 
-        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1.25rem' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#166534', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+        <div style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderLeft: '4px solid #166534', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#166534', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
             Partner Agencies
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#166534' }}>{distinctAgencies}</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#166534' }}>{distinctAgencies}</div>
           <div style={{ fontSize: '12px', color: '#64748B', marginTop: '0.25rem' }}>BFP, MHO, MEO, MPDO, Barangay</div>
         </div>
       </div>
@@ -290,15 +290,15 @@ const Requirements = () => {
       {loading ? (
         <div style={{ padding: '4rem', textAlign: 'center', color: '#64748B' }}>Loading municipal requirements...</div>
       ) : (
-        <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+        <div style={{ backgroundColor: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
-              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                <th style={{ padding: '0.875rem 1.25rem', fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Clearance & Legal Basis</th>
-                <th style={{ padding: '0.875rem 1.25rem', fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Classification & Rule</th>
-                <th style={{ padding: '0.875rem 1.25rem', fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Applicability</th>
-                <th style={{ padding: '0.875rem 1.25rem', fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Est. Fee & Cycle</th>
-                {isAdmin && <th style={{ padding: '0.875rem 1.25rem', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Actions</th>}
+              <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
+                <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Clearance & Legal Basis</th>
+                <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Classification & Rule</th>
+                <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Applicability</th>
+                <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Est. Fee & Cycle</th>
+                {isAdmin && <th style={{ padding: '0.875rem 1.25rem', textAlign: 'right', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Actions</th>}
               </tr>
             </thead>
             <tbody>

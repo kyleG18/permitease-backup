@@ -174,8 +174,13 @@ const AdminRenewals = () => {
       {/* Header with Title and LGU Context */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ color: 'var(--text-dark)', marginBottom: '0.25rem', fontSize: '1.65rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <CalendarClock size={28} color="var(--primary-green, #16A34A)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+            <div style={{ padding: '0.45rem', backgroundColor: '#DCFCE7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CalendarClock size={20} color="#15803D" />
+            </div>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.08em' }}>COMPLIANCE MONITORING</span>
+          </div>
+          <h1 style={{ color: '#0F172A', marginBottom: '0.25rem', fontSize: '1.65rem', fontWeight: '800' }}>
             Statutory Renewal & Delinquency Radar
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
@@ -324,16 +329,16 @@ const AdminRenewals = () => {
       </div>
 
       {/* Renewals Table */}
-      <div className="card admin-renewals-table-wrap table-scroll-wrap" style={{ padding: 0, overflowX: 'auto', border: '1px solid var(--border-light)' }}>
+      <div className="card admin-renewals-table-wrap table-scroll-wrap" style={{ padding: 0, overflowX: 'auto', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 4px 14px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
         <table className="table" style={{ minWidth: '950px', marginBottom: 0 }}>
           <thead>
-            <tr style={{ backgroundColor: '#F8FAFC' }}>
-              <th style={{ padding: '0.85rem 1rem' }}>Business & Line</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Owner / Contact</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Permit Reference</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Expiration & Countdown</th>
-              <th style={{ padding: '0.85rem 1rem' }}>Statutory Status</th>
-              <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>BPLO Actions</th>
+            <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
+              <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Business & Line</th>
+              <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Owner / Contact</th>
+              <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Permit Reference</th>
+              <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Expiration & Countdown</th>
+              <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Statutory Status</th>
+              <th style={{ padding: '0.9rem 1rem', textAlign: 'right', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>BPLO Actions</th>
             </tr>
           </thead>
           <tbody>

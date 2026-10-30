@@ -73,34 +73,40 @@ export default function AdminPermits() {
   if (error) return <div style={{ padding: '2rem', color: 'var(--danger)' }}>{error}</div>;
 
   return (
-    <div className="admin-permits-container animate-fade-in" style={{ padding: '2rem' }}>
+    <div className="admin-permits-container animate-fade-in" style={{ padding: '2rem', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>Preparation Records</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+          <div style={{ padding: '0.45rem', backgroundColor: '#DCFCE7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={20} color="#15803D" />
+          </div>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.08em' }}>BPLO RECORDS REGISTRY</span>
+        </div>
+        <h1 style={{ margin: 0, color: '#0F172A', fontSize: '1.65rem', fontWeight: '800' }}>Preparation Records</h1>
         <p style={{ color: 'var(--text-muted)', marginTop: '0.35rem', fontSize: '0.9rem' }}>BPLO-verified preparation submission summaries. These are not official issued permits.</p>
       </div>
 
       {/* Summary Cards */}
       <div className="admin-permits-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {[
-          { label: 'Total Issued', count: permits.length, color: '#2563EB', bg: '#DBEAFE' },
-          { label: 'Valid', count: validCount, color: '#166534', bg: '#DCFCE7' },
-          { label: 'Expired', count: expiredCount, color: '#991B1B', bg: '#FEE2E2' },
-        ].map(({ label, count, color, bg }) => (
-          <div key={label} style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.25rem' }}>
-            <div style={{ fontSize: '2rem', fontWeight: '800', color }}>{count}</div>
-            <div style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+          { label: 'Total Issued', count: permits.length, color: '#0F172A', borderAccent: '#15803D' },
+          { label: 'Valid', count: validCount, color: '#15803D', borderAccent: '#15803D' },
+          { label: 'Expired', count: expiredCount, color: '#DC2626', borderAccent: '#DC2626' },
+        ].map(({ label, count, color, borderAccent }) => (
+          <div key={label} style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeft: `4px solid ${borderAccent}`, boxShadow: '0 2px 6px rgba(0,0,0,0.03)', padding: '1.25rem' }}>
+            <div style={{ fontSize: '1.85rem', fontWeight: '800', color }}>{count}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '0.2rem' }}>{label}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="admin-permits-toolbar" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '200px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem' }}>
+      <div className="admin-permits-toolbar" style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '200px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.5rem 0.75rem' }}>
           <Search size={16} color="var(--text-muted)" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by permit no., business, or owner…" style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.9rem' }} />
         </div>
         <select value={filter} onChange={e => setFilter(e.target.value)}
-          style={{ padding: '0.55rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', backgroundColor: 'white' }}>
+          style={{ padding: '0.55rem 0.75rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.875rem', backgroundColor: 'white' }}>
           <option value="ALL">All Statuses</option>
           <option value="VALID">Valid</option>
           <option value="EXPIRED">Expired</option>
@@ -108,12 +114,12 @@ export default function AdminPermits() {
       </div>
 
       {/* Table */}
-      <div className="table-scroll-wrap" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+      <div className="table-scroll-wrap" style={{ backgroundColor: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 4px 14px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid var(--border-light)' }}>
+            <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
               {['Permit No.', 'Business', 'Owner', 'Type', 'Issued', 'Expires', 'Status', 'Actions'].map(h => (
-                <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                <th key={h} style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
               ))}
             </tr>
           </thead>

@@ -141,12 +141,17 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
+    <div className="animate-fade-in" style={{ paddingBottom: '2rem', fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 um-header-row" style={{ gap: '1rem' }}>
         <div>
-          <h2 className="m-0" style={{ fontWeight: 700, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Users size={28} color="var(--primary-green, #16A34A)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+            <div style={{ padding: '0.45rem', backgroundColor: '#DCFCE7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Users size={20} color="#15803D" />
+            </div>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.08em' }}>STAFF & USER DIRECTORY</span>
+          </div>
+          <h2 className="m-0" style={{ fontWeight: 800, color: '#0F172A', fontSize: '1.65rem' }}>
             User Management
           </h2>
           <p className="text-muted m-0 mt-1" style={{ fontSize: '0.9rem' }}>
@@ -166,13 +171,15 @@ const UserManagement = () => {
             className="btn btn-primary"
             onClick={() => { setShowCreateModal(true); setCreateError(''); }}
             style={{ 
-              backgroundColor: 'var(--primary-green, #16A34A)', 
-              borderColor: 'var(--primary-green, #16A34A)',
+              backgroundColor: '#15803D', 
+              borderColor: '#15803D',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
               fontWeight: 600,
-              padding: '0.55rem 1.1rem'
+              padding: '0.55rem 1.1rem',
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(21,128,61,0.25)'
             }}
           >
             <UserPlus size={18} /> Register Staff / User
@@ -237,7 +244,7 @@ const UserManagement = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="card mb-4 um-toolbar" style={{ padding: '1rem' }}>
+      <div className="card mb-4 um-toolbar" style={{ padding: '1.25rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div className="d-flex flex-wrap justify-content-between align-items-center" style={{ gap: '1rem' }}>
           {/* Search Box */}
           <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: '420px' }}>
@@ -283,16 +290,16 @@ const UserManagement = () => {
       </div>
 
       {/* Users Table */}
-      <div className="card">
+      <div className="card" style={{ borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
         <div className="table-responsive">
           <table className="table" style={{ margin: 0 }}>
             <thead>
-              <tr style={{ backgroundColor: '#F8FAFC' }}>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>User Details</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role / Permission</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Account Status</th>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Registered</th>
+              <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>User Details</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role / Permission</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Account Status</th>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Registered</th>
               </tr>
             </thead>
             <tbody>

@@ -49,13 +49,13 @@ const KnowledgeBase = () => {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Knowledge Base</h1>
+          <div><span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#15803D" }}>REGULATORY ARCHIVE</span><h1 style={{ color: "#0F172A", margin: "0.2rem 0 0.25rem", fontSize: "28px", fontWeight: 800 }}>Knowledge Base</h1></div>
           <p className="text-muted">Reference documents, ordinances, and guidelines used by the AI Assistant.</p>
         </div>
-        {isAdmin && <button className="btn btn-primary" onClick={() => setShowModal(true)}><Upload size={18} /> Upload Document</button>}
+        {isAdmin && <button className="btn btn-primary" onClick={() => setShowModal(true)} style={{ backgroundColor: "#15803D", borderRadius: "8px", fontWeight: 700, boxShadow: "0 2px 6px rgba(21,128,61,0.25)" }}><Upload size={18} /> Upload Document</button>}
       </div>
 
       {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--status-expired-bg)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
@@ -76,7 +76,7 @@ const KnowledgeBase = () => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
             {docs.map(doc => (
-              <div key={doc.id} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div key={doc.id} className="card" style={{ display: 'flex', flexDirection: 'column', borderRadius: "12px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={{ width: '48px', height: '48px', background: '#FEF3C7', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
                     📄

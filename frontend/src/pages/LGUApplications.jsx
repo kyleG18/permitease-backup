@@ -174,28 +174,27 @@ export default function LGUApplications() {
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <header style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'var(--government-navy, #0F172A)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <FileText size={20} strokeWidth={2.4} />
             </div>
             <div>
-              <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-green, #15803D)' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#15803D' }}>
                 MUNICIPALITY OF ROXAS • BPLO LICENSING SECTION
               </span>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--government-navy, #0F172A)', margin: 0 }}>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
                 Application Forms (Form BPLO-01)
               </h1>
             </div>
           </div>
           <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
-            Official Roxas Unified Business Permit Application Forms submitted by MSMEs. BPLO personnel can edit all form fields, print, download, or conduct preparation reviews.
+            Official Roxas Unified Business Permit Application Forms submitted by MSMEs. BPLO personnel can edit form fields, print, or conduct preparation reviews.
           </p>
         </div>
 
         {/* Quick Link to Walk-in Schedule */}
         <Link
           to="/admin/walkins"
-          className="btn btn-outline"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -203,13 +202,15 @@ export default function LGUApplications() {
             padding: '0.6rem 1rem',
             fontSize: '13px',
             fontWeight: 700,
-            borderColor: '#CBD5E1',
-            color: 'var(--government-navy, #0F172A)',
+            border: '1px solid #BBF7D0',
+            backgroundColor: '#F0FDF4',
+            color: '#166534',
             textDecoration: 'none',
-            borderRadius: '8px'
+            borderRadius: '8px',
+            transition: 'all 0.15s ease'
           }}
         >
-          <Calendar size={15} color="var(--primary-green, #15803D)" />
+          <Calendar size={15} color="#15803D" />
           View Walk-in Schedule Roster &rarr;
         </Link>
       </header>
@@ -253,12 +254,13 @@ export default function LGUApplications() {
               style={{
                 padding: '0.35rem 0.75rem',
                 borderRadius: '6px',
-                border: filter === f ? '1px solid var(--government-navy, #0F172A)' : '1px solid #CBD5E1',
-                backgroundColor: filter === f ? 'var(--government-navy, #0F172A)' : '#FFFFFF',
+                border: filter === f ? '1px solid #15803D' : '1px solid #E2E8F0',
+                backgroundColor: filter === f ? '#15803D' : '#FFFFFF',
                 color: filter === f ? '#FFFFFF' : '#475569',
                 fontSize: '12px',
                 fontWeight: 700,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
               {f}
@@ -269,7 +271,7 @@ export default function LGUApplications() {
       </div>
 
       {/* ── APPLICATIONS TABLE ───────────────────────────────────────────── */}
-      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
         
         {loading ? (
           <div style={{ padding: '3.5rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
@@ -278,7 +280,7 @@ export default function LGUApplications() {
         ) : filteredApps.length === 0 ? (
           <div style={{ padding: '3.5rem', textAlign: 'center' }}>
             <FileText size={38} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--government-navy, #0F172A)', margin: '0 0 0.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', margin: '0 0 0.25rem' }}>
               No Application Forms Found
             </h3>
             <p style={{ color: '#64748B', fontSize: '13px', margin: 0 }}>
@@ -289,13 +291,13 @@ export default function LGUApplications() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.05em' }}>
-                  <th style={{ padding: '0.85rem 1rem' }}>Form / Ref #</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Business Profile</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Applicant / Owner</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Type &amp; Date</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>Status</th>
-                  <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>BPLO Actions</th>
+                <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Form / Ref #</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Business Profile</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Applicant / Owner</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Type &amp; Date</th>
+                  <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Status</th>
+                  <th style={{ padding: '0.85rem 1rem', textAlign: 'right', fontWeight: 700 }}>BPLO Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -384,12 +386,13 @@ export default function LGUApplications() {
                               gap: '0.3rem',
                               padding: '0.4rem 0.65rem',
                               borderRadius: '6px',
-                              border: '1.5px solid #CBD5E1',
+                              border: '1px solid #E2E8F0',
                               backgroundColor: '#FFFFFF',
-                              color: 'var(--government-navy, #0F172A)',
+                              color: '#334155',
                               fontSize: '11.5px',
                               fontWeight: 700,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
                             }}
                             title="Edit all fields of Form BPLO-01"
                           >
@@ -405,12 +408,13 @@ export default function LGUApplications() {
                               gap: '0.3rem',
                               padding: '0.4rem 0.65rem',
                               borderRadius: '6px',
-                              border: '1px solid var(--primary-green, #15803D)',
+                              border: '1px solid #BBF7D0',
                               backgroundColor: '#F0FDF4',
-                              color: 'var(--primary-green, #15803D)',
+                              color: '#15803D',
                               fontSize: '11.5px',
                               fontWeight: 700,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
                             }}
                             title="Preview and print filled Form BPLO-01"
                           >
@@ -424,13 +428,15 @@ export default function LGUApplications() {
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '0.25rem',
-                              padding: '0.4rem 0.65rem',
+                              padding: '0.4rem 0.75rem',
                               borderRadius: '6px',
-                              backgroundColor: 'var(--government-navy, #0F172A)',
+                              backgroundColor: '#15803D',
                               color: '#FFFFFF',
                               fontSize: '11.5px',
                               fontWeight: 700,
-                              textDecoration: 'none'
+                              textDecoration: 'none',
+                              boxShadow: '0 2px 6px rgba(21, 128, 61, 0.25)',
+                              transition: 'all 0.15s ease'
                             }}
                             title="Full administrative review and checklist"
                           >

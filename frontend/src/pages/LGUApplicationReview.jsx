@@ -257,21 +257,21 @@ export default function LGUApplicationReview() {
       </div>
 
       {/* Header Summary Card */}
-      <div className="lgu-review-header-card" style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between' }}>
+      <div className="lgu-review-header-card" style={{ backgroundColor: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 4px 14px rgba(0,0,0,0.03)', padding: '1.75rem 2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Pre-Assessment Ref.</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-green)', fontFamily: 'monospace', marginBottom: '0.5rem' }}>{app.application_number}</div>
-          <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.25rem', color: 'var(--text-dark)' }}>{app.business_name}</h1>
-          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{app.application_type === 'NEW' ? 'New Business Permit Preparation' : 'Renewal Preparation'}</div>
+          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.35rem' }}>Pre-Assessment Ref.</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#15803D', fontFamily: 'monospace', marginBottom: '0.35rem' }}>{app.application_number}</div>
+          <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.25rem', color: '#0F172A', fontWeight: '800' }}>{app.business_name}</h1>
+          <div style={{ fontSize: '0.9rem', color: '#64748B' }}>{app.application_type === 'NEW' ? 'New Business Permit Preparation' : 'Renewal Preparation'}</div>
         </div>
         <div className="lgu-review-meta-row" style={{ display: 'flex', gap: '2rem', textAlign: 'right' }}>
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Preparation Status</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.35rem' }}>Preparation Status</div>
             <StatusBadge status={app.status} />
           </div>
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Submitted</div>
-            <div style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-dark)' }}>{formatDate(submittedDate)}</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.35rem' }}>Submitted</div>
+            <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#0F172A' }}>{formatDate(submittedDate)}</div>
           </div>
         </div>
       </div>
@@ -282,13 +282,13 @@ export default function LGUApplicationReview() {
         {/* ── FORM ACTIONS (Edit & Print) — always visible ── */}
         <button
           onClick={() => setIsEditModalOpen(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', color: 'var(--government-navy)', border: '1.5px solid #CBD5E1', padding: '0.7rem 1.25rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', color: '#334155', border: '1px solid #E2E8F0', padding: '0.65rem 1.15rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.875rem', transition: 'all 0.15s ease' }}
         >
           <Edit3 size={15} /> Edit Form Info
         </button>
         <button
           onClick={() => setIsFormPreviewOpen(prev => !prev)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: isFormPreviewOpen ? 'var(--government-navy)' : 'white', color: isFormPreviewOpen ? 'white' : 'var(--government-navy)', border: '1.5px solid var(--government-navy)', padding: '0.7rem 1.25rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: isFormPreviewOpen ? '#15803D' : '#F0FDF4', color: isFormPreviewOpen ? '#FFFFFF' : '#15803D', border: isFormPreviewOpen ? '1.5px solid #15803D' : '1.5px solid #BBF7D0', padding: '0.65rem 1.15rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.875rem', transition: 'all 0.15s ease' }}
         >
           {isFormPreviewOpen ? <Eye size={15} /> : <Printer size={15} />}
           {isFormPreviewOpen ? 'Hide Form' : 'View & Print Form BPLO-01'}
@@ -298,25 +298,25 @@ export default function LGUApplicationReview() {
 
         {/* ── REVIEW WORKFLOW ACTIONS ── */}
         {canStartReview && (
-          <button onClick={() => setModal('review')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#2563EB', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
+          <button onClick={() => setModal('review')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: 'white', border: 'none', padding: '0.7rem 1.4rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(21,128,61,0.3)' }}>
             <Play size={16} /> Start Review
           </button>
         )}
         {canAct && (
           <>
-            <button onClick={() => setModal('correction')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#D97706', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
+            <button onClick={() => setModal('correction')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#D97706', color: 'white', border: 'none', padding: '0.7rem 1.4rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(217,119,6,0.3)' }}>
               <RotateCcw size={16} /> Request Correction
             </button>
-            <button onClick={() => setModal('approve')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#16A34A', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
+            <button onClick={() => setModal('approve')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: 'white', border: 'none', padding: '0.7rem 1.4rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(21,128,61,0.3)' }}>
               <CheckCircle size={16} /> Mark as Verified
             </button>
-            <button onClick={() => setModal('reject')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#DC2626', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer' }}>
+            <button onClick={() => setModal('reject')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#DC2626', color: 'white', border: 'none', padding: '0.7rem 1.4rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(220,38,38,0.3)' }}>
               <XCircle size={16} /> Request Corrections
             </button>
           </>
         )}
         {app.status === 'APPROVED' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', fontSize: '0.9rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0', padding: '0.65rem 1.25rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.9rem' }}>
             <CheckCircle size={16} /> Pre-Assessment Verified
           </div>
         )}

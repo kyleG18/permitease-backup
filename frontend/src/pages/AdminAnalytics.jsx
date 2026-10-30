@@ -116,13 +116,13 @@ export default function AdminAnalytics() {
 
     // StatCard Component
     const StatCard = ({ title, value, icon, colorClass, subtitle }) => (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem', flex: 1, minWidth: '200px' }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem', flex: 1, minWidth: '200px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</div>
                 <div className={`text-${colorClass}`}>{icon}</div>
             </div>
-            <div style={{ fontSize: '1.85rem', fontWeight: '800', color: 'var(--government-navy)', lineHeight: '1' }}>{value !== null && value !== undefined ? value : 'N/A'}</div>
-            {subtitle && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>{subtitle}</div>}
+            <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#0F172A', lineHeight: '1' }}>{value !== null && value !== undefined ? value : 'N/A'}</div>
+            {subtitle && <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.4rem' }}>{subtitle}</div>}
         </div>
     );
 
@@ -132,10 +132,10 @@ export default function AdminAnalytics() {
             {/* ── SCREEN HEADER (Hidden in print) ───────────────────────── */}
             <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '0.25rem' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#15803D', marginBottom: '0.25rem' }}>
                         Municipality of Roxas, Oriental Mindoro • BPLO
                     </div>
-                    <h1 style={{ color: 'var(--government-navy)', margin: '0 0 0.25rem', fontSize: '28px', fontWeight: '700' }}>
+                    <h1 style={{ color: '#0F172A', margin: '0 0 0.25rem', fontSize: '28px', fontWeight: '800' }}>
                         Reports & Analytics
                     </h1>
                     <p style={{ margin: 0, color: '#64748B', fontSize: '14px' }}>
@@ -154,13 +154,14 @@ export default function AdminAnalytics() {
                                 border: 'none',
                                 cursor: 'pointer',
                                 fontSize: '13px',
-                                fontWeight: '600',
+                                fontWeight: '700',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.35rem',
-                                backgroundColor: activeTab === 'analytics' ? 'white' : 'transparent',
-                                color: activeTab === 'analytics' ? 'var(--government-navy)' : '#64748B',
-                                boxShadow: activeTab === 'analytics' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                backgroundColor: activeTab === 'analytics' ? '#15803D' : 'transparent',
+                                color: activeTab === 'analytics' ? '#FFFFFF' : '#64748B',
+                                boxShadow: activeTab === 'analytics' ? '0 1px 3px rgba(21,128,61,0.2)' : 'none',
+                                transition: 'all 0.15s ease'
                             }}
                         >
                             <BarChart2 size={15} /> Visual Analytics
@@ -173,13 +174,14 @@ export default function AdminAnalytics() {
                                 border: 'none',
                                 cursor: 'pointer',
                                 fontSize: '13px',
-                                fontWeight: '600',
+                                fontWeight: '700',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.35rem',
-                                backgroundColor: activeTab === 'report' ? 'white' : 'transparent',
-                                color: activeTab === 'report' ? 'var(--government-navy)' : '#64748B',
-                                boxShadow: activeTab === 'report' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                backgroundColor: activeTab === 'report' ? '#15803D' : 'transparent',
+                                color: activeTab === 'report' ? '#FFFFFF' : '#64748B',
+                                boxShadow: activeTab === 'report' ? '0 1px 3px rgba(21,128,61,0.2)' : 'none',
+                                transition: 'all 0.15s ease'
                             }}
                         >
                             <FileText size={15} /> Executive Report Table
@@ -191,7 +193,7 @@ export default function AdminAnalytics() {
                         className="form-control" 
                         value={period} 
                         onChange={(e) => setPeriod(e.target.value)} 
-                        style={{ width: '150px', padding: '0.45rem 0.75rem', fontSize: '13px', borderRadius: '6px', border: '1px solid #CBD5E1' }}
+                        style={{ width: '150px', padding: '0.45rem 0.75rem', fontSize: '13px', borderRadius: '6px', border: '1px solid #CBD5E1', outline: 'none', fontWeight: 600, color: '#334155' }}
                     >
                         <option value="30d">Last 30 Days</option>
                         <option value="90d">Last 90 Days</option>
@@ -206,14 +208,16 @@ export default function AdminAnalytics() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.4rem',
-                            backgroundColor: 'var(--primary-green)',
+                            backgroundColor: '#15803D',
                             color: 'white',
                             border: 'none',
                             padding: '0.55rem 1rem',
                             borderRadius: '6px',
-                            fontWeight: '600',
+                            fontWeight: '700',
                             fontSize: '13px',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 6px rgba(21,128,61,0.3)',
+                            transition: 'all 0.15s ease'
                         }}
                     >
                         <Printer size={16} /> Print Official Report
