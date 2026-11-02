@@ -111,6 +111,7 @@ app.use('/api/taxes', require('./routes/taxRoutes'));
 app.use('/api/readiness', require('./routes/readinessRoutes'));
 app.use('/api/renewals', require('./routes/renewalRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/schedule', require('./routes/holidayRoutes'));
 
 // Basic route for testing
 app.get('/', (req, res) => {

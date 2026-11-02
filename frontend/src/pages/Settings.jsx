@@ -44,20 +44,22 @@ const Settings = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '800px' }}>
-      <div className="mb-4">
-        <h2 className="m-0" style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{ts.title}</h2>
-        <p className="text-muted">{ts.subtitle}</p>
+    <div className="animate-fade-in page-container" style={{ maxWidth: '800px' }}>
+      <div className="page-heading-row" style={{ marginBottom: '1.75rem' }}>
+        <div>
+          <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800, color: 'var(--government-navy)' }}>{ts.title}</h1>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>{ts.subtitle}</p>
+        </div>
       </div>
 
-      <div className="card mb-4">
-        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div className="card mb-4" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.25rem 1.5rem', margin: 0 }}>
           <User size={20} className="text-muted" />
           <h3 className="m-0" style={{ fontSize: '1.125rem' }}>{ts.profileTab}</h3>
         </div>
-        <div className="p-4">
+        <div style={{ padding: '1.5rem' }}>
           {profileMessage.text && (
-            <div className={`p-3 mb-3 rounded ${profileMessage.type === 'success' ? 'bg-success text-white' : 'bg-danger text-white'}`}>
+            <div className={`alert ${profileMessage.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '1rem' }}>
               {profileMessage.text}
             </div>
           )}
@@ -97,14 +99,14 @@ const Settings = () => {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.25rem 1.5rem', margin: 0 }}>
           <Lock size={20} className="text-muted" />
           <h3 className="m-0" style={{ fontSize: '1.125rem' }}>{ts.securityTab}</h3>
         </div>
-        <div className="p-4">
+        <div style={{ padding: '1.5rem' }}>
           {passwordMessage.text && (
-            <div className={`p-3 mb-3 rounded ${passwordMessage.type === 'success' ? 'bg-success text-white' : 'bg-danger text-white'}`}>
+            <div className={`alert ${passwordMessage.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '1rem' }}>
               {passwordMessage.text}
             </div>
           )}

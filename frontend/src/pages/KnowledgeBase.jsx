@@ -3,6 +3,8 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { Library, Upload, Trash2, X, FileText, ExternalLink } from 'lucide-react';
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+
 const KnowledgeBase = () => {
   const { user } = useContext(AuthContext);
   const [docs, setDocs] = useState([]);
@@ -49,50 +51,51 @@ const KnowledgeBase = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div className="animate-fade-in page-container" style={{ maxWidth: "1200px" }}>
+      <div className="page-heading-row" style={{ marginBottom: '2rem' }}>
         <div>
-          <div><span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#15803D" }}>REGULATORY ARCHIVE</span><h1 style={{ color: "#0F172A", margin: "0.2rem 0 0.25rem", fontSize: "28px", fontWeight: 800 }}>Knowledge Base</h1></div>
-          <p className="text-muted">Reference documents, ordinances, and guidelines used by the AI Assistant.</p>
+          <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--primary-green)" }}>REGULATORY ARCHIVE</span>
+          <h1 style={{ color: "var(--government-navy)", margin: "0.2rem 0 0.25rem", fontSize: "1.5rem", fontWeight: 800 }}>Knowledge Base</h1>
+          <p className="text-muted" style={{ margin: 0, fontSize: "0.875rem" }}>Reference documents, municipal revenue codes, and ordinances informing AI assessments and chatbot guidance.</p>
         </div>
-        {isAdmin && <button className="btn btn-primary" onClick={() => setShowModal(true)} style={{ backgroundColor: "#15803D", borderRadius: "8px", fontWeight: 700, boxShadow: "0 2px 6px rgba(21,128,61,0.25)" }}><Upload size={18} /> Upload Document</button>}
+        {isAdmin && <button className="btn btn-primary" onClick={() => setShowModal(true)}><Upload size={18} /> Upload Document</button>}
       </div>
 
-      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--status-expired-bg)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
+      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--danger-light)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid #FECACA' }}>{error}</div>}
 
       {!isAdmin && (
-        <div style={{ background: 'var(--light-green)', border: '1px solid var(--secondary-green)', borderRadius: 'var(--radius-sm)', padding: '1rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: 'var(--primary-green)' }}>
-          📚 These documents are used by the AI Assistant to answer permit-related questions. Contact your LGU Administrator to upload additional documents.
+        <div style={{ background: 'var(--primary-green-light)', border: '1px solid #BBF7D0', borderRadius: 'var(--radius-sm)', padding: '0.85rem 1rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: 'var(--primary-green-dark)' }}>
+          📚 These official municipal documents guide the AI in evaluating your permit requirements and fee calculations.
         </div>
       )}
 
-      {loading ? <div className="text-muted text-center" style={{ padding: '4rem' }}>Loading...</div> :
+      {loading ? <div className="text-muted text-center" style={{ padding: '4rem' }}>Loading documents...</div> :
         docs.length === 0 ? (
-          <div className="card text-center" style={{ padding: '4rem' }}>
-            <Library size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
-            <h3 className="text-muted">Knowledge Base is Empty</h3>
-            <p className="text-muted">{isAdmin ? 'Upload documents to help the AI Assistant answer permit questions.' : 'No documents have been uploaded yet.'}</p>
+          <div className="empty-state">
+            <Library size={48} className="empty-state__icon" style={{ color: 'var(--text-muted)' }} />
+            <h3 className="empty-state__title">Knowledge Base is Empty</h3>
+            <p className="empty-state__desc">{isAdmin ? 'Upload municipal documents to help the AI Assistant answer permit questions.' : 'No municipal documents have been uploaded yet.'}</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
             {docs.map(doc => (
-              <div key={doc.id} className="card" style={{ display: 'flex', flexDirection: 'column', borderRadius: "12px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+              <div key={doc.id} className="card" style={{ display: 'flex', flexDirection: 'column', borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ width: '48px', height: '48px', background: '#FEF3C7', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
+                  <div style={{ width: '44px', height: '44px', background: 'var(--accent-gold-light)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0 }}>
                     📄
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem' }}>{doc.title}</h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>{new Date(doc.uploaded_at).toLocaleDateString()}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{ margin: 0, fontSize: '0.925rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.title}</h4>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>{new Date(doc.uploaded_at).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
-                  <a href={`http://localhost:5000/uploads/${doc.document_path}`} target="_blank" rel="noreferrer"
+                  <a href={`${API_BASE}/uploads/${doc.document_path}`} target="_blank" rel="noreferrer"
                     className="btn btn-outline" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
                     <ExternalLink size={14} /> View PDF
                   </a>
                   {isAdmin && (
-                    <button className="btn" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', background: 'var(--status-expired-bg)', color: 'var(--danger)', border: 'none' }} onClick={() => handleDelete(doc.id)}>
+                    <button className="btn" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', background: 'var(--danger-light)', color: 'var(--danger)', border: 'none' }} onClick={() => handleDelete(doc.id)}>
                       <Trash2 size={14} /> Delete
                     </button>
                   )}

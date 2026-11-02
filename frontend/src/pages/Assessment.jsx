@@ -8,7 +8,8 @@ import {
   BrainCircuit, CheckCircle, CheckCircle2, FileText, ChevronDown, ChevronUp,
   History, Info, Building2, AlertCircle, Sparkles, Send, X,
   ArrowRight, HelpCircle, MapPin, ClipboardList, Loader2, Clock, Printer,
-  PenLine, StickyNote, ShieldCheck, BookOpen, ExternalLink, Library
+  PenLine, StickyNote, ShieldCheck, BookOpen, ExternalLink, Library,
+  Landmark, Building, Filter, Layers
 } from 'lucide-react';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
@@ -21,6 +22,79 @@ const SIGNATURE_KEYWORDS = [
 function requiresSignature(permitName = '') {
   const lower = (permitName || '').toLowerCase();
   return SIGNATURE_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+function getRequirementStage(req, isTl = false) {
+  const name = (req.permit_name || '').toLowerCase();
+  const agency = (req.issuing_agency || '').toLowerCase();
+
+  // STAGE 1: National Legal Registrations (DTI, SEC, CDA, BIR)
+  if (
+    agency.includes('dti') || agency.includes('sec') || agency.includes('cda') || agency.includes('bir') ||
+    name.includes('dti') || name.includes('sec') || name.includes('cda') || name.includes('bir') ||
+    name.includes('tax identification') || name.includes('certificate of registration') || name.includes('business name')
+  ) {
+    return {
+      id: 'stage_1',
+      order: 1,
+      title: isTl ? 'Yugto 1 — Pambansang Legal na Rehistro' : 'Stage 1 — National Legal Registrations',
+      badge: isTl ? 'Pambansang Ahensya' : 'National Agencies',
+      description: isTl ? 'Pangunahing pagkakakilanlan at rehistro sa buwis bago kumuha ng mga lokal na clearance.' : 'Foundational identity and tax registrations to secure first before local clearances.',
+      Icon: Landmark,
+      color: 'var(--government-navy)',
+      bg: '#F1F4F8',
+      border: '#D1D9E0'
+    };
+  }
+
+  // STAGE 2: Barangay & Community Clearances (Barangay, Cedula / Community Tax)
+  if (
+    agency.includes('barangay') || agency.includes('treasur') || agency.includes('mto') ||
+    name.includes('barangay') || name.includes('cedula') || name.includes('community tax')
+  ) {
+    return {
+      id: 'stage_2',
+      order: 2,
+      title: isTl ? 'Yugto 2 — Mga Clearance sa Barangay at Komunidad' : 'Stage 2 — Barangay & Community Clearances',
+      badge: isTl ? 'Lokal na Komunidad' : 'Local Community',
+      description: isTl ? 'Mga clearance mula sa iyong lokal na barangay hall at sedula / community tax.' : 'Jurisdictional clearances from your local barangay hall and community tax assessment.',
+      Icon: Building,
+      color: 'var(--government-navy)',
+      bg: '#F1F4F8',
+      border: '#D1D9E0'
+    };
+  }
+
+  // STAGE 3: Municipal Inspections & Regulatory Clearances (BFP, Health/Sanitary, Zoning, Building)
+  if (
+    agency.includes('fire') || agency.includes('bfp') || agency.includes('health') || agency.includes('sanitary') || agency.includes('zoning') || agency.includes('engineer') || agency.includes('building') ||
+    name.includes('fire') || name.includes('fsic') || name.includes('sanitary') || name.includes('health') || name.includes('zoning') || name.includes('locational') || name.includes('occupancy')
+  ) {
+    return {
+      id: 'stage_3',
+      order: 3,
+      title: isTl ? 'Yugto 3 — Inspeksyon sa Munisipyo at Regulasyon' : 'Stage 3 — Municipal Inspections & Regulatory Clearances',
+      badge: isTl ? 'Mga Tanggapan ng Munisipyo ng Roxas' : 'Roxas Municipal Offices',
+      description: isTl ? 'Mga clearance para sa kaligtasan, kalinisan, at zoning na kinakailangan ng munisipyo.' : 'Safety, sanitation, and zoning clearances required by municipal inspection departments.',
+      Icon: ShieldCheck,
+      color: 'var(--government-navy)',
+      bg: '#F1F4F8',
+      border: '#D1D9E0'
+    };
+  }
+
+  // STAGE 4: Industry-Specific & Special Clearances (MENRO, Special Permits, Tourism, Liquor, etc.)
+  return {
+    id: 'stage_4',
+    order: 4,
+    title: isTl ? 'Yugto 4 — Mga Espesyal na Clearance ayon sa Industriya' : 'Stage 4 — Industry-Specific & Special Clearances',
+    badge: isTl ? 'Espesyal / Kondisyonal' : 'Special / Conditional',
+    description: isTl ? 'Mga clearance sa kapaligiran, kalakalan, o espesyal na permit para sa iyong negosyo.' : 'Environmental, trade, or specialized clearances tailored to your specific business activities.',
+    Icon: Sparkles,
+    color: 'var(--government-navy)',
+    bg: '#F1F4F8',
+    border: '#D1D9E0'
+  };
 }
 
 function parseInlineBold(text) {
@@ -89,7 +163,7 @@ function FormattedAiResponse({ text }) {
     if (lower.includes('status') || lower.includes('note') || lower.includes('record') || lower.includes('paalala')) {
       return { Icon: Info, color: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD', labelColor: '#0369A1' };
     }
-    return { Icon: Sparkles, color: '#4F46E5', bg: '#EEF2FF', border: '#C7D2FE', labelColor: '#3730A3' };
+    return { Icon: Sparkles, color: 'var(--primary-green)', bg: 'var(--primary-green-light)', border: '#B7DEC5', labelColor: 'var(--primary-green-dark)' };
   };
 
   return (
@@ -158,12 +232,32 @@ function FormattedAiResponse({ text }) {
   );
 }
 
+const ANALYSIS_STEPS = [
+  'Reading business profile & declared activities in Roxas City...',
+  'Cross-referencing Roxas Municipal Revenue Code & national statutes...',
+  'Checking prerequisite clearances (DTI/SEC, BFP, Sanitary, Zoning)...',
+  'Finalizing tailored permit checklist & estimated processing fees...'
+];
+
 const Assessment = () => {
   const { user, token } = useContext(AuthContext);
   const { lang, t } = useContext(LanguageContext);
+  const isTl = lang === 'tl';
   const authToken = token || user?.token || '';
   const config = { headers: { Authorization: `Bearer ${authToken}` } };
   const ta = t.assessment || {};
+
+  const analysisSteps = isTl ? [
+    'Binabasa ang profile ng negosyo at mga idineklarang aktibidad sa Bayan ng Roxas...',
+    'Isinasangguni sa Roxas Municipal Revenue Code at mga pambansang batas...',
+    'Sinusuri ang mga paunang clearance (DTI/SEC, BFP, Sanitary, Zoning)...',
+    'Kinukumpleto ang iniangkop na checklist ng permit at mga tinatayang bayarin...'
+  ] : [
+    'Reading business profile & declared activities in Roxas City...',
+    'Cross-referencing Roxas Municipal Revenue Code & national statutes...',
+    'Checking prerequisite clearances (DTI/SEC, BFP, Sanitary, Zoning)...',
+    'Finalizing tailored permit checklist & estimated processing fees...'
+  ];
 
   const [businesses, setBusinesses] = useState([]);
   const [selectedBizId, setSelectedBizId] = useState('');
@@ -174,11 +268,22 @@ const Assessment = () => {
   const [knowledgeDocs, setKnowledgeDocs] = useState([]);
   const [checklist, setChecklist] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [analysisStep, setAnalysisStep] = useState(0);
   const [loadingChecklist, setLoadingChecklist] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [expandedHistory, setExpandedHistory] = useState(null);
+
+  // Cycle analysis message while loading
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => {
+      setAnalysisStep(prev => (prev + 1) % analysisSteps.length);
+    }, 1600);
+    return () => clearInterval(interval);
+  }, [loading, analysisSteps.length]);
 
   // Ask AI state per requirement: { [reqKey]: { isOpen: boolean, loading: boolean, answer: string, question: string, inputVal: string } }
   const [aiHelperState, setAiHelperState] = useState({});
@@ -252,6 +357,7 @@ const Assessment = () => {
       return;
     }
     setLoading(true);
+    setAnalysisStep(0);
     setError('');
     setSuccessMsg('');
     try {
@@ -269,7 +375,8 @@ const Assessment = () => {
       const compRes = await axios.get(`${API}/compliance/business/${selectedBizId}`, config);
       setChecklist(compRes.data?.checklist || []);
 
-      setSuccessMsg('AI Assessment completed! Review your required permits below. Mark what you already have and use "Ask AI" for guidance.');
+      setLastUpdated(new Date());
+      setSuccessMsg('AI Assessment completed! Requirements checklist has been refreshed.');
       setTimeout(() => setSuccessMsg(''), 7000);
     } catch (err) {
       if (err.response?.status === 429) {
@@ -388,6 +495,8 @@ Instructions:
   };
 
   // 6. Metrics & Derived Stats
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'need' | 'have'
+
   const totalReqs = checklist.length;
   const haveCount = checklist.filter(r => r.status === 'Approved' || r.status === 'Submitted').length;
   const needCount = totalReqs - haveCount;
@@ -401,37 +510,70 @@ Instructions:
 
   const aiAdvisoryReqs = currentResult?.ai_assessment?.recommended_permits || [];
 
+  // Group checklist by stage and status filter
+  const groupedStages = useMemo(() => {
+    if (!checklist || checklist.length === 0) return [];
+
+    const filtered = checklist.filter(req => {
+      const isHave = req.status === 'Approved' || req.status === 'Submitted';
+      if (statusFilter === 'need') return !isHave;
+      if (statusFilter === 'have') return isHave;
+      return true;
+    });
+
+    const buckets = {};
+
+    filtered.forEach(req => {
+      const stage = getRequirementStage(req, isTl);
+      if (!buckets[stage.id]) {
+        buckets[stage.id] = {
+          ...stage,
+          items: []
+        };
+      }
+      buckets[stage.id].items.push(req);
+    });
+
+    return Object.values(buckets).sort((a, b) => a.order - b.order);
+  }, [checklist, statusFilter, isTl]);
+
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '3rem' }}>
+    <div className="animate-fade-in page-container" style={{ maxWidth: '1200px' }}>
       
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', background: 'var(--primary-green-light)', color: 'var(--primary-green)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BrainCircuit size={19} strokeWidth={2.2} />
-            </div>
-            <h1 style={{ color: 'var(--government-navy)', margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>AI Assessment</h1>
+      <div className="page-heading-row">
+        <div className="page-heading-row__left">
+          <div className="page-heading-icon page-heading-icon--ai">
+            <BrainCircuit size={20} strokeWidth={2.2} />
           </div>
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>
-            AI-driven identification of all municipal permits and statutory requirements for your specific business in Roxas City.
-          </p>
+          <div>
+            <h1 style={{ color: 'var(--government-navy)', margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>
+              {isTl ? 'Pagsusuri ng AI para sa Permit' : 'AI Permit Assessment'}
+            </h1>
+            <p className="text-muted" style={{ margin: '0.15rem 0 0', fontSize: '0.875rem' }}>
+              {isTl
+                ? 'Gabay ng AI sa pagtukoy ng lahat ng mga permit at statutory requirements para sa iyong negosyo sa Bayan ng Roxas.'
+                : 'AI-guided identification of all municipal permits and statutory requirements for your specific business in Roxas City.'}
+            </p>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div className="page-heading-actions">
           {totalReqs > 0 && (
             <button
               onClick={() => window.print()}
               className="btn btn-sm no-print"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                backgroundColor: '#15803D', color: '#fff',
+                backgroundColor: 'var(--primary-green)', color: '#fff',
                 border: 'none', borderRadius: '8px',
                 padding: '0.5rem 1rem', fontWeight: 700,
-                cursor: 'pointer', boxShadow: '0 2px 8px rgba(21,128,61,0.25)'
+                cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,122,61,0.25)'
               }}
+              title={isTl ? 'I-print ang opisyal na checklist ng mga kinakailangan' : 'Print official requirements checklist'}
+              aria-label="Print Requirements Checklist"
             >
-              <Printer size={14} /> Print Checklist
+              <Printer size={14} /> {isTl ? 'I-print ang Checklist' : 'Print Checklist'}
             </button>
           )}
           <Link
@@ -439,7 +581,7 @@ Instructions:
             className="btn btn-primary btn-sm"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}
           >
-            Prepare Application <ArrowRight size={14} />
+            {isTl ? 'Maghanda ng Aplikasyon' : 'Prepare Application'} <ArrowRight size={14} />
           </Link>
         </div>
       </div>
@@ -463,12 +605,17 @@ Instructions:
             <Building2 size={20} style={{ color: 'var(--primary-green)' }} />
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>
-                Active Business Profile
+                {isTl ? 'Aktibong Profile ng Negosyo' : 'Active Business Profile'}
               </label>
               {loadingBiz ? (
-                <span className="text-muted">Loading businesses...</span>
+                <span className="text-muted">{isTl ? 'Ikinakarga ang mga negosyo...' : 'Loading businesses...'}</span>
               ) : businesses.length === 0 ? (
-                <span className="text-muted">No business registered. <Link to="/onboarding" style={{ color: 'var(--primary-green)', fontWeight: 600 }}>Create one now &rarr;</Link></span>
+                <span className="text-muted">
+                  {isTl ? 'Walang nakarehistrong negosyo.' : 'No business registered.'}{' '}
+                  <Link to="/onboarding" style={{ color: 'var(--primary-green)', fontWeight: 600 }}>
+                    {isTl ? 'Gumawa ngayon →' : 'Create one now &rarr;'}
+                  </Link>
+                </span>
               ) : (
                 <select
                   value={selectedBizId}
@@ -495,19 +642,37 @@ Instructions:
             </div>
           </div>
 
-          <div className="assessment-biz-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="assessment-biz-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {lastUpdated && !loading && (
+              <span style={{ fontSize: '0.75rem', color: 'var(--primary-green)', background: 'var(--primary-green-light)', padding: '0.3rem 0.65rem', borderRadius: 'var(--radius-full)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', border: '1px solid #B7DEC5' }}>
+                <CheckCircle2 size={12} /> {isTl ? 'Na-update' : 'Updated'} {lastUpdated.toLocaleTimeString(isTl ? 'fil-PH' : 'en-PH', { hour: 'numeric', minute: '2-digit', hour12: true })}
+              </span>
+            )}
+
             <button
               className="btn btn-primary"
               onClick={handleAssess}
               disabled={loading || !selectedBizId}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', fontWeight: 600, fontSize: '0.875rem' }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.65rem 1.25rem',
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                boxShadow: loading ? '0 0 0 4px rgba(22, 122, 61, 0.2)' : undefined,
+                transition: 'all 0.2s ease'
+              }}
             >
               {loading ? (
-                <>Analyzing with AI...</>
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>{isTl ? 'Sinusuri gamit ang AI...' : 'Analyzing with AI...'}</span>
+                </>
               ) : (
                 <>
                   <Sparkles size={16} />
-                  {currentResult || totalReqs > 0 ? 'Re-Run Assessment' : 'Run AI Assessment'}
+                  <span>{currentResult || totalReqs > 0 ? (isTl ? 'Muling Suriin gamit ang AI' : 'Re-Run Assessment') : (isTl ? 'Simulan ang Pagsusuri ng AI' : 'Run AI Assessment')}</span>
                 </>
               )}
             </button>
@@ -515,93 +680,86 @@ Instructions:
         </div>
       </div>
 
-      {/* ── READINESS SCORE PROGRESS CARD (If checklist exists) ───────────── */}
-      {totalReqs > 0 && (
-        <div className="card" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem', background: 'var(--surface)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              <div style={{
-                width: '62px',
-                height: '62px',
-                borderRadius: '50%',
-                background: score >= 80 ? 'var(--success-light)' : score >= 50 ? 'var(--warning-light)' : 'var(--danger-light)',
-                color: scoreColor,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: '1.2rem',
-                border: `3px solid ${scoreColor}`
-              }}>
-                <span>{score}%</span>
-                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', marginTop: '-3px' }}>ready</span>
-              </div>
-
-              <div>
-                <h3 style={{ margin: '0 0 0.15rem', color: 'var(--government-navy)', fontSize: '1.05rem', fontWeight: 700 }}>
-                  Permit Readiness Progress
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                  {score === 100
-                    ? 'All requirements are marked ready! You can now proceed to Prepare Application.'
-                    : `${haveCount} of ${totalReqs} requirements prepared. Mark items below as you obtain them.`}
-                </p>
-              </div>
+      {/* ── ACTIVE AI RUNNING BANNER ── */}
+      {loading && (
+        <div className="assessment-running-banner animate-fade-in">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary-green)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(22, 122, 61, 0.25)' }}>
+              <BrainCircuit size={22} className="animate-pulse" />
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', background: 'var(--success-light)', color: 'var(--success)', fontWeight: 700, fontSize: '0.78rem' }}>
-                ✓ {haveCount} Ready
-              </span>
-              <span style={{ padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', background: needCount > 0 ? 'var(--warning-light)' : 'var(--background)', color: needCount > 0 ? 'var(--warning)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.78rem' }}>
-                ⏳ {needCount} Still Needed
-              </span>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <strong style={{ fontSize: '0.95rem', color: 'var(--primary-green-dark)', fontWeight: 800 }}>
+                  {isTl
+                    ? `Sinusuri ang mga Rekisito para sa ${selectedBiz?.business_name || 'Negosyo'}...`
+                    : `Analyzing Requirements for ${selectedBiz?.business_name || 'Business'}...`}
+                </strong>
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--primary-green-dark)', background: '#FFFFFF', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', border: '1px solid #B7DEC5', textTransform: 'uppercase' }}>
+                  {isTl ? 'Aktibo ang AI Engine' : 'AI Engine Active'}
+                </span>
+              </div>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.8125rem', color: '#4B5563' }}>
+                {analysisSteps[analysisStep]}
+              </p>
             </div>
           </div>
 
-          <div style={{ height: '6px', background: 'var(--border-light)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginTop: '1rem' }}>
-            <div style={{ height: '100%', width: `${score}%`, background: scoreColor, borderRadius: 'var(--radius-full)', transition: 'width 0.6s ease' }} />
+          <div className="assessment-running-track">
+            <div className="assessment-running-bar" />
           </div>
         </div>
       )}
 
+      {/* ── UPDATED RESULTS WRAPPER WITH FADE-IN ANIMATION ── */}
+      <div key={lastUpdated ? lastUpdated.getTime() : 'initial'} className="animate-fade-in">
+
+
       {/* ── AI CLASSIFICATION BANNER ───────────────────────────────────────── */}
       {currentResult?.ai_assessment && (
-        <div className="card" style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem', borderLeft: '4px solid #6366f1', background: '#fafbff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <BrainCircuit size={18} color="#6366f1" />
-            <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#4338ca', fontWeight: 700 }}>AI Classification Analysis</h3>
+        <div className="assessment-ai-panel">
+          <div className="assessment-ai-panel__header">
+            <BrainCircuit size={18} style={{ color: 'var(--ai-accent)' }} />
+            <h3 className="assessment-ai-panel__title">
+              {isTl ? 'Pagsusuri ng Klasipikasyon ng AI' : 'AI Classification Analysis'}
+            </h3>
             {currentResult.ai_assessment.confidence && (
-              <span style={{ marginLeft: 'auto', fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>
-                {Math.round(currentResult.ai_assessment.confidence * 100)}% Confidence
+              <span className="assessment-ai-panel__confidence">
+                {isTl
+                  ? `${Math.round(currentResult.ai_assessment.confidence * 100)}% Kumpiyansa`
+                  : `${Math.round(currentResult.ai_assessment.confidence * 100)}% Confidence`}
               </span>
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            <div style={{ background: '#fff', border: '1px solid #e0e7ff', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)' }}>
-              <span style={{ fontSize: '0.6875rem', color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Classified Category</span>
-              <strong style={{ fontSize: '0.875rem', color: 'var(--government-navy)' }}>{currentResult.ai_assessment.industry_category}</strong>
+          <div className="assessment-ai-panel__meta-grid">
+            <div className="assessment-ai-meta-item">
+              <span className="assessment-ai-meta-item__label">
+                {isTl ? 'Nakilalang Kategorya' : 'Classified Category'}
+              </span>
+              <strong className="assessment-ai-meta-item__value">{currentResult.ai_assessment.industry_category}</strong>
             </div>
-            <div style={{ background: '#fff', border: '1px solid #e0e7ff', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)' }}>
-              <span style={{ fontSize: '0.6875rem', color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Business Type</span>
-              <strong style={{ fontSize: '0.875rem', color: 'var(--government-navy)' }}>{currentResult.ai_assessment.business_type}</strong>
+            <div className="assessment-ai-meta-item">
+              <span className="assessment-ai-meta-item__label">
+                {isTl ? 'Uri ng Negosyo' : 'Business Type'}
+              </span>
+              <strong className="assessment-ai-meta-item__value">{currentResult.ai_assessment.business_type}</strong>
             </div>
           </div>
 
           {currentResult.ai_assessment.summary && (
-            <p style={{ margin: 0, fontSize: '0.8125rem', color: '#334155', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
               {currentResult.ai_assessment.summary}
             </p>
           )}
 
           {currentResult.ai_assessment.questions?.length > 0 && (
-            <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e0e7ff' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4338ca' }}>Points to clarify with Roxas City BPLO:</span>
-              <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem', fontSize: '0.78rem', color: '#475569' }}>
+            <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--ai-accent-border)' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--ai-accent-dark)' }}>
+                {isTl ? 'Mga puntong lilinawin sa Roxas City BPLO:' : 'Points to clarify with Roxas City BPLO:'}
+              </span>
+              <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 {currentResult.ai_assessment.questions.map((q, idx) => (
-                  <li key={idx}>{q}</li>
+                  <li key={idx} style={{ marginTop: '0.15rem' }}>{q}</li>
                 ))}
               </ul>
             </div>
@@ -609,140 +767,412 @@ Instructions:
         </div>
       )}
 
-      {/* ── KNOWLEDGE BASE & REGULATORY REFERENCES BANNER ────────────────────── */}
-      <div className="card" style={{
-        marginBottom: '1.5rem',
-        padding: '1.25rem 1.5rem',
-        borderRadius: '12px',
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E2E8F0',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary-green-light)', color: 'var(--primary-green)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BookOpen size={17} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--government-navy)', fontWeight: 800 }}>
-                  Regulatory Basis &amp; Knowledge Base
-                </h3>
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.1rem 0.5rem', borderRadius: 'var(--radius-full)', background: '#DCFCE7', color: '#15803D', textTransform: 'uppercase' }}>
-                  Substantiated by Ordinances
-                </span>
-              </div>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Official municipal charters, executive orders, and ordinances guiding this assessment in Roxas City.
-              </p>
-            </div>
-          </div>
 
-          <Link
-            to="/knowledge-base"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              color: '#15803D',
-              textDecoration: 'none',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '8px',
-              backgroundColor: '#F0FDF4',
-              border: '1px solid #BBF7D0',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <Library size={13} />
-            <span>Open Knowledge Base Archive</span>
-            <ExternalLink size={12} />
-          </Link>
-        </div>
 
-        {knowledgeDocs && knowledgeDocs.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
-            {knowledgeDocs.map((doc) => (
-              <a
-                key={doc.id}
-                href={`${API.replace('/api', '')}/uploads/${doc.document_path}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  padding: '0.7rem 0.95rem',
-                  borderRadius: '8px',
-                  backgroundColor: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
-                  textDecoration: 'none',
-                  color: '#1E293B',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  transition: 'all 0.15s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#15803D';
-                  e.currentTarget.style.backgroundColor = '#F0FDF4';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#E2E8F0';
-                  e.currentTarget.style.backgroundColor = '#F8FAFC';
-                }}
-              >
-                <FileText size={16} color="#15803D" style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {doc.title}
-                </span>
-                <span style={{ fontSize: '0.65rem', color: '#15803D', fontWeight: 800, backgroundColor: '#DCFCE7', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
-                  PDF
-                </span>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div style={{
-            fontSize: '0.8125rem',
-            color: '#64748B',
-            backgroundColor: '#F8FAFC',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
-            border: '1px dashed #CBD5E1',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <Info size={16} color="#0284C7" style={{ flexShrink: 0 }} />
-            <span>
-              Assessment is strictly cross-referenced against <strong>Republic Act No. 7160 (Local Government Code)</strong>, <strong>Fire Code of the Philippines (RA 9514)</strong>, and the <strong>Roxas Municipal Revenue Code</strong>. Uploaded municipal documents appear here automatically.
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* ── REQUIREMENTS CHECKLIST WITH "ASK AI" & TOGGLES ─────────────────── */}
-      <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+      {/* ── REQUIRED PERMITS & CLEARANCES ROADMAP (STAGE CARDS) ────────────── */}
+      <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.125rem', color: 'var(--government-navy)', fontWeight: 800 }}>
-              Requirements Checklist &amp; AI Advisor
+            <h2 style={{ margin: 0, fontSize: '1.125rem', color: 'var(--government-navy)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Layers size={20} style={{ color: 'var(--primary-green)' }} />
+              {isTl ? 'Mga Kinakailangang Permit at Clearance' : 'Required Permits & Clearances'}
             </h2>
             <p style={{ margin: '0.15rem 0 0', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-              Mark what you have ready. Click <strong>Ask AI</strong> on any item to learn why it's needed or where to get it in Roxas City.
+              {isTl
+                ? `Hakbang-hakbang na rekisito para sa ${selectedBiz?.business_type || 'iyong negosyo'} sa Bayan ng Roxas.`
+                : `Step-by-step regulatory requirements tailored for ${selectedBiz?.business_type || 'your business'} in Roxas City.`}
             </p>
           </div>
           
           {totalReqs > 0 && (
             <span style={{ fontSize: '0.75rem', background: 'var(--primary-green-light)', color: 'var(--primary-green-dark)', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>
-              {totalReqs} Requirements Configured
+              {isTl ? `${totalReqs} Rekisito ang Naka-configure` : `${totalReqs} Requirements Configured`}
             </span>
           )}
         </div>
 
-        {/* ── REQUIREMENT ACQUISITION & PROCESSING EXPENSES BANNER ── */}
-        {totalReqs > 0 && (
+        {!currentResult && totalReqs === 0 ? (
+          <div style={{ padding: '3rem 1.5rem', textAlign: 'center', background: 'var(--background)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-medium)' }}>
+            <BrainCircuit size={40} style={{ color: 'var(--primary-green)', marginBottom: '0.75rem', opacity: 0.6 }} />
+            <h3 style={{ margin: '0 0 0.4rem', color: 'var(--government-navy)' }}>
+              {isTl ? 'Handa para sa Pagsusuri' : 'Ready for Assessment'}
+            </h3>
+            <p style={{ margin: '0 0 1.25rem', fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
+              {isTl
+                ? 'I-click ang "Simulan ang Pagsusuri ng AI" sa itaas. Susuriin ng PermitEase ang mga detalye ng iyong negosyo at magbibigay ng iniangkop na listahan ng mga rekisito sa munisipyo na may gabay ng AI.'
+                : 'Click "Run AI Assessment" above. PermitEase will analyze your business details and provide a tailored list of municipal requirements with on-demand AI guidance.'}
+            </p>
+            <button
+              className="btn btn-primary"
+              onClick={handleAssess}
+              disabled={loading || !selectedBizId}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>{isTl ? 'Sinusuri gamit ang AI...' : 'Analyzing with AI...'}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  <span>{isTl ? 'Simulan ang Pagsusuri ng AI' : 'Run AI Assessment Now'}</span>
+                </>
+              )}
+            </button>
+          </div>
+        ) : loadingChecklist ? (
+          <p className="text-muted" style={{ padding: '2rem', textAlign: 'center' }}>
+            {isTl ? 'Ikinakarga ang mga rekisito...' : 'Loading requirements...'}
+          </p>
+        ) : checklist.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            {isTl
+              ? 'Walang tiyak na rekisitong nahanap para sa negosyong ito. Mangyaring direktang beripikahin sa Roxas BPLO.'
+              : 'No specific requirements found for this business. Please verify directly with Roxas BPLO.'}
+          </div>
+        ) : (
+          <>
+            {/* Filter Toolbar */}
+            {totalReqs > 0 && (
+          <div className="req-filter-bar">
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginLeft: '0.25rem', marginRight: '0.25rem' }}>
+              <Filter size={14} /> {isTl ? 'Salain:' : 'Filter:'}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`req-filter-btn ${statusFilter === 'all' ? 'req-filter-btn--active' : ''}`}
+            >
+              <span>{isTl ? 'Lahat ng Rekisito' : 'All Requirements'}</span>
+              <span className="req-filter-count">{totalReqs}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter('need')}
+              className={`req-filter-btn ${statusFilter === 'need' ? 'req-filter-btn--active' : ''}`}
+            >
+              <span>{isTl ? '⏳ Kailangan Pa' : '⏳ Still Needed'}</span>
+              <span className="req-filter-count">{needCount}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter('have')}
+              className={`req-filter-btn ${statusFilter === 'have' ? 'req-filter-btn--active' : ''}`}
+            >
+              <span>{isTl ? '✓ Handa Na / Mayroon Na' : '✓ Ready / Acquired'}</span>
+              <span className="req-filter-count">{haveCount}</span>
+            </button>
+          </div>
+        )}
+
+        {groupedStages.length === 0 ? (
+          <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center', background: 'var(--background)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-medium)', margin: '1rem 0' }}>
+            {statusFilter === 'need' ? (
+              <>
+                <CheckCircle2 size={36} style={{ color: 'var(--primary-green)', margin: '0 auto 0.5rem', opacity: 0.8 }} />
+                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--government-navy)' }}>
+                  {isTl ? 'Handa na ang Lahat ng Rekisito!' : 'All Requirements Prepared!'}
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {isTl
+                    ? 'Naitatak mo na ang lahat ng mga paunang rekisito bilang handa na. Pumunta sa Maghanda ng Aplikasyon para mag-file.'
+                    : 'You have marked all prerequisite requirements as ready. Proceed to Prepare Application to file.'}
+                </p>
+              </>
+            ) : statusFilter === 'have' ? (
+              <>
+                <Clock size={36} style={{ color: 'var(--accent-gold)', margin: '0 auto 0.5rem', opacity: 0.8 }} />
+                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--government-navy)' }}>
+                  {isTl ? 'Wala Pang Handa na Rekisito' : 'No Ready Items Yet'}
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {isTl
+                    ? 'Lumipat sa "Lahat" o "Kailangan Pa" at i-click ang "Handa Na" habang nakukuha mo ang iyong mga clearance.'
+                    : 'Switch to "All" or "Still Needed" and click "Ready" as you acquire your clearances.'}
+                </p>
+              </>
+            ) : (
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {isTl ? 'Walang tumutugmang rekisito sa filter na ito.' : 'No requirements match this filter.'}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {groupedStages.map(stage => {
+              const StageIcon = stage.Icon;
+              const stageTotal = stage.items.length;
+              const stageReady = stage.items.filter(r => r.status === 'Approved' || r.status === 'Submitted').length;
+
+              return (
+                <div key={stage.id} className="req-stage-section">
+                  {/* Stage Header */}
+                  <div className="req-stage-header" style={{ backgroundColor: stage.bg, borderColor: stage.border }}>
+                    <div className="req-stage-title-wrap">
+                      <div className="req-stage-icon-box" style={{ backgroundColor: '#ffffff', color: stage.color, border: `1px solid ${stage.border}` }}>
+                        <StageIcon size={17} />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <h3 className="req-stage-title" style={{ color: stage.color }}>{stage.title}</h3>
+                          <span className="req-stage-badge" style={{ backgroundColor: '#ffffff', color: stage.color, border: `1px solid ${stage.border}` }}>
+                            {stage.badge}
+                          </span>
+                        </div>
+                        <p className="req-stage-desc">{stage.description}</p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', backgroundColor: '#ffffff', color: stageReady === stageTotal ? 'var(--primary-green)' : 'var(--text-secondary)', border: `1px solid ${stage.border}` }}>
+                        {isTl ? `${stageReady} sa ${stageTotal} Handa Na` : `${stageReady} of ${stageTotal} Ready`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Cards Grid */}
+                  <div className="req-cards-grid" style={{ borderColor: stage.border }}>
+                    {stage.items.map((req, idx) => {
+                      const reqKey = `checklist_${req.requirement_id || idx}_${req.permit_name}`;
+                      const helper = aiHelperState[reqKey] || {};
+                      const isHave = req.status === 'Approved' || req.status === 'Submitted';
+                      const hasSignature = requiresSignature(req.permit_name);
+
+                      return (
+                        <div
+                          key={req.requirement_id || idx}
+                          className={`req-card ${isHave ? 'req-card--ready' : ''} ${helper.isOpen ? 'req-card--ai-open' : ''}`}
+                        >
+                          {/* Card Top Row: Agency, Badges, Fee */}
+                          <div className="req-card-top">
+                            <div className="req-card-tags">
+                              {req.issuing_agency && (
+                                <span className="req-card-agency">{req.issuing_agency}</span>
+                              )}
+                              {req.is_mandatory ? (
+                                <span className="req-card-type-mandatory">{isTl ? 'Kailangan' : 'Mandatory'}</span>
+                              ) : (
+                                <span className="req-card-type-conditional">{isTl ? 'Kondisyonal' : 'Conditional'}</span>
+                              )}
+                            </div>
+
+                            {req.estimated_fee !== undefined && (
+                              <span className="req-card-fee">
+                                ₱{Number(req.estimated_fee || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Card Title & Badges */}
+                          <div>
+                            <h4 className="req-card-title">{req.permit_name}</h4>
+
+                            {hasSignature && (
+                              <div className="req-card-signature">
+                                <PenLine size={11} />
+                                <span>{isTl ? 'Kailangan ng lagda sa kamay' : 'Handwritten signature required'}</span>
+                              </div>
+                            )}
+
+                            {req.description && (
+                              <p className="req-card-desc">{req.description}</p>
+                            )}
+
+                            {req.required_documents && (
+                              <div className="req-card-docs">
+                                <ClipboardList size={13} style={{ flexShrink: 0, marginTop: '2px', color: 'var(--text-muted)' }} />
+                                <div><strong>{isTl ? 'Mga dadalhin:' : 'What to bring:'}</strong> {req.required_documents}</div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Card Action Bar */}
+                          <div className="req-card-footer">
+                            <div className="req-status-segmented">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(req.requirement_id, 'Approved')}
+                                className={`req-seg-btn req-seg-btn--have ${isHave ? 'active' : ''}`}
+                                title={isTl ? 'Markahan bilang handa na' : 'Mark as ready / acquired'}
+                              >
+                                <CheckCircle2 size={13} /> {isTl ? 'Handa Na' : 'Ready'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(req.requirement_id, 'Missing')}
+                                className={`req-seg-btn req-seg-btn--need ${!isHave ? 'active' : ''}`}
+                                title={isTl ? 'Markahan bilang kailangan pa' : 'Mark as still needed'}
+                              >
+                                <Clock size={13} /> {isTl ? 'Kailangan Pa' : 'Still Need'}
+                              </button>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => toggleAskAi(reqKey)}
+                              className={`req-ask-ai-btn ${helper.isOpen ? 'req-ask-ai-btn--active' : ''}`}
+                              title={isTl ? 'Humingi ng gabay sa AI para sa rekisitong ito' : 'Ask AI for guidance on this requirement'}
+                            >
+                              <Sparkles size={13} />
+                              {helper.isOpen ? (isTl ? 'Isara ang AI' : 'Close AI') : (isTl ? 'Tanungin ang AI' : 'Ask AI')}
+                            </button>
+                          </div>
+
+                          {/* Expandable Ask AI Helper Panel */}
+                          {helper.isOpen && (
+                            <div className="assessment-ai-helper" style={{ marginTop: '0.85rem' }}>
+                              <div className="assessment-ai-helper__header">
+                                <span className="assessment-ai-helper__label">
+                                  <Sparkles size={13} /> {isTl ? 'Payo ng AI —' : 'AI Advisory —'} {req.permit_name}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleAskAi(reqKey)}
+                                  className="assessment-ai-helper__close"
+                                  title={isTl ? 'Isara' : 'Close'}
+                                  aria-label="Close AI Helper"
+                                >
+                                  <X size={15} />
+                                </button>
+                              </div>
+
+                              {/* Quick chips */}
+                              <div className="assessment-ai-chips" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => askAiQuestion(reqKey, req.permit_name, isTl ? 'Bakit ko kailangan ang permit na ito para sa aking negosyo?' : 'Why do I need this permit requirement for my business?')}
+                                  disabled={helper.loading}
+                                  className="assessment-ai-chip"
+                                >
+                                  <HelpCircle size={12} /> {isTl ? 'Bakit ko ito kailangan?' : 'Why do I need this?'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => askAiQuestion(reqKey, req.permit_name, isTl ? 'Saan ako pupunta para makuha ito sa Roxas City, at anong tanggapan ang namamahala rito?' : 'Where do I physically go to get this permit in Roxas City, and which office handles it?')}
+                                  disabled={helper.loading}
+                                  className="assessment-ai-chip"
+                                >
+                                  <MapPin size={12} /> {isTl ? 'Saan ito kinukuha sa Roxas?' : 'Where do I get this in Roxas?'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => askAiQuestion(reqKey, req.permit_name, isTl ? 'Anong mga paunang rekisito, bayarin, o hakbang ang kailangan kong kumpletuhin muna?' : 'What prerequisites, fees, or preparation steps should I complete first?')}
+                                  disabled={helper.loading}
+                                  className="assessment-ai-chip"
+                                >
+                                  <ClipboardList size={12} /> {isTl ? 'Mga Rekisito at Hakbang' : 'Prerequisites & Steps'}
+                                </button>
+                              </div>
+
+                              {/* Custom Question Input */}
+                              <form
+                                className="assessment-ai-form"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const val = (helper.inputVal || '').trim();
+                                  if (val) askAiQuestion(reqKey, req.permit_name, val);
+                                }}
+                                style={{ display: 'flex', gap: '0.4rem', marginBottom: helper.answer || helper.loading || helper.error ? '0.75rem' : 0 }}
+                              >
+                                <input
+                                  type="text"
+                                  placeholder={isTl ? 'O mag-type ng tanong tungkol sa permit na ito...' : 'Or type a specific question about this permit...'}
+                                  value={helper.inputVal || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setAiHelperState(prev => ({
+                                      ...prev,
+                                      [reqKey]: { ...(prev[reqKey] || {}), inputVal: val }
+                                    }));
+                                  }}
+                                  disabled={helper.loading}
+                                  className="assessment-ai-input"
+                                  aria-label={`Ask a question about ${req.permit_name}`}
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={helper.loading || !(helper.inputVal || '').trim()}
+                                  className="assessment-ai-submit"
+                                >
+                                  <Send size={12} /> {isTl ? 'Itanong' : 'Ask'}
+                                </button>
+                              </form>
+
+                              {/* Loading state */}
+                              {helper.loading && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--ai-accent)', fontSize: '0.8125rem', padding: '0.5rem 0' }}>
+                                  <Loader2 size={16} className="animate-spin" />
+                                  <span>{isTl ? 'Sumasangguni sa mga alituntunin ng permit sa Roxas City...' : 'Consulting Roxas City permit guidelines...'}</span>
+                                </div>
+                              )}
+
+                              {/* Error state */}
+                              {helper.error && (
+                                <div style={{ color: 'var(--danger)', fontSize: '0.78rem', padding: '0.4rem 0' }}>
+                                  {helper.error}
+                                </div>
+                              )}
+
+                              {/* AI Response Area */}
+                              {helper.answer && !helper.loading && (
+                                <div className="assessment-ai-response">
+                                  <div className="assessment-ai-response__header">
+                                    <div className="assessment-ai-response__title">
+                                      <Sparkles size={14} />
+                                      <span>{isTl ? `Gabay ng AI para sa ${req.permit_name}` : `AI Guidance for ${req.permit_name}`}</span>
+                                    </div>
+                                    <span className="assessment-ai-response__question">
+                                      Q: {helper.question}
+                                    </span>
+                                  </div>
+
+                                  <FormattedAiResponse text={helper.answer} />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>
+    )}
+
+      </div>
+
+      {/* ── REQUIREMENTS CHECKLIST & AI ADVISOR / ESTIMATED EXPENSES (RIGHT ABOVE ASSESSMENT HISTORY) ── */}
+      {totalReqs > 0 && (
+        <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.125rem', color: 'var(--government-navy)', fontWeight: 800 }}>
+                {isTl ? 'Talaan ng mga Rekisito at AI Advisor' : 'Requirements Checklist & AI Advisor'}
+              </h2>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                {isTl
+                  ? <>Markahan ang mayroon ka na. I-click ang <strong>Tanungin ang AI</strong> sa kahit anong rekisito upang malaman kung bakit ito kailangan o saan ito kukunin sa Roxas.</>
+                  : <>Mark what you have ready. Click <strong>Ask AI</strong> on any item to learn why it's needed or where to get it in Roxas City.</>}
+              </p>
+            </div>
+            
+            <span style={{ fontSize: '0.75rem', background: 'var(--primary-green-light)', color: 'var(--primary-green-dark)', padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>
+              {isTl ? `${totalReqs} Rekisito ang Naka-configure` : `${totalReqs} Requirements Configured`}
+            </span>
+          </div>
+
+          {/* ── REQUIREMENT ACQUISITION & PROCESSING EXPENSES BANNER ── */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -750,30 +1180,30 @@ Instructions:
             flexWrap: 'wrap',
             gap: '1rem',
             padding: '1.15rem 1.4rem',
-            marginBottom: '1.25rem',
+            marginBottom: '1rem',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
-            border: '1.5px solid #86EFAC',
+            background: 'var(--primary-green-light)',
+            border: '1.5px solid #A5D6B8',
             boxShadow: '0 2px 8px rgba(22, 101, 52, 0.05)'
           }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#166534', background: '#BBF7D0', padding: '0.2rem 0.55rem', borderRadius: '4px' }}>
-                  ESTIMATED REQUIREMENT EXPENSES
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary-green-dark)', background: 'var(--primary-green-light)', padding: '0.2rem 0.55rem', borderRadius: '4px' }}>
+                  {isTl ? 'TINATAYANG GASTOS SA MGA REKISITO' : 'ESTIMATED REQUIREMENT EXPENSES'}
                 </span>
-                <span style={{ fontSize: '0.78rem', color: '#15803D', fontWeight: 600 }}>
-                  Tailored for {selectedBiz?.business_type || 'Selected Business'}
+                <span style={{ fontSize: '0.78rem', color: 'var(--primary-green)', fontWeight: 600 }}>
+                  {isTl ? `Iniangkop para sa ${selectedBiz?.business_type || 'Napiling Negosyo'}` : `Tailored for ${selectedBiz?.business_type || 'Selected Business'}`}
                 </span>
               </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0F172A' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--government-navy)' }}>
                 ₱{totalRequirementExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#475569', marginLeft: '0.5rem' }}>
-                  total processing expense for {totalReqs} prerequisite requirements
+                <span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>
+                  {isTl ? `kabuuang gastos sa pagproseso para sa ${totalReqs} paunang rekisito` : `total processing expense for ${totalReqs} prerequisite requirements`}
                 </span>
               </div>
               {stillNeededExpenses > 0 && stillNeededExpenses < totalRequirementExpenses && (
-                <div style={{ fontSize: '0.8rem', color: '#B45309', fontWeight: 600, marginTop: '0.2rem' }}>
-                  ⏳ ₱{stillNeededExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })} remaining for {needCount} item(s) you still need.
+                <div style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', fontWeight: 600, marginTop: '0.2rem' }}>
+                  ⏳ ₱{stillNeededExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })} {isTl ? `natitira para sa ${needCount} rekisito na kailangan mo pa.` : `remaining for ${needCount} item(s) you still need.`}
                 </div>
               )}
             </div>
@@ -785,8 +1215,8 @@ Instructions:
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                backgroundColor: '#15803D',
-                borderColor: '#15803D',
+                backgroundColor: 'var(--primary-green)',
+                borderColor: 'var(--primary-green)',
                 color: '#FFFFFF',
                 fontWeight: 700,
                 fontSize: '0.875rem',
@@ -796,355 +1226,21 @@ Instructions:
                 textDecoration: 'none'
               }}
             >
-              <span>Calculate with Fee Estimator</span>
+              <span>{isTl ? 'Kalkulahin gamit ang Fee Estimator' : 'Calculate with Fee Estimator'}</span>
               <ArrowRight size={16} />
             </Link>
           </div>
-        )}
 
-        {!currentResult && totalReqs === 0 ? (
-          <div style={{ padding: '3rem 1.5rem', textAlign: 'center', background: 'var(--background)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-medium)' }}>
-            <BrainCircuit size={40} style={{ color: 'var(--primary-green)', marginBottom: '0.75rem', opacity: 0.6 }} />
-            <h3 style={{ margin: '0 0 0.4rem', color: 'var(--government-navy)' }}>Ready for Assessment</h3>
-            <p style={{ margin: '0 0 1.25rem', fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
-              Click <strong>"Run AI Assessment"</strong> above. PermitEase will analyze your business details and provide a tailored list of municipal requirements with on-demand AI guidance.
-            </p>
-            <button
-              className="btn btn-primary"
-              onClick={handleAssess}
-              disabled={loading || !selectedBizId}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              <Sparkles size={16} /> Run AI Assessment Now
-            </button>
-          </div>
-        ) : loadingChecklist ? (
-          <p className="text-muted" style={{ padding: '2rem', textAlign: 'center' }}>Loading requirements...</p>
-        ) : checklist.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            No specific requirements found for this business. Please verify directly with Roxas BPLO.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {checklist.map((req, idx) => {
-              const reqKey = `checklist_${req.requirement_id || idx}_${req.permit_name}`;
-              const helper = aiHelperState[reqKey] || {};
-              const isHave = req.status === 'Approved' || req.status === 'Submitted';
-              const hasSignature = requiresSignature(req.permit_name);
-
-              return (
-                <div
-                  key={req.requirement_id || idx}
-                  style={{
-                    border: `1px solid ${isHave ? '#bbf7d0' : helper.isOpen ? '#818cf8' : 'var(--border-color)'}`,
-                    borderRadius: 'var(--radius-md)',
-                    padding: '1.25rem',
-                    background: isHave ? '#fcfdfc' : 'var(--surface)',
-                    boxShadow: helper.isOpen ? '0 4px 14px rgba(23, 32, 51, 0.06)' : 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <div className="assessment-req-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                    
-                    {/* Left: Info */}
-                    <div className="assessment-req-info" style={{ flex: 1, minWidth: '240px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
-                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--government-navy)', fontWeight: 700 }}>
-                          {req.permit_name}
-                        </h4>
-
-                        {req.estimated_fee !== undefined && (
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '0.15rem 0.55rem', borderRadius: 'var(--radius-full)', background: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0' }}>
-                            ₱{Number(req.estimated_fee || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                          </span>
-                        )}
-
-                        {req.issuing_agency && (
-                          <span style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', background: '#F1F5F9', color: '#475569' }}>
-                            {req.issuing_agency}
-                          </span>
-                        )}
-
-                        {req.is_mandatory ? (
-                          <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', background: 'var(--border-light)', color: 'var(--government-navy)' }}>
-                            Mandatory
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', background: '#e0f2fe', color: '#0369a1' }}>
-                            Conditional
-                          </span>
-                        )}
-
-                        {hasSignature && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', background: '#fef3c7', color: '#92400e' }}>
-                            <PenLine size={11} /> Handwritten signature required
-                          </span>
-                        )}
-                      </div>
-
-                      {req.description && (
-                        <p style={{ margin: '0 0 0.5rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                          {req.description}
-                        </p>
-                      )}
-
-                      {req.required_documents && (
-                        <div style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--background)', padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
-                          <ClipboardList size={13} style={{ flexShrink: 0, marginTop: '2px' }} />
-                          <span><strong>What to bring:</strong> {req.required_documents}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right: Status Toggles & Ask AI Trigger Button */}
-                    <div className="assessment-req-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', flexShrink: 0 }}>
-                      
-                      {/* I Have This toggle */}
-                      <button
-                        onClick={() => handleToggleStatus(req.requirement_id, 'Approved')}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          padding: '0.45rem 0.75rem',
-                          borderRadius: 'var(--radius-sm)',
-                          border: isHave ? '1px solid var(--primary-green)' : '1px solid var(--border-medium)',
-                          background: isHave ? 'var(--primary-green)' : 'var(--surface)',
-                          color: isHave ? '#fff' : 'var(--text-secondary)',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <CheckCircle2 size={14} /> I Have This
-                      </button>
-
-                      {/* Still Need toggle */}
-                      <button
-                        onClick={() => handleToggleStatus(req.requirement_id, 'Missing')}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          padding: '0.45rem 0.75rem',
-                          borderRadius: 'var(--radius-sm)',
-                          border: !isHave ? '1px solid #d97706' : '1px solid var(--border-medium)',
-                          background: !isHave ? '#fffbeb' : 'var(--surface)',
-                          color: !isHave ? '#92400e' : 'var(--text-muted)',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Clock size={14} /> Still Need
-                      </button>
-
-                      {/* Ask AI Trigger Button */}
-                      <button
-                        onClick={() => toggleAskAi(reqKey)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          padding: '0.45rem 0.8rem',
-                          borderRadius: 'var(--radius-full)',
-                          border: helper.isOpen ? '1px solid #6366f1' : '1px solid #e0e7ff',
-                          background: helper.isOpen ? '#4f46e5' : '#eef2ff',
-                          color: helper.isOpen ? '#fff' : '#4338ca',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <Sparkles size={13} />
-                        {helper.isOpen ? 'Close AI' : 'Ask AI'}
-                      </button>
-                    </div>
-
-                  </div>
-
-                  {/* ── EXPANDED ASK AI INLINE HELPER ───────────────────────── */}
-                  {helper.isOpen && (
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e0e7ff', background: '#f8fafc', borderRadius: 'var(--radius-sm)', padding: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#4338ca', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <Sparkles size={13} /> AI Advisory &mdash; {req.permit_name}
-                        </span>
-                        <button
-                          onClick={() => toggleAskAi(reqKey)}
-                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
-                          title="Close"
-                        >
-                          <X size={15} />
-                        </button>
-                      </div>
-
-                      {/* Quick chips */}
-                      <div className="assessment-ai-chips" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
-                        <button
-                          onClick={() => askAiQuestion(reqKey, req.permit_name, 'Why do I need this permit requirement for my business?')}
-                          disabled={helper.loading}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0.35rem 0.7rem',
-                            borderRadius: 'var(--radius-full)',
-                            border: '1px solid #c7d2fe',
-                            background: '#fff',
-                            color: '#3730a3',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <HelpCircle size={12} /> Why do I need this?
-                        </button>
-
-                        <button
-                          onClick={() => askAiQuestion(reqKey, req.permit_name, 'Where do I physically go to get this permit in Roxas City, and which office handles it?')}
-                          disabled={helper.loading}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0.35rem 0.7rem',
-                            borderRadius: 'var(--radius-full)',
-                            border: '1px solid #c7d2fe',
-                            background: '#fff',
-                            color: '#3730a3',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <MapPin size={12} /> Where do I get this in Roxas?
-                        </button>
-
-                        <button
-                          onClick={() => askAiQuestion(reqKey, req.permit_name, 'What prerequisites, fees, or preparation steps should I complete first?')}
-                          disabled={helper.loading}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0.35rem 0.7rem',
-                            borderRadius: 'var(--radius-full)',
-                            border: '1px solid #c7d2fe',
-                            background: '#fff',
-                            color: '#3730a3',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <ClipboardList size={12} /> Prerequisites &amp; Steps
-                        </button>
-                      </div>
-
-                      {/* Custom Question Input */}
-                      <form
-                        className="assessment-ai-form"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const val = (helper.inputVal || '').trim();
-                          if (val) askAiQuestion(reqKey, req.permit_name, val);
-                        }}
-                        style={{ display: 'flex', gap: '0.4rem', marginBottom: helper.answer || helper.loading || helper.error ? '0.75rem' : 0 }}
-                      >
-                        <input
-                          type="text"
-                          placeholder="Or type a specific question about this permit..."
-                          value={helper.inputVal || ''}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setAiHelperState(prev => ({
-                              ...prev,
-                              [reqKey]: { ...(prev[reqKey] || {}), inputVal: val }
-                            }));
-                          }}
-                          disabled={helper.loading}
-                          style={{
-                            flex: 1,
-                            padding: '0.4rem 0.75rem',
-                            borderRadius: 'var(--radius-sm)',
-                            border: '1px solid var(--border-medium)',
-                            fontSize: '0.8125rem',
-                            outline: 'none',
-                            background: '#fff'
-                          }}
-                        />
-                        <button
-                          type="submit"
-                          disabled={helper.loading || !(helper.inputVal || '').trim()}
-                          style={{
-                            padding: '0.4rem 0.85rem',
-                            borderRadius: 'var(--radius-sm)',
-                            background: '#4f46e5',
-                            color: '#fff',
-                            border: 'none',
-                            fontSize: '0.78rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem'
-                          }}
-                        >
-                          <Send size={12} /> Ask
-                        </button>
-                      </form>
-
-                      {/* Loading state */}
-                      {helper.loading && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4338ca', fontSize: '0.8125rem', padding: '0.5rem 0' }}>
-                          <Loader2 size={16} className="animate-spin" />
-                          <span>Consulting Roxas City permit guidelines...</span>
-                        </div>
-                      )}
-
-                      {/* Error state */}
-                      {helper.error && (
-                        <div style={{ color: 'var(--danger)', fontSize: '0.78rem', padding: '0.4rem 0' }}>
-                          {helper.error}
-                        </div>
-                      )}
-
-                      {/* AI Response Area */}
-                      {helper.answer && !helper.loading && (
-                        <div style={{ background: '#F8FAFC', border: '1px solid #C7D2FE', borderRadius: 'var(--radius-md)', padding: '0.9rem', marginTop: '0.75rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', paddingBottom: '0.45rem', borderBottom: '1px solid #E2E8F0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 700, color: '#4F46E5' }}>
-                              <Sparkles size={14} />
-                              <span>AI Guidance for {req.permit_name}</span>
-                            </div>
-                            <span style={{ fontSize: '0.7rem', color: '#64748B', maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              Q: {helper.question}
-                            </span>
-                          </div>
-
-                          {/* Formatted Structured Response */}
-                          <FormattedAiResponse text={helper.answer} />
-                        </div>
-                      )}
-
-                    </div>
-                  )}
-
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Next step prompt */}
-        {totalReqs > 0 && (
-          <div style={{ marginTop: '1.5rem', padding: '1rem 1.25rem', background: 'var(--primary-green-light)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {/* Next step prompt */}
+          <div style={{ padding: '1rem 1.25rem', background: 'var(--primary-green-light)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
-              <strong style={{ color: 'var(--primary-green-dark)', fontSize: '0.9rem', display: 'block' }}>Ready to file your application?</strong>
+              <strong style={{ color: 'var(--primary-green-dark)', fontSize: '0.9rem', display: 'block' }}>
+                {isTl ? 'Handa ka na bang i-file ang iyong aplikasyon?' : 'Ready to file your application?'}
+              </strong>
               <span style={{ color: 'var(--primary-green-dark)', fontSize: '0.8125rem', opacity: 0.9 }}>
-                Proceed to Prepare Application to print your pre-filled Form BPLO-01 or file via the Roxas eBPLS portal.
+                {isTl 
+                  ? 'Pumunta sa Maghanda ng Aplikasyon upang i-print ang iyong pre-filled Form BPLO-01 o mag-file sa pamamagitan ng Roxas eBPLS portal.' 
+                  : 'Proceed to Prepare Application to print your pre-filled Form BPLO-01 or file via the Roxas eBPLS portal.'}
               </span>
             </div>
             <Link
@@ -1152,44 +1248,30 @@ Instructions:
               className="btn btn-primary btn-sm"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}
             >
-              Go to Prepare Application <ArrowRight size={14} />
+              {isTl ? 'Pumunta sa Maghanda ng Aplikasyon' : 'Go to Prepare Application'} <ArrowRight size={14} />
             </Link>
-          </div>
-        )}
-      </div>
-
-      {/* ── AI ADVISORY RECOMMENDATIONS ────────────────────────────────────── */}
-      {aiAdvisoryReqs.length > 0 && (
-        <div className="card" style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem', background: '#f0fdfa', border: '1px solid #ccfbf1' }}>
-          <h3 style={{ fontSize: '0.95rem', color: '#0f766e', margin: '0 0 0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
-            <BrainCircuit size={17} color="#0d9488" />
-            AI Advisory Recommendations
-          </h3>
-          <p style={{ fontSize: '0.8125rem', color: '#115e59', margin: '0 0 1rem' }}>
-            Based on your declared business activities, the AI also suggests checking if these special permits apply:
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
-            {aiAdvisoryReqs.map((item, i) => (
-              <div key={i} style={{ border: '1px solid #99f6e4', borderRadius: 'var(--radius-sm)', padding: '0.85rem', background: '#fff' }}>
-                <strong style={{ fontSize: '0.875rem', color: '#0f172a', display: 'block', marginBottom: '0.2rem' }}>{item.permit_name}</strong>
-                {item.reason && <p style={{ fontSize: '0.78rem', color: '#475569', margin: 0, lineHeight: 1.4 }}>{item.reason}</p>}
-              </div>
-            ))}
           </div>
         </div>
       )}
+      </div>
+
+
 
       {/* ── ASSESSMENT HISTORY ───────────────────────────────────────────── */}
       <div className="card" style={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
           <History size={18} style={{ color: 'var(--primary-green)' }} />
-          <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--government-navy)', fontWeight: 700 }}>Assessment History</h3>
+          <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--government-navy)', fontWeight: 700 }}>
+            {isTl ? 'Kasaysayan ng Pagsusuri' : 'Assessment History'}
+          </h3>
         </div>
 
         {loadingHistory ? (
-          <p className="text-muted">Loading history...</p>
+          <p className="text-muted">{isTl ? 'Ikinakarga ang kasaysayan...' : 'Loading history...'}</p>
         ) : assessments.length === 0 ? (
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>No previous assessments on record.</p>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+            {isTl ? 'Walang nakaraang pagsusuri sa rekord.' : 'No previous assessments on record.'}
+          </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {assessments.map(a => {
@@ -1208,11 +1290,11 @@ Instructions:
                   >
                     <div>
                       <strong style={{ fontSize: '0.85rem', color: 'var(--government-navy)' }}>{a.business_name || `${industry} · ${type}`}</strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{new Date(a.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{new Date(a.created_at).toLocaleDateString(isTl ? 'fil-PH' : 'en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.72rem', background: 'var(--surface)', border: '1px solid var(--border-medium)', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', fontWeight: 600 }}>
-                        {reqs.length} requirements
+                        {reqs.length} {isTl ? 'mga rekisito' : 'requirements'}
                       </span>
                       {expandedHistory === a.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </div>
@@ -1222,7 +1304,7 @@ Instructions:
                     <div style={{ padding: '1rem', borderTop: '1px solid var(--border-light)', background: 'var(--surface)' }}>
                       {parsed?.ai_assessment?.summary && (
                         <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                          <strong>Summary:</strong> {parsed.ai_assessment.summary}
+                          <strong>{isTl ? 'Buod:' : 'Summary:'}</strong> {parsed.ai_assessment.summary}
                         </p>
                       )}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>

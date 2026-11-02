@@ -21,7 +21,10 @@ import {
   BookOpen,
   FileText,
   ExternalLink,
-  Library
+  Library,
+  Calculator,
+  Loader2,
+  RotateCcw
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -45,6 +48,8 @@ export default function FeeEstimation() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [calculating, setCalculating] = useState(false);
 
   // Requirements from AI Assessment & System
   const [assessedChecklist, setAssessedChecklist] = useState([]);
@@ -96,6 +101,7 @@ export default function FeeEstimation() {
       setFloorArea(String(activeBiz.floor_area || '25'));
       setEmployees(String(activeBiz.employees || '2'));
 
+      setHasCalculated(false);
       setSaveSuccess(false);
       setError('');
     }
@@ -162,6 +168,17 @@ export default function FeeEstimation() {
     } else if (scale === 'Micro-Enterprise' && num >= 3000000) {
       setCapitalization('50000');
     }
+  };
+
+  const handleCalculateFees = () => {
+    setCalculating(true);
+    setTimeout(() => {
+      setCalculating(false);
+      setHasCalculated(true);
+      setTimeout(() => {
+        document.getElementById('fee-results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }, 400);
   };
 
   // ═════════════════════════════════════════════════════════════════════
@@ -353,7 +370,7 @@ export default function FeeEstimation() {
   const grandTotalStillNeeded = displayTotal + requirementExpenses.stillNeeded;
 
   return (
-    <div className="animate-fade-in page-container" style={{ maxWidth: '820px', margin: '0 auto', paddingBottom: '3rem' }}>
+    <div className="animate-fade-in page-container" style={{ maxWidth: '1200px', paddingBottom: '3rem' }}>
       
       {/* ── HEADER SECTION ── */}
       <div style={{ marginBottom: '1.75rem' }}>
@@ -638,21 +655,150 @@ export default function FeeEstimation() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={handleSaveToProfile}
-              disabled={saving}
-              className="btn btn-outline"
-              style={{ minHeight: '42px', padding: '0 1.25rem' }}
-            >
-              <Save size={16} />
-              {saving
-                ? (isTl ? 'Nagse-save...' : 'Saving Changes...')
-                : (isTl ? 'I-save ang mga Detalye sa Profile' : 'Save Details to Business Profile')}
-            </button>
-          </div>
+          {/* CONFIRMATION & CALCULATION ACTION AREA */}
+          {!hasCalculated ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2.25rem 1.5rem',
+              background: 'linear-gradient(135deg, var(--primary-green-soft) 0%, var(--primary-green-light) 100%)',
+              borderRadius: 'var(--radius-md)',
+              border: '1.5px solid #BBF7D0',
+              textAlign: 'center',
+              gap: '1rem',
+              marginTop: '1rem'
+            }}>
+              <div style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--primary-green)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 14px rgba(22, 122, 61, 0.25)'
+              }}>
+                <Calculator size={26} />
+              </div>
+
+              <div>
+                <h3 style={{ margin: '0 0 0.35rem', color: 'var(--government-navy)', fontSize: '1.2rem', fontWeight: 800 }}>
+                  {isTl ? 'Kumpirmahin ang mga Detalye ng Negosyo' : 'Confirm Business Details & Calculate Fees'}
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', maxWidth: '560px', lineHeight: 1.55 }}>
+                  {isTl
+                    ? 'Suriin o baguhin ang mga parameter ng iyong negosyo sa itaas (capitalization, puwesto, uri ng aplikasyon). Pagkatapos suriin, i-click ang button upang buuin ang kumpletong pagtatantya ng bayarin.'
+                    : 'Review or adjust your business parameters above (capitalization, operating premises, application stage). Once verified, click the button below to compute your estimated municipal fees and prerequisite clearance costs.'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '0.35rem' }}>
+                <button
+                  type="button"
+                  onClick={handleSaveToProfile}
+                  disabled={saving}
+                  className="btn btn-outline"
+                  style={{ minHeight: '44px', padding: '0 1.25rem', backgroundColor: '#FFFFFF' }}
+                >
+                  <Save size={16} />
+                  {saving
+                    ? (isTl ? 'Nagse-save...' : 'Saving Changes...')
+                    : (isTl ? 'I-save ang mga Detalye sa Profile' : 'Save Details to Business Profile')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCalculateFees}
+                  disabled={calculating}
+                  className="btn btn-primary"
+                  style={{
+                    minHeight: '44px',
+                    padding: '0 1.75rem',
+                    backgroundColor: 'var(--primary-green)',
+                    borderColor: 'var(--primary-green)',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 4px 14px rgba(22, 122, 61, 0.3)'
+                  }}
+                >
+                  {calculating ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>{isTl ? 'Kinukwenta ang mga Bayarin...' : 'Calculating Fees...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      <span>{isTl ? 'Kumpirmahin at Kalkulahin ang Bayarin' : 'Confirm Details & Calculate Fees'}</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              padding: '1rem 1.25rem',
+              background: 'var(--primary-green-light)',
+              border: '1.5px solid #BBF7D0',
+              borderRadius: 'var(--radius-md)',
+              marginTop: '1rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--primary-green)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle2 size={18} />
+                </div>
+                <div>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--primary-green-dark)', display: 'block' }}>
+                    {isTl ? 'Nakumpirma ang mga Detalye ng Negosyo' : 'Business Parameters Confirmed'}
+                  </strong>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--primary-green-dark)', opacity: 0.9 }}>
+                    {businessName || activeBiz?.business_name} • {businessType} • {businessScale} ({operatingSetup === 'physical' ? 'Physical' : 'Online'})
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={handleSaveToProfile}
+                  disabled={saving}
+                  className="btn btn-outline btn-sm"
+                  style={{ backgroundColor: '#FFFFFF', borderColor: '#BBF7D0', color: 'var(--primary-green-dark)', fontWeight: 600 }}
+                >
+                  <Save size={14} />
+                  {saving ? (isTl ? 'Nagse-save...' : 'Saving...') : (isTl ? 'I-save sa Profile' : 'Save to Profile')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCalculateFees}
+                  disabled={calculating}
+                  className="btn btn-primary btn-sm"
+                  style={{ backgroundColor: 'var(--primary-green)', borderColor: 'var(--primary-green)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  <RotateCcw size={14} className={calculating ? 'animate-spin' : ''} />
+                  <span>{isTl ? 'Muling Kalkulahin' : 'Recalculate Fees'}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* ── CALCULATED RESULTS SECTION (Only rendered after user confirms details) ── */}
+        {hasCalculated && (
+          <div id="fee-results-section" className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
         {/* STEP 3: RENEWAL NOTICE (IF APPLICABLE) */}
         {isRenewal && (
@@ -1048,18 +1194,18 @@ export default function FeeEstimation() {
               </div>
 
               <Link
-                to="/knowledge-base"
+                to="/knowledge"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.35rem',
                   fontSize: '0.78rem',
                   fontWeight: '700',
-                  color: '#15803D',
+                  color: 'var(--primary-green)',
                   textDecoration: 'none',
                   padding: '0.35rem 0.75rem',
                   borderRadius: '6px',
-                  backgroundColor: '#F0FDF4',
+                  backgroundColor: 'var(--primary-green-light)',
                   border: '1px solid #BBF7D0'
                 }}
               >
@@ -1142,6 +1288,9 @@ export default function FeeEstimation() {
             </Link>
           </div>
         </div>
+
+        </div>
+        )}
 
       </div>
 

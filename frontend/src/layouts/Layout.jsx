@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const { user } = useContext(AuthContext);
   const isChatPage = location.pathname === '/assistant';
+  const isFormPage = location.pathname === '/applications';
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -54,12 +55,13 @@ const Layout = ({ children }) => {
         </main>
       </div>
 
-      {/* Floating AI Chat Button */}
-      {!isChatPage && (
+      {/* Floating AI Chat Button — hidden on chat page and form/applications page */}
+      {!isChatPage && !isFormPage && (
         <Link 
           to="/assistant" 
           className="btn btn-primary floating-chat-btn"
           title="Ask AI Assistant"
+          aria-label="Ask AI Assistant"
         >
           <MessageSquare size={22} />
         </Link>

@@ -207,7 +207,7 @@ export default function Applications() {
       {/* ── MINIMALIST HEADER ────────────────────────────────────────────── */}
       <header className="no-print" style={{ marginBottom: '1.75rem' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.35rem', color: '#0F172A', letterSpacing: '-0.02em' }}>
-          Prepare Application
+          {isTl ? 'Maghanda ng Aplikasyon' : 'Prepare Application'}
         </h1>
         <p style={{ color: '#64748B', fontSize: '14.5px', margin: '0 0 1.25rem' }}>
           {isTl 
@@ -218,10 +218,13 @@ export default function Applications() {
         {/* Minimalist Profile Selector + Readiness Pill */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           {loadingBiz ? (
-            <span style={{ fontSize: '13px', color: '#64748B' }}>Loading profiles...</span>
+            <span style={{ fontSize: '13px', color: '#64748B' }}>{isTl ? 'Ikinakarga ang mga profile...' : 'Loading profiles...'}</span>
           ) : businesses.length === 0 ? (
             <span style={{ fontSize: '13px', color: '#64748B' }}>
-              No business registered. <Link to="/onboarding" style={{ color: '#15803D', fontWeight: 600 }}>Create one now &rarr;</Link>
+              {isTl ? 'Walang nakarehistrong negosyo.' : 'No business registered.'}{' '}
+              <Link to="/onboarding" style={{ color: '#15803D', fontWeight: 600 }}>
+                {isTl ? 'Gumawa ngayon →' : 'Create one now →'}
+              </Link>
             </span>
           ) : (
             <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -257,29 +260,6 @@ export default function Applications() {
               </span>
             </div>
           )}
-
-          {/* Readiness Pill */}
-          <Link
-            to={`/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`}
-            title="View requirement checklist in Assessment"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.35rem 0.75rem',
-              borderRadius: '999px',
-              backgroundColor: isAllReady ? '#DCFCE7' : '#FEF3C7',
-              color: isAllReady ? '#166534' : '#92400E',
-              border: `1px solid ${isAllReady ? '#BBF7D0' : '#FDE68A'}`,
-              fontSize: '12.5px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            {isAllReady ? <CheckCircle2 size={14} color="#166534" /> : <AlertTriangle size={14} color="#B45309" />}
-            <span>{loadingCompliance ? 'Checking...' : `${readyReqs} of ${totalReqs} items ready`}</span>
-          </Link>
         </div>
       </header>
 
@@ -320,75 +300,18 @@ export default function Applications() {
             }}>
               
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', marginBottom: '0.4rem' }}>
-                Pathway 1: Walk-In
+                {isTl ? 'Paraan 1: Pagbisita sa Munisipyo (Walk-In)' : 'Pathway 1: Walk-In'}
               </div>
 
               <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.35rem' }}>
-                Print Form BPLO-01
+                {isTl ? 'I-print ang Form BPLO-01' : 'Print Form BPLO-01'}
               </h2>
 
-              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 1.25rem', lineHeight: 1.5, minHeight: '40px' }}>
                 {isTl
                   ? 'I-format at i-print ang iyong Unified Business Permit Application.'
                   : 'Format and print your Unified Business Permit Application.'}
               </p>
-
-              {/* Document Readiness Summary */}
-              <div style={{
-                backgroundColor: isAllReady ? '#F0FDF4' : '#FFFBEB',
-                border: `1px solid ${isAllReady ? '#BBF7D0' : '#FDE68A'}`,
-                borderRadius: '8px',
-                padding: '0.85rem 1rem',
-                marginBottom: '1.25rem'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-                  {isAllReady ? (
-                    <CheckCircle2 size={16} color="#15803D" />
-                  ) : (
-                    <AlertTriangle size={16} color="#B45309" />
-                  )}
-                  {isAllReady ? (
-                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#15803D' }}>
-                      All clearances ready for walk-in
-                    </span>
-                  ) : (
-                    <>
-                      {missingReqs.slice(0, 2).map((r, i) => (
-                        <span key={i} style={{
-                          backgroundColor: '#FEF3C7',
-                          color: '#92400E',
-                          padding: '0.15rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '11.5px',
-                          fontWeight: 600,
-                          border: '1px solid #FDE68A'
-                        }}>
-                          {r.permit_name}
-                        </span>
-                      ))}
-                      {missingReqs.length > 2 && (
-                        <span style={{ fontSize: '11.5px', color: '#92400E', fontWeight: 600 }}>
-                          +{missingReqs.length - 2} more
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-                <Link
-                  to={`/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.3rem',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: isAllReady ? '#15803D' : '#92400E',
-                    textDecoration: 'none'
-                  }}
-                >
-                  &rarr; {isAllReady ? 'Review items in Assessment' : 'Complete missing items in Assessment'}
-                </Link>
-              </div>
 
               {/* Main Action Button - Consistent Green Theme */}
               <button
@@ -399,6 +322,8 @@ export default function Applications() {
                   border: 'none',
                   borderRadius: '8px',
                   padding: '0.8rem 1.25rem',
+                  minHeight: '44px',
+                  boxSizing: 'border-box',
                   fontWeight: 700,
                   fontSize: '14px',
                   display: 'flex',
@@ -413,11 +338,11 @@ export default function Applications() {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}
               >
-                <Printer size={16} /> View &amp; Print Pre-Filled Form BPLO-01
+                <Printer size={16} /> {isTl ? 'Tingnan at I-print ang Form BPLO-01' : 'View & Print Pre-Filled Form BPLO-01'}
               </button>
 
               {/* Secondary Buttons Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1.25rem' }}>
                 <button
                   onClick={() => setIsEditModalOpen(true)}
                   style={{
@@ -438,7 +363,7 @@ export default function Applications() {
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#94A3B8'}
                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#CBD5E1'}
                 >
-                  <Edit3 size={14} color="#64748B" /> Edit Fields
+                  <Edit3 size={14} color="#64748B" /> {isTl ? 'I-edit ang Impormasyon' : 'Edit Fields'}
                 </button>
                 <a
                   href="/forms/Roxas_Business_Permit_Application_Form.pdf"
@@ -463,19 +388,78 @@ export default function Applications() {
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#94A3B8'}
                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#CBD5E1'}
                 >
-                  <Download size={14} color="#64748B" /> Blank PDF
+                  <Download size={14} color="#64748B" /> {isTl ? 'Blangkong PDF' : 'Blank PDF'}
                 </a>
+              </div>
+
+              {/* Document Readiness Summary */}
+              <div style={{
+                backgroundColor: isAllReady ? '#F0FDF4' : '#FFFBEB',
+                border: `1px solid ${isAllReady ? '#BBF7D0' : '#FDE68A'}`,
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                marginBottom: '1.25rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                  {isAllReady ? (
+                    <CheckCircle2 size={16} color="#15803D" />
+                  ) : (
+                    <AlertTriangle size={16} color="#B45309" />
+                  )}
+                  {isAllReady ? (
+                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#15803D' }}>
+                      {isTl ? 'Handa na ang lahat ng clearance sa pagbisita' : 'All clearances ready for walk-in'}
+                    </span>
+                  ) : (
+                    <>
+                      {missingReqs.slice(0, 2).map((r, i) => (
+                        <span key={i} style={{
+                          backgroundColor: '#FEF3C7',
+                          color: '#92400E',
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: '4px',
+                          fontSize: '11.5px',
+                          fontWeight: 600,
+                          border: '1px solid #FDE68A'
+                        }}>
+                          {r.permit_name}
+                        </span>
+                      ))}
+                      {missingReqs.length > 2 && (
+                        <span style={{ fontSize: '11.5px', color: '#92400E', fontWeight: 600 }}>
+                          +{missingReqs.length - 2} {isTl ? 'pa' : 'more'}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+                <Link
+                  to={`/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: isAllReady ? '#15803D' : '#92400E',
+                    textDecoration: 'none'
+                  }}
+                >
+                  &rarr; {isAllReady
+                    ? (isTl ? 'Suriin ang mga item sa Assessment' : 'Review items in Assessment')
+                    : (isTl ? 'Kumpletuhin ang mga Item sa Assessment' : 'Complete Items in Assessment')}
+                </Link>
               </div>
 
               {/* Walk-in Guide (Clean Minimalist) */}
               <div style={{ marginTop: 'auto', paddingTop: '1.15rem', borderTop: '1px solid #F1F5F9' }}>
                 <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '0.6rem' }}>
-                  WALK-IN GUIDE
+                  {isTl ? 'GABAY SA PAGPUNTA (WALK-IN)' : 'WALK-IN GUIDE'}
                 </div>
                 <ol style={{ margin: 0, paddingLeft: '1.15rem', fontSize: '13px', color: '#475569', lineHeight: 1.65 }}>
-                  <li>Print 2 copies of Form BPLO-01.</li>
-                  <li>Bring your physical clearances.</li>
-                  <li>Present your business documents at Window 1.</li>
+                  <li>{isTl ? 'Mag-print ng 2 kopya ng Form BPLO-01.' : 'Print 2 copies of Form BPLO-01.'}</li>
+                  <li>{isTl ? 'Dalhin ang mga orihinal na clearance.' : 'Bring your physical clearances.'}</li>
+                  <li>{isTl ? 'Iharap ang iyong mga dokumento sa Window 1.' : 'Present your business documents at Window 1.'}</li>
                 </ol>
               </div>
 
@@ -493,14 +477,14 @@ export default function Applications() {
             }}>
               
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', marginBottom: '0.4rem' }}>
-                Pathway 2: Online
+                {isTl ? 'Paraan 2: Online' : 'Pathway 2: Online'}
               </div>
 
               <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.35rem' }}>
-                Official eBPLS Portal
+                {isTl ? 'Opisyal na eBPLS Portal' : 'Official eBPLS Portal'}
               </h2>
 
-              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 1.25rem', lineHeight: 1.5, minHeight: '40px' }}>
                 {isTl
                   ? 'Mag-file at magbayad online sa pambansang plataporma ng DICT.'
                   : 'File and pay online via the DICT national platform.'}
@@ -516,6 +500,8 @@ export default function Applications() {
                   color: '#FFFFFF',
                   borderRadius: '8px',
                   padding: '0.8rem 1.25rem',
+                  minHeight: '44px',
+                  boxSizing: 'border-box',
                   fontWeight: 700,
                   fontSize: '14px',
                   display: 'flex',
@@ -525,12 +511,13 @@ export default function Applications() {
                   textDecoration: 'none',
                   cursor: 'pointer',
                   width: '100%',
+                  marginBottom: '0.65rem',
                   transition: 'background-color 0.15s ease'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}
               >
-                Go to eBPLS Portal <ExternalLink size={15} />
+                {isTl ? 'Pumunta sa eBPLS Portal' : 'Go to eBPLS Portal'} <ExternalLink size={15} />
               </a>
 
               {/* Clean Portal Link */}
@@ -562,20 +549,20 @@ export default function Applications() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748B', letterSpacing: '0.05em' }}>
-                    {isTl ? 'Ihanda ang mga sumusunod na info' : 'PREPARE THE FOLLOWING INFOS'}
+                    {isTl ? 'IHANDA ANG MGA SUMUSUNOD NA IMPORMASYON' : 'PREPARE THE FOLLOWING INFOS'}
                   </span>
                   <span style={{ fontSize: '11px', color: '#15803D', fontWeight: 600 }}>
-                    1-click copy
+                    {isTl ? '1-click kopyahin' : '1-click copy'}
                   </span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {[
-                    { label: 'Business', val: formBploData?.business_name || selectedBiz?.business_name, key: 'name' },
-                    { label: 'Line', val: formBploData?.industry_category || selectedBiz?.business_type, key: 'type' },
-                    { label: 'Capital', val: formBploData?.capitalization ? `₱${Number(formBploData.capitalization).toLocaleString()}` : (selectedBiz?.capitalization ? `₱${Number(selectedBiz.capitalization).toLocaleString()}` : '₱0.00'), key: 'cap' },
+                    { label: isTl ? 'Negosyo' : 'Business', val: formBploData?.business_name || selectedBiz?.business_name, key: 'name' },
+                    { label: isTl ? 'Linya' : 'Line', val: formBploData?.industry_category || selectedBiz?.business_type, key: 'type' },
+                    { label: isTl ? 'Kapital' : 'Capital', val: formBploData?.capitalization ? `₱${Number(formBploData.capitalization).toLocaleString()}` : (selectedBiz?.capitalization ? `₱${Number(selectedBiz.capitalization).toLocaleString()}` : '₱0.00'), key: 'cap' },
                     { label: 'TIN', val: formBploData?.tin || selectedBiz?.tin, key: 'tin', canAdd: true },
-                    { label: 'Reg #', val: formBploData?.dti_sec_cda_number || selectedBiz?.dti_sec_cda_number, key: 'reg', canAdd: true }
+                    { label: isTl ? 'Reg #' : 'Reg #', val: formBploData?.dti_sec_cda_number || selectedBiz?.dti_sec_cda_number, key: 'reg', canAdd: true }
                   ].map(item => {
                     const hasVal = Boolean(item.val && String(item.val).trim() !== '' && String(item.val).toLowerCase() !== 'not set');
                     return (
@@ -598,7 +585,7 @@ export default function Applications() {
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
                           }}>
-                            {hasVal ? item.val : 'Not set'}
+                            {hasVal ? item.val : (isTl ? 'Hindi pa nakalagay' : 'Not set')}
                           </span>
                         </div>
 
@@ -634,7 +621,7 @@ export default function Applications() {
                             }}
                           >
                             {copiedKey === item.key ? <Check size={12} color="#166534" /> : <Copy size={12} />}
-                            {copiedKey === item.key ? 'Copied' : 'Copy'}
+                            {copiedKey === item.key ? (isTl ? 'Nakopya' : 'Copied') : (isTl ? 'Kopyahin' : 'Copy')}
                           </button>
                         ) : item.canAdd ? (
                           <button
@@ -654,7 +641,7 @@ export default function Applications() {
                               flexShrink: 0
                             }}
                           >
-                            <Plus size={12} /> Add
+                            <Plus size={12} /> {isTl ? 'Idagdag' : 'Add'}
                           </button>
                         ) : null}
                       </div>
@@ -671,7 +658,10 @@ export default function Applications() {
           <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 'var(--radius-md)', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
             <Info size={20} color="#64748B" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div style={{ fontSize: '0.8125rem', color: '#475569', lineHeight: 1.5 }}>
-              <strong>Municipal Advisory:</strong> PermitEase formats and pre-fills the official Roxas Unified Business Permit Application Form (Form BPLO-01) according to municipal ordinances. Official legal filing, fee verification, and physical permit issuance are conducted by the Roxas BPLO either in-person at City Hall or through the official DICT eBPLS portal.
+              <strong>{isTl ? 'Paunawa ng Munisipyo:' : 'Municipal Advisory:'}</strong>{' '}
+              {isTl
+                ? 'Ang PermitEase ang nag-fo-format at nagpi-fill-out ng opisyal na Roxas Unified Business Permit Application Form (Form BPLO-01) alinsunod sa mga ordinansa ng munisipyo. Ang opisyal na pag-file, beripikasyon ng bayarin, at pag-isyu ng permit ay isinasagawa ng Roxas BPLO sa pamamagitan ng personal na pagbisita sa Munisipyo o sa opisyal na DICT eBPLS portal.'
+                : 'PermitEase formats and pre-fills the official Roxas Unified Business Permit Application Form (Form BPLO-01) according to municipal ordinances. Official legal filing, fee verification, and physical permit issuance are conducted by the Roxas BPLO either in-person at City Hall or through the official DICT eBPLS portal.'}
             </div>
           </div>
 

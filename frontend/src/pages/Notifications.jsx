@@ -38,6 +38,7 @@ const getNotificationLink = (n) => {
 export default function Notifications() {
   const { user } = useContext(AuthContext);
   const { lang, t } = useContext(LanguageContext);
+  const isTl = lang === 'tl';
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = user?.token;
@@ -61,6 +62,7 @@ export default function Notifications() {
     try {
       await fetch(`${API}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, status: 'Read' } : n));
+      window.dispatchEvent(new CustomEvent('notificationUpdate'));
     } catch (err) { console.error(err); }
   };
 
@@ -68,6 +70,7 @@ export default function Notifications() {
     try {
       await fetch(`${API}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => ({ ...n, status: 'Read' })));
+      window.dispatchEvent(new CustomEvent('notificationUpdate'));
     } catch (err) { console.error(err); }
   };
 
@@ -76,6 +79,7 @@ export default function Notifications() {
     try {
       await fetch(`${API}/notifications/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.filter(n => n.id !== id));
+      window.dispatchEvent(new CustomEvent('notificationUpdate'));
     } catch (err) { console.error(err); }
   };
 
@@ -92,75 +96,81 @@ export default function Notifications() {
   if (loading) return <div style={{ padding: '2rem', color: 'var(--text-muted)' }}>{tn.title}...</div>;
 
   return (
-    <div className="animate-fade-in notifications-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
+    <div className="animate-fade-in page-container" style={{ maxWidth: '860px' }}>
       
-      <div className="notifications-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div className="page-heading-row" style={{ marginBottom: '1.75rem' }}>
         <div>
-          <h1 style={{ margin: 0, color: 'var(--primary-green)', fontSize: '1.6rem', fontWeight: '700' }}>{tn.title}</h1>
-          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+          <h1 style={{ margin: 0, color: 'var(--government-navy)', fontSize: '1.5rem', fontWeight: 800 }}>{tn.title}</h1>
+          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            {isTl 
+              ? `${unreadCount} ${unreadCount === 1 ? 'hindi pa nababasang abiso' : 'mga hindi pa nababasang abiso'}`
+              : `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`}
           </p>
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'white', color: 'var(--text-dark)', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}>
-            <CheckCheck size={16} /> {tn.markAllRead}
+          <button
+            onClick={markAllRead}
+            className="btn btn-outline btn-sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+          >
+            <CheckCheck size={16} /> {isTl ? 'Markahan Lahat Bilang Nabasa' : tn.markAllRead}
           </button>
         )}
       </div>
 
       {notifications.length === 0 ? (
-        <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', padding: '4rem', textAlign: 'center', boxShadow: 'var(--shadow-card)' }}>
-          <BellOff size={48} style={{ color: '#CBD5E1', margin: '0 auto 1rem' }} />
-          <h3 style={{ margin: '0 0 0.5rem', color: 'var(--text-dark)' }}>{tn.noNotifications}</h3>
-          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{tn.noNotificationsDesc}</p>
+        <div className="empty-state">
+          <BellOff size={48} className="empty-state__icon" style={{ color: 'var(--text-muted)' }} />
+          <h3 className="empty-state__title">{tn.noNotifications}</h3>
+          <p className="empty-state__desc">{tn.noNotificationsDesc}</p>
         </div>
       ) : (
-        <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {notifications.map((n, idx) => {
             const isUnread = n.status === 'Unread';
             const link = getNotificationLink(n);
             
             const content = (
-              <div className="notification-item" style={{
-                display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1.25rem 1.5rem',
+              <div className={`notification-item ${isUnread ? 'notification-item--unread' : ''}`} style={{
                 borderBottom: idx < notifications.length - 1 ? '1px solid var(--border-light)' : 'none',
-                background: isUnread ? '#F0FDF4' : 'white',
-                transition: 'background 0.2s',
-                textDecoration: 'none',
-                color: 'inherit'
+                borderRadius: 0
               }}>
-                <div style={{ 
-                  width: '42px', height: '42px', borderRadius: '50%', 
-                  background: isUnread ? 'var(--primary-green)' : '#F1F5F9', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 
-                }}>
+                <div className={`notification-item__icon-wrap ${isUnread ? 'notification-item__icon-wrap--unread' : 'notification-item__icon-wrap--read'}`}>
                   {getNotificationIcon(n.type, n.status)}
                 </div>
                 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: isUnread ? '700' : '600', color: 'var(--text-dark)' }}>{n.title}</h4>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', marginLeft: '1rem', flexShrink: 0 }}>{fmtDate(n.created_at)}</span>
+                <div className="notification-item__content">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem', gap: '0.5rem' }}>
+                    <h4 className="notification-item__title">{n.title}</h4>
+                    <span className="notification-item__time">{fmtDate(n.created_at)}</span>
                   </div>
                   
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: isUnread ? '#334155' : 'var(--text-muted)', lineHeight: '1.4' }}>{n.message}</p>
+                  <p className="notification-item__body">{n.message}</p>
                   
                   {n.email_sent === 1 && (
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <CheckCircle size={10} color="#10B981" /> Email notification sent
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <CheckCircle size={11} color="var(--primary-green)" /> {isTl ? 'Naipadala ang abiso sa email' : 'Email notification sent'}
                     </div>
                   )}
                 </div>
                 
-                <div className="notification-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '1rem', opacity: isUnread ? 1 : 0.6 }}>
+                <div className="notification-actions">
                   {isUnread && (
-                    <button onClick={(e) => markRead(n.id, e)} title="Mark as read"
-                      style={{ padding: '0.4rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary-green)', background: 'transparent', color: 'var(--primary-green)', cursor: 'pointer', display: 'flex' }}>
+                    <button
+                      onClick={(e) => markRead(n.id, e)}
+                      title={isTl ? 'Markahan bilang nabasa' : 'Mark as read'}
+                      aria-label="Mark notification as read"
+                      style={{ padding: '0.4rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary-green)', background: 'transparent', color: 'var(--primary-green)', cursor: 'pointer', display: 'flex' }}
+                    >
                       <CheckCheck size={14} />
                     </button>
                   )}
-                  <button onClick={(e) => deleteNotif(n.id, e)} title="Delete"
-                    style={{ padding: '0.4rem', borderRadius: 'var(--radius-sm)', border: '1px solid #FEE2E2', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'flex' }}>
+                  <button
+                    onClick={(e) => deleteNotif(n.id, e)}
+                    title={isTl ? 'Burahin' : 'Delete'}
+                    aria-label="Delete notification"
+                    style={{ padding: '0.4rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--danger-light)', background: 'var(--danger-light)', color: 'var(--danger)', cursor: 'pointer', display: 'flex' }}
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>

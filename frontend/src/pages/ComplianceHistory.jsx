@@ -5,21 +5,21 @@ import { History, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const ScoreBadge = ({ score }) => {
-  const color = score >= 80 ? '#16A34A' : score >= 50 ? '#D97706' : '#DC2626';
-  const bg = score >= 80 ? '#DCFCE7' : score >= 50 ? '#FEF3C7' : '#FEE2E2';
+  const color = score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
+  const bg = score >= 80 ? 'var(--success-light)' : score >= 50 ? 'var(--warning-light)' : 'var(--danger-light)';
   const label = score >= 80 ? 'Compliant' : score >= 50 ? 'Partial' : 'Non-Compliant';
   return (
-    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', fontWeight: '700', color, backgroundColor: bg }}>
+    <span style={{ padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-full)', fontSize: '0.8rem', fontWeight: '700', color, backgroundColor: bg }}>
       {score}% — {label}
     </span>
   );
 };
 
 const TrendIcon = ({ current, previous }) => {
-  if (previous === null || previous === undefined) return <Minus size={16} color="#9CA3AF" />;
-  if (current > previous) return <TrendingUp size={16} color="#16A34A" />;
-  if (current < previous) return <TrendingDown size={16} color="#DC2626" />;
-  return <Minus size={16} color="#9CA3AF" />;
+  if (previous === null || previous === undefined) return <Minus size={16} color="var(--text-muted)" />;
+  if (current > previous) return <TrendingUp size={16} color="var(--success)" />;
+  if (current < previous) return <TrendingDown size={16} color="var(--danger)" />;
+  return <Minus size={16} color="var(--text-muted)" />;
 };
 
 export default function ComplianceHistory() {
@@ -56,15 +56,18 @@ export default function ComplianceHistory() {
   const toggleExpand = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '900px' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.6rem', marginBottom: '0.25rem' }}>Compliance History</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Track how your compliance score has changed over time.</p>
+    <div className="animate-fade-in page-container" style={{ maxWidth: '900px' }}>
+      <div className="page-heading-row" style={{ marginBottom: '1.75rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--government-navy)', margin: '0 0 0.25rem' }}>Compliance History</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>Track how your compliance score has changed over time in Roxas City.</p>
+        </div>
       </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
         <select value={selectedBizId} onChange={e => setSelectedBizId(e.target.value)}
-          style={{ padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', minWidth: '240px', fontSize: '0.9rem' }}>
+          aria-label="Select Business Profile"
+          style={{ padding: '0.55rem 0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-medium)', minWidth: '240px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--government-navy)', background: 'var(--surface)' }}>
           {businesses.map(b => <option key={b.id} value={b.id}>{b.business_name}</option>)}
         </select>
       </div>

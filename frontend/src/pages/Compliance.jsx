@@ -8,19 +8,19 @@ import {
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
 const statusConfig = {
-  Missing:       { color: '#EF4444', bg: '#FEE2E2', icon: <XCircle size={14}/> },
-  Submitted:     { color: '#F59E0B', bg: '#FEF3C7', icon: <Clock size={14}/> },
-  Approved:      { color: '#22C55E', bg: '#DCFCE7', icon: <CheckCircle2 size={14}/> },
-  Rejected:      { color: '#DC2626', bg: '#FEE2E2', icon: <XCircle size={14}/> },
-  Expired:       { color: '#6B7280', bg: '#F3F4F6', icon: <AlertCircle size={14}/> },
+  Missing:       { color: 'var(--danger)', bg: 'var(--danger-light)', icon: <XCircle size={14}/> },
+  Submitted:     { color: 'var(--warning)', bg: 'var(--warning-light)', icon: <Clock size={14}/> },
+  Approved:      { color: 'var(--success)', bg: 'var(--success-light)', icon: <CheckCircle2 size={14}/> },
+  Rejected:      { color: 'var(--danger)', bg: 'var(--danger-light)', icon: <XCircle size={14}/> },
+  Expired:       { color: 'var(--text-secondary)', bg: 'var(--border-light)', icon: <AlertCircle size={14}/> },
 };
 
 const StatusBadge = ({ status }) => {
-  const cfg = statusConfig[status] || { color: '#6B7280', bg: '#F3F4F6', icon: null };
+  const cfg = statusConfig[status] || { color: 'var(--text-secondary)', bg: 'var(--border-light)', icon: null };
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-      padding: '0.2rem 0.65rem', borderRadius: '9999px',
+      padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)',
       fontSize: '0.75rem', fontWeight: '600',
       color: cfg.color, backgroundColor: cfg.bg
     }}>
@@ -30,7 +30,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const ScoreRing = ({ score }) => {
-  const color = score >= 80 ? '#22C55E' : score >= 50 ? '#F59E0B' : '#EF4444';
+  const color = score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
   const label = score >= 80 ? 'Compliant' : score >= 50 ? 'Partially Compliant' : 'Non-Compliant';
   const r = 54, circ = 2 * Math.PI * r;
   const dash = (score / 100) * circ;
@@ -38,12 +38,12 @@ const ScoreRing = ({ score }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
       <svg width="130" height="130" viewBox="0 0 130 130">
-        <circle cx="65" cy="65" r={r} fill="none" stroke="#E5E7EB" strokeWidth="12" />
+        <circle cx="65" cy="65" r={r} fill="none" stroke="var(--border-light)" strokeWidth="12" />
         <circle cx="65" cy="65" r={r} fill="none" stroke={color} strokeWidth="12"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           transform="rotate(-90 65 65)" style={{ transition: 'stroke-dasharray 0.8s ease' }} />
         <text x="65" y="60" textAnchor="middle" fontSize="22" fontWeight="700" fill={color}>{score}%</text>
-        <text x="65" y="80" textAnchor="middle" fontSize="10" fill="#6B7280">Compliance</text>
+        <text x="65" y="80" textAnchor="middle" fontSize="10" fill="var(--text-muted)">Compliance</text>
       </svg>
       <span style={{ fontWeight: '600', color, fontSize: '0.9rem' }}>{label}</span>
     </div>
@@ -125,31 +125,35 @@ export default function Compliance() {
   const mandatory = compliance?.checklist?.filter(c => c.is_mandatory) || [];
 
   return (
-    <div className="compliance-page-container" style={{ padding: '2rem', maxWidth: '1000px' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.6rem', color: 'var(--text-dark)', marginBottom: '0.25rem' }}>
-          Compliance Checklist
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Track your business permit requirements and document submission status.
-        </p>
+    <div className="compliance-page-container page-container" style={{ maxWidth: '1000px' }}>
+      <div className="page-heading-row" style={{ marginBottom: '1.75rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--government-navy)', margin: '0 0 0.25rem' }}>
+            Compliance Checklist
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
+            Track your business permit requirements and document submission status for Roxas City.
+          </p>
+        </div>
       </div>
 
       {/* Business Selector */}
-      <div className="compliance-selector-row" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card compliance-selector-row" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', padding: '1rem 1.25rem' }}>
         <select
           value={selectedBizId}
           onChange={e => setSelectedBizId(e.target.value)}
-          style={{ padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', minWidth: '240px', fontSize: '0.9rem' }}
+          aria-label="Select Business Profile"
+          style={{ padding: '0.55rem 0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-medium)', minWidth: '240px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--government-navy)', background: 'var(--surface)' }}
         >
           {businesses.map(b => <option key={b.id} value={b.id}>{b.business_name}</option>)}
         </select>
         <button
           onClick={handleEvaluate}
           disabled={evaluating || !selectedBizId}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+          className="btn btn-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1.15rem' }}
         >
-          <RefreshCw size={15} className={evaluating ? 'spinning' : ''} />
+          <RefreshCw size={15} className={evaluating ? 'animate-spin' : ''} />
           {evaluating ? 'Evaluating...' : 'Re-Evaluate'}
         </button>
       </div>
@@ -160,22 +164,22 @@ export default function Compliance() {
         <div style={{ display: 'grid', gap: '1.5rem' }}>
 
           {/* Score + Summary Cards */}
-          <div className="compliance-score-card" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '1.5rem', backgroundColor: 'var(--white)', borderRadius: 'var(--radius-md)', padding: '1.5rem', boxShadow: 'var(--shadow-card)', alignItems: 'center' }}>
+          <div className="card compliance-score-card" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '1.5rem', padding: '1.5rem', alignItems: 'center' }}>
             <ScoreRing score={compliance.compliance_score || 0} />
             <div className="compliance-stat-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#DCFCE7', borderRadius: 'var(--radius-sm)' }}>
-                <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#16A34A' }}>
+              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: 'var(--success-light)', borderRadius: 'var(--radius-sm)', border: '1px solid #BBF7D0' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--success)' }}>
                   {compliance.checklist?.filter(c => c.status === 'Approved' || c.status === 'Submitted').length || 0}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#166534', fontWeight: '500' }}>Submitted</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--primary-green-dark)', fontWeight: '700', textTransform: 'uppercase' }}>Submitted</div>
               </div>
-              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#FEE2E2', borderRadius: 'var(--radius-sm)' }}>
-                <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#DC2626' }}>{missing.length}</div>
-                <div style={{ fontSize: '0.75rem', color: '#991B1B', fontWeight: '500' }}>Missing</div>
+              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: 'var(--danger-light)', borderRadius: 'var(--radius-sm)', border: '1px solid #FECACA' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--danger)' }}>{missing.length}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: '700', textTransform: 'uppercase' }}>Missing</div>
               </div>
-              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-sm)' }}>
-                <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#374151' }}>{compliance.checklist?.length || 0}</div>
-                <div style={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: '500' }}>Total</div>
+              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--government-navy)' }}>{compliance.checklist?.length || 0}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Total</div>
               </div>
             </div>
           </div>

@@ -3,8 +3,11 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { FolderOpen, Upload, Trash2, Download, X, FileText } from 'lucide-react';
 
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
+
 const Documents = () => {
-  const { user } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
+  const activeToken = token || user?.token;
   const [documents, setDocuments] = useState([]);
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +17,7 @@ const Documents = () => {
   const handleDownload = async (docId, docName) => {
     try {
       const res = await fetch(`${API}/documents/download/${docId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${activeToken}` }
       });
       if (!res.ok) {
         alert('Failed to download document.');
@@ -38,13 +41,13 @@ const Documents = () => {
   const [formData, setFormData] = useState({ business_id: '', document_name: '', expiration_date: '' });
   const [file, setFile] = useState(null);
 
-  const config = { headers: { Authorization: `Bearer ${user.token}` } };
+  const config = { headers: { Authorization: `Bearer ${activeToken}` } };
 
   const fetchData = async () => {
     try {
       const [docsRes, bizsRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents`, config),
-        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, config)
+        axios.get(`${API}/documents`, config),
+        axios.get(`${API}/businesses`, config)
       ]);
       setDocuments(docsRes.data);
       setBusinesses(bizsRes.data);
@@ -64,8 +67,8 @@ const Documents = () => {
       uploadData.append('business_id', formData.business_id);
       uploadData.append('document_name', formData.document_name);
       uploadData.append('expiration_date', formData.expiration_date);
-      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/upload`, uploadData, {
-        headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'multipart/form-data' }
+      await axios.post(`${API}/documents/upload`, uploadData, {
+        headers: { Authorization: `Bearer ${activeToken}`, 'Content-Type': 'multipart/form-data' }
       });
       setShowModal(false); setFile(null); setFormData({ business_id: '', document_name: '', expiration_date: '' }); fetchData();
     } catch (err) { setError(err.response?.data?.message || 'Upload failed'); }
@@ -74,7 +77,7 @@ const Documents = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this document?')) return;
-    try { await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${id}`, config); fetchData(); }
+    try { await axios.delete(`${API}/documents/${id}`, config); fetchData(); }
     catch (err) { setError('Failed to delete'); }
   };
 
@@ -85,23 +88,23 @@ const Documents = () => {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="documents-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="animate-fade-in page-container">
+      <div className="page-heading-row documents-header-row" style={{ marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Documents</h1>
-          <p className="text-muted">Upload and manage your permit-related documents.</p>
+          <h1 style={{ color: 'var(--government-navy)', margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800 }}>Documents</h1>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>Upload, view, and organize your business permit documents and attachments.</p>
         </div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}><Upload size={18} /> Upload Document</button>
       </div>
 
-      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--status-expired-bg)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
+      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--danger-light)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid #FECACA' }}>{error}</div>}
 
-      {loading ? <div className="text-muted text-center" style={{ padding: '4rem' }}>Loading...</div> :
+      {loading ? <div className="text-muted text-center" style={{ padding: '4rem' }}>Loading documents...</div> :
         documents.length === 0 ? (
-          <div className="card text-center" style={{ padding: '4rem' }}>
-            <FolderOpen size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
-            <h3 className="text-muted">No Documents Yet</h3>
-            <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Upload your first permit document.</p>
+          <div className="empty-state">
+            <FolderOpen size={48} className="empty-state__icon" style={{ color: 'var(--text-muted)' }} />
+            <h3 className="empty-state__title">No Documents Uploaded Yet</h3>
+            <p className="empty-state__desc">Upload your barangay clearances, DTI certificates, and other requirements.</p>
             <button className="btn btn-primary" onClick={() => setShowModal(true)}><Upload size={18} /> Upload Document</button>
           </div>
         ) : (

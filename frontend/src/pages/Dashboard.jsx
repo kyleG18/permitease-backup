@@ -1,12 +1,15 @@
 import { useContext, useEffect, useState, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { BusinessContext } from '../context/BusinessContext';
+import { LanguageContext } from '../context/LanguageContext';
 import axios from 'axios';
 import {
-  FileText, CheckCircle, AlertTriangle, XCircle, Clock,
+  FileText, CheckCircle, CheckCircle2, AlertTriangle, XCircle, Clock,
   Building2, ClipboardCheck, Receipt, BarChart2,
   ShieldCheck, AlertCircle, ChevronRight, BrainCircuit, Calendar,
   TrendingUp, Bell, ArrowRight, Info, Zap,
-  Ticket, Scale, CalendarCheck, Activity, Users, ArrowUpRight
+  Ticket, Scale, CalendarCheck, Activity, Users, ArrowUpRight,
+  Download, ExternalLink, MapPin, Printer
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { Link } from 'react-router-dom';
@@ -45,62 +48,106 @@ const statusStyle = (s) => ({
 }[s] || { color: 'var(--status-rejected)', bg: 'var(--status-rejected-bg)' });
 
 // ===========================================================================
-// BUSINESS OWNER DASHBOARD
+// BUSINESS OWNER DASHBOARD (Streamlined & User-Friendly Action Center)
 // ===========================================================================
 const BusinessOwnerDashboard = ({ user, stats, loading }) => {
+  const { businesses: contextBusinesses, loadingBusinesses } = useContext(BusinessContext);
+  const { lang } = useContext(LanguageContext);
+  const isTl = lang === 'tl';
+  const [selectedBizId, setSelectedBizId] = useState('');
   const [readiness, setReadiness] = useState(null);
   const [estimate, setEstimate] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const headers = { Authorization: `Bearer ${user.token}` };
+  const [loadingBizData, setLoadingBizData] = useState(false);
+  const headers = useMemo(() => ({ Authorization: `Bearer ${user.token}` }), [user.token]);
 
+  // Combined business profiles list from stats or context
+  const businessesList = useMemo(() => {
+    if (stats?.businesses && stats.businesses.length > 0) return stats.businesses;
+    if (contextBusinesses && contextBusinesses.length > 0) return contextBusinesses;
+    return [];
+  }, [stats?.businesses, contextBusinesses]);
+
+  // Set default business
   useEffect(() => {
-    axios.get(`${API}/notifications`, { headers }).then(r => setNotifications(r.data.slice(0, 4))).catch(() => {});
-    if (stats?.businesses?.length > 0) {
-      const bizId = stats.businesses[0].id;
-      axios.get(`${API}/readiness/${bizId}`, { headers }).then(r => setReadiness(r.data)).catch(() => {});
-      axios.get(`${API}/tax/estimate/${bizId}`, { headers }).then(r => setEstimate(r.data)).catch(() => {});
+    if (businessesList.length > 0 && !selectedBizId) {
+      setSelectedBizId(String(businessesList[0].id));
     }
-  }, [stats]);
+  }, [businessesList, selectedBizId]);
 
-  if (!loading && stats?.total_businesses === 0) {
+  // Fetch notifications
+  useEffect(() => {
+    axios.get(`${API}/notifications`, { headers })
+      .then(r => setNotifications(Array.isArray(r.data) ? r.data.slice(0, 4) : []))
+      .catch(() => {});
+  }, [headers]);
+
+  // Fetch readiness & estimate for selected business
+  useEffect(() => {
+    if (!selectedBizId) return;
+    setLoadingBizData(true);
+    Promise.allSettled([
+      axios.get(`${API}/readiness/${selectedBizId}`, { headers }),
+      axios.get(`${API}/tax/estimate/${selectedBizId}`, { headers })
+    ]).then(([readRes, estRes]) => {
+      if (readRes.status === 'fulfilled') setReadiness(readRes.value.data);
+      if (estRes.status === 'fulfilled') setEstimate(estRes.value.data);
+      setLoadingBizData(false);
+    });
+  }, [selectedBizId, headers]);
+
+  // Zero-business onboarding view
+  if (!loading && !loadingBusinesses && stats?.total_businesses === 0 && businessesList.length === 0) {
     return (
       <div className="animate-fade-in" style={{ padding: '2rem', maxWidth: '600px', margin: '4rem auto', textAlign: 'center' }}>
-        <div className="card">
-          <h2 style={{ color: 'var(--government-navy)', marginBottom: '1rem' }}>Welcome to PermitEase</h2>
-          <p style={{ color: 'var(--text-primary)', fontWeight: '500', marginBottom: '0.5rem' }}>Your account is ready.</p>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-            Let's set up your business profile first so PermitEase can determine your permit requirements.
+        <div className="card" style={{ padding: '2.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', backgroundColor: '#FFFFFF' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+            <Building2 size={28} />
+          </div>
+          <h2 style={{ color: 'var(--government-navy, #0F172A)', marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 800 }}>
+            {isTl ? 'Maligayang Pagdating sa PermitEase' : 'Welcome to PermitEase'}
+          </h2>
+          <p style={{ color: '#64748B', fontSize: '14px', marginBottom: '1.75rem', lineHeight: 1.55 }}>
+            {isTl
+              ? 'Handa na ang iyong account. Irehistro muna ang profile ng iyong negosyo upang matukoy ng PermitEase ang mga tiyak na permit na kailangan sa Munisipalidad ng Roxas.'
+              : 'Your account is ready. Register your business profile first so PermitEase can determine your exact Municipality of Roxas, Oriental Mindoro permit requirements.'}
           </p>
-          <Link to="/onboarding" className="btn btn-primary btn-lg" style={{ display: 'inline-flex' }}>
-            Set Up My Business
+          <Link to="/onboarding" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', fontWeight: 700, borderRadius: '8px' }}>
+            {isTl ? 'Irehistro ang Aking Negosyo' : 'Register My Business'} <ArrowRight size={16} />
           </Link>
         </div>
       </div>
     );
   }
 
-  const readScore = readiness?.readiness_score ?? 0;
-  const readColor = readScore >= 80 ? 'var(--success)' : readScore >= 50 ? 'var(--warning)' : 'var(--danger)';
+  const selectedBiz = businessesList.find(b => String(b.id) === String(selectedBizId)) || businessesList[0] || {};
 
-  let reqHave = 0, reqNeed = 0, reqNotChecked = 0;
-  if (readiness?.categories) {
-    readiness.categories.forEach(cat => {
-      if (cat.status === 'Complete' || cat.status === 'Valid' || cat.status === 'Computed') reqHave++;
-      else if (cat.status === 'Incomplete') reqNeed++;
-      else reqNotChecked++;
-    });
+  // Readiness scores
+  const readScore = readiness?.readiness_score ?? stats?.compliance_score ?? 0;
+
+  // Extract actual requirement counts from the "Requirements Checklist" category detail
+  // The API embeds counts in the detail string: "X of Y requirement(s) marked as prepared"
+  let reqHave = 0, reqNeed = 0;
+  const reqChecklist = readiness?.categories?.find(c => c.label === 'Requirements Checklist');
+  if (reqChecklist) {
+    const match = (reqChecklist.detail || '').match(/^(\d+)\s+of\s+(\d+)/);
+    if (match) {
+      reqHave = parseInt(match[1], 10);
+      const reqTotal = parseInt(match[2], 10);
+      reqNeed = reqTotal - reqHave;
+    }
+  } else {
+    reqHave = stats?.ready_requirements ?? 0;
+    reqNeed = stats?.missing_requirements ?? 0;
   }
-  const totalReqs = (readiness?.categories || []).length;
+  const totalReqs = reqHave + reqNeed || stats?.total_requirements || 0;
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const firstName = user?.full_name?.split(' ')[0] || 'User';
-  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  // Requirement-specific percentage — used for the KPI card progress bar
+  // This is separate from readScore (which includes profile + fee sections)
+  const reqPct = totalReqs > 0 ? Math.round((reqHave / totalReqs) * 100) : 0;
+  const reqColor = reqPct === 100 ? '#15803D' : reqPct >= 50 ? '#D97706' : reqPct > 0 ? '#D97706' : '#E5E7EB';
 
-  const step1Done = true;
-  const step2Done = readScore === 100;
-  const step3Done = !!estimate;
-  const step4Done = false;
+  const formatCurrency = (val) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val || 0);
 
   let taxTotal = 0, hasUnassessedTax = false;
   if (estimate?.local_business_tax) {
@@ -117,120 +164,170 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
     });
   }
 
-  const formatCurrency = (val) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val || 0);
+  const hour = new Date().getHours();
+  const greeting = hour < 12
+    ? (isTl ? 'Magandang umaga' : 'Good morning')
+    : hour < 18
+      ? (isTl ? 'Magandang hapon' : 'Good afternoon')
+      : (isTl ? 'Magandang gabi' : 'Good evening');
+  const firstName = user?.full_name?.split(' ')[0] || (isTl ? 'May-ari ng Negosyo' : 'Business Owner');
+  const currentDate = new Date().toLocaleDateString(isTl ? 'fil-PH' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  // KPI metric cards data
-  const selfDeclaredReady = reqHave;
-  const kpiCards = [
+  // Walk-in status
+  const activeWalkin = stats?.active_walkin;
+  const isAttended = activeWalkin?.walkin_status === 'ATTENDED';
+  const isScheduled = !!activeWalkin?.walkin_date;
+  const hasAssessment = Boolean(stats?.assessment_completed || (readiness && totalReqs > 0));
+
+  // Dynamic "Next Best Action" logic
+  let nextAction = null;
+  if (isScheduled && !isAttended) {
+    nextAction = {
+      tag: isTl ? 'NAKATAKDANG APPOINTMENT' : 'UPCOMING APPOINTMENT',
+      tagColor: '#166534',
+      tagBg: '#DCFCE7',
+      tagBorder: '#BBF7D0',
+      title: `Window 1 Walk-In — ${activeWalkin.business_name || selectedBiz.business_name || (isTl ? 'Iyong Negosyo' : 'Your Business')}`,
+      desc: isTl
+        ? `Ang iyong appointment ay nakatakda sa ${new Date(activeWalkin.walkin_date).toLocaleDateString('fil-PH', { weekday: 'long', month: 'long', day: 'numeric' })} (${activeWalkin.walkin_time_slot === 'Morning Batch' || activeWalkin.walkin_time_slot === 'Morning Window' ? 'Batch sa Umaga' : 'Batch sa Hapon'}). Magdala ng 2 kopya ng Form BPLO-01 at mga orihinal na clearance sa Window 1.`
+        : `Your appointment is scheduled for ${new Date(activeWalkin.walkin_date).toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric' })} (${activeWalkin.walkin_time_slot || 'Morning Window'}). Bring 2 printed copies of Form BPLO-01 and your physical clearances to Window 1.`,
+      primaryBtnText: isTl ? 'Tingnan ang Appointment at Routing Slip' : 'View Appointment & Routing Slip',
+      primaryBtnLink: '/schedule-walkin',
+      primaryBtnIcon: CalendarCheck,
+      secondaryBtnText: isTl ? 'I-print ang Form BPLO-01' : 'Print Form BPLO-01',
+      secondaryBtnLink: `/applications${selectedBizId ? `?businessId=${selectedBizId}` : ''}`
+    };
+  } else if (isAttended) {
+    nextAction = {
+      tag: isTl ? 'NASURI NA ANG MGA DOKUMENTO' : 'DOCUMENTS VERIFIED',
+      tagColor: '#166534',
+      tagBg: '#DCFCE7',
+      tagBorder: '#BBF7D0',
+      title: isTl ? 'Beripikasyon sa Counter — Pumunta sa Ingat-Yaman (Treasury)' : 'Counter Verification Complete — Proceed to Treasury Cashier',
+      desc: isTl ? 'Naberipika na ng BPLO Window 1 ang iyong pisikal na application folder at inindorso ka na sa Ingat-Yaman ng Munisipyo para sa pagbabayad at pagkuha ng permit.' : 'BPLO Window 1 has verified your physical application folder and endorsed you to Municipal Treasury for final payment and permit claiming.',
+      primaryBtnText: isTl ? 'Tingnan ang Katayuan at Resibo' : 'View Status & Receipt',
+      primaryBtnLink: '/schedule-walkin',
+      primaryBtnIcon: CheckCircle2
+    };
+  } else if (!hasAssessment) {
+    nextAction = {
+      tag: isTl ? 'HAKBANG 1 — KINAKAILANGAN' : 'STEP 1 — REQUIRED',
+      tagColor: '#166534',
+      tagBg: '#F0FDF4',
+      tagBorder: '#BBF7D0',
+      title: isTl ? 'Tukuyin ang Iyong mga Kinakailangang Clearance' : 'Identify Your Required Municipal Clearances',
+      desc: isTl ? 'Patakbuhin ang Pagsusuri ng AI upang matukoy ang mga tiyak na clearance at rekisito sa Munisipalidad ng Roxas para sa linya ng iyong negosyo.' : 'Run the AI Assessment to identify the specific clearances and prerequisites required for your business type under local ordinances.',
+      primaryBtnText: isTl ? 'Simulan ang Pagsusuri ng AI' : 'Start AI Assessment',
+      primaryBtnLink: `/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`,
+      primaryBtnIcon: BrainCircuit
+    };
+  } else if (readScore === 100 || (totalReqs > 0 && reqNeed === 0)) {
+    nextAction = {
+      tag: isTl ? 'LAHAT NG CLEARANCE — HANDA NA' : 'ALL CLEARANCES READY',
+      tagColor: '#166534',
+      tagBg: '#DCFCE7',
+      tagBorder: '#BBF7D0',
+      title: isTl ? 'Handa Nang Mag-file — Ihanda ang Form BPLO-01' : 'Ready to File — Prepare Your Form BPLO-01',
+      desc: isTl ? 'Naihanda na ang lahat ng rekisito. I-download ang pre-filled na Unified Business Permit Application Form, pagkatapos ay mag-iskedyul ng appointment sa Window 1.' : 'All prerequisites are in order. Download your pre-filled Unified Business Permit Application Form and schedule your Window 1 appointment.',
+      primaryBtnText: isTl ? 'Tingnan at I-print ang Form BPLO-01' : 'View & Print Form BPLO-01',
+      primaryBtnLink: `/applications${selectedBizId ? `?businessId=${selectedBizId}` : ''}`,
+      primaryBtnIcon: ClipboardCheck,
+      secondaryBtnText: isTl ? 'Mag-iskedyul ng Walk-In' : 'Schedule Walk-In',
+      secondaryBtnLink: '/schedule-walkin'
+    };
+  } else {
+    nextAction = {
+      tag: isTl ? `IN PROGRESS — ${reqNeed} NATITIRA` : `IN PROGRESS — ${reqNeed} REMAINING`,
+      tagColor: '#92400E',
+      tagBg: '#FFFBEB',
+      tagBorder: '#FDE68A',
+      title: isTl ? `Ipunin ang ${reqNeed} Natitirang Clearance` : `Gather Your ${reqNeed} Remaining Clearances`,
+      desc: isTl
+        ? `${reqHave} sa ${totalReqs} clearance ang handa para sa ${selectedBiz.business_name || 'iyong negosyo'}. Suriin ang iyong checklist sa Assessment o kalkulahin ang iyong tinatayang bayarin.`
+        : `${reqHave} of ${totalReqs} clearances are prepared for ${selectedBiz.business_name || 'your business'}. Review your checklist in Assessment or calculate your estimated municipal fees.`,
+      primaryBtnText: isTl ? 'Suriin ang Checklist sa Assessment' : 'Review Assessment Checklist',
+      primaryBtnLink: `/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`,
+      primaryBtnIcon: ShieldCheck,
+      secondaryBtnText: isTl ? 'Kalkulahin ang Bayarin' : 'Calculate Estimated Fees',
+      secondaryBtnLink: `/fee-estimation${selectedBizId ? `?business_id=${selectedBizId}` : ''}`
+    };
+  }
+
+  // Unified 4-Milestone Roadmap
+  const milestones = [
     {
-      icon: Building2,
-      label: 'My Businesses',
-      value: loading ? '…' : (stats?.total_businesses ?? 0),
-      sub: 'Registered profiles',
-      accent: 'var(--government-navy)',
-      accentBg: 'rgba(23,32,51,0.07)',
-      to: '/profile',
+      step: 1,
+      title: isTl ? 'Pagsusuri ng AI' : 'AI Assessment',
+      label: hasAssessment
+        ? (isTl ? 'Natukoy ang mga Clearance' : 'Clearances Identified')
+        : (isTl ? 'Mga Paunang Rekisito' : 'Statutory Prerequisites'),
+      status: hasAssessment ? 'COMPLETE' : 'CURRENT',
+      statusColor: hasAssessment ? '#15803D' : '#0F172A',
+      statusBg: hasAssessment ? '#DCFCE7' : '#F1F5F9',
+      link: `/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`,
+      icon: BrainCircuit
     },
     {
-      icon: ShieldCheck,
-      label: 'Permit Readiness',
-      value: loading ? '…' : `${readScore}%`,
-      sub: readScore >= 80 ? 'On track' : readScore >= 50 ? 'In progress' : 'Needs attention',
-      accent: readScore >= 80 ? 'var(--success)' : readScore >= 50 ? 'var(--warning)' : 'var(--danger)',
-      accentBg: readScore >= 80 ? 'var(--success-light)' : readScore >= 50 ? 'var(--warning-light)' : 'var(--danger-light)',
-      to: '/assessment',
+      step: 2,
+      title: isTl ? 'Estimasyon ng Bayarin' : 'Fee Estimation',
+      label: estimate
+        ? (hasUnassessedFee || hasUnassessedTax ? (isTl ? 'Naka-configure ang Iskedyul' : 'Schedule Configured') : formatCurrency(taxTotal + feeTotal))
+        : (isTl ? 'Bayarin at Buwis sa Munisipyo' : 'Municipal Fees & Tax'),
+      status: estimate ? 'COMPLETE' : hasAssessment ? 'CURRENT' : 'UPCOMING',
+      statusColor: estimate ? '#15803D' : hasAssessment ? '#0F172A' : '#94A3B8',
+      statusBg: estimate ? '#DCFCE7' : hasAssessment ? '#F1F5F9' : '#FFFFFF',
+      link: `/fee-estimation${selectedBizId ? `?business_id=${selectedBizId}` : ''}`,
+      icon: Receipt
     },
     {
-      icon: CheckCircle,
-      label: 'Self-Declared Ready',
-      value: loading ? '…' : selfDeclaredReady,
-      sub: selfDeclaredReady > 0 ? `of ${totalReqs} clearances marked` : 'Mark items in AI Assessment',
-      accent: selfDeclaredReady > 0 ? 'var(--success)' : 'var(--text-secondary)',
-      accentBg: selfDeclaredReady > 0 ? 'var(--success-light)' : 'var(--border-light)',
-      to: '/assessment',
+      step: 3,
+      title: 'Form BPLO-01',
+      label: readScore === 100
+        ? (isTl ? 'Handa na Lahat ng Dokumento' : 'All Documents Ready')
+        : (isTl ? `${reqHave} sa ${totalReqs} Handa Na` : `${reqHave} of ${totalReqs} Prepared`),
+      status: readScore === 100 ? 'COMPLETE' : (hasAssessment && !!estimate) ? 'CURRENT' : 'UPCOMING',
+      statusColor: readScore === 100 ? '#15803D' : (hasAssessment && !!estimate) ? '#0F172A' : '#94A3B8',
+      statusBg: readScore === 100 ? '#DCFCE7' : (hasAssessment && !!estimate) ? '#F1F5F9' : '#FFFFFF',
+      link: `/applications${selectedBizId ? `?businessId=${selectedBizId}` : ''}`,
+      icon: ClipboardCheck
     },
     {
-      icon: AlertCircle,
-      label: 'Still Needed',
-      value: loading ? '…' : (stats?.missing_requirements ?? 0),
-      sub: (stats?.missing_requirements ?? 0) === 0 ? 'All clear!' : 'Action needed',
-      accent: (stats?.missing_requirements ?? 0) === 0 ? 'var(--success)' : 'var(--danger)',
-      accentBg: (stats?.missing_requirements ?? 0) === 0 ? 'var(--success-light)' : 'var(--danger-light)',
-      to: '/assessment',
-    },
-    {
-      icon: BrainCircuit,
-      label: 'AI Assessment',
-      value: loading ? '…' : (stats?.assessment_completed ? 'Done' : 'Pending'),
-      sub: stats?.assessment_completed ? 'Clearances identified' : 'Not yet run',
-      accent: stats?.assessment_completed ? 'var(--success)' : 'var(--text-secondary)',
-      accentBg: stats?.assessment_completed ? 'var(--success-light)' : 'var(--border-light)',
-      to: '/assessment',
-    },
+      step: 4,
+      title: 'Window 1 Walk-In',
+      label: isAttended
+        ? (isTl ? 'Naberipika sa Counter' : 'Verified at Counter')
+        : isScheduled
+          ? (isTl ? `Nakatakda sa ${new Date(activeWalkin.walkin_date).toLocaleDateString('fil-PH', { month: 'short', day: 'numeric' })}` : `Booked for ${new Date(activeWalkin.walkin_date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}`)
+          : (isTl ? 'Fast-Track Ground Floor' : 'Fast-Track Ground Floor'),
+      status: isAttended ? 'COMPLETE' : isScheduled ? 'SCHEDULED' : readScore === 100 ? 'CURRENT' : 'UPCOMING',
+      statusColor: isAttended ? '#15803D' : isScheduled ? '#1E40AF' : readScore === 100 ? '#0F172A' : '#94A3B8',
+      statusBg: isAttended ? '#DCFCE7' : isScheduled ? '#EFF6FF' : readScore === 100 ? '#F1F5F9' : '#FFFFFF',
+      link: '/schedule-walkin',
+      icon: CalendarCheck
+    }
   ];
 
-  // Quick action tiles
-  const quickActions = [
-    {
-      icon: ClipboardCheck,
-      label: 'Prepare Application',
-      desc: 'Fill Form BPLO-01 & plan walk-in',
-      to: '/applications',
-      primary: true,
-    },
-    {
-      icon: BrainCircuit,
-      label: 'AI Assessment',
-      desc: 'Identify permits with AI guidance',
-      to: '/assessment',
-      primary: false,
-    },
-    {
-      icon: CalendarCheck,
-      label: 'Schedule Walk-in',
-      desc: 'Book your slot at BPLO Window 1',
-      to: '/schedule-walkin',
-      primary: false,
-    },
-    {
-      icon: Receipt,
-      label: 'Cost Estimation',
-      desc: 'Estimate local taxes & regulatory fees',
-      to: '/tax-estimation',
-      primary: false,
-    },
-  ];
-
-  const timelineSteps = [
-    { title: 'AI Assessment',         desc: 'Identify clearances needed for your business', done: !!stats?.assessment_completed, to: '/assessment' },
-    { title: 'Cost Estimation',        desc: 'Estimate municipal taxes & fees',               done: !!estimate, to: '/tax-estimation' },
-    { title: 'Prepare Application',    desc: 'Fill & download Form BPLO-01',                  done: readScore >= 80, to: '/applications' },
-    { title: 'Schedule Walk-in',       desc: 'Book your slot at BPLO Window 1',               done: !!stats?.active_walkin, to: '/schedule-walkin' },
-    { title: 'Walk in to BPLO',        desc: 'File at Municipal Hall (Window 1)',              done: stats?.active_walkin?.walkin_status === 'ATTENDED', to: '/schedule-walkin' },
-  ];
-
-  const stepsCompleted = timelineSteps.filter(s => s.done).length;
-  const progressPct = Math.round((stepsCompleted / timelineSteps.length) * 100);
-
-  const officialSteps = [
-    { num: 1, title: 'File',    desc: 'Submit application & supporting documents at BPLO.' },
-    { num: 2, title: 'Assess',  desc: 'LGU assesses applicable taxes, fees & other charges.' },
-    { num: 3, title: 'Payment', desc: 'Pay the officially assessed amounts.' },
-    { num: 4, title: 'Claim',   desc: 'Receive your business permit & other documents.' },
-  ];
+  const milestonesDoneCount = milestones.filter(m => m.status === 'COMPLETE').length;
+  const roadmapPct = Math.round((milestonesDoneCount / milestones.length) * 100);
 
   return (
-    <div className="animate-fade-in db-msme">
+    <div className="animate-fade-in db-msme" style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: 'Inter, sans-serif' }}>
 
-      {/* ── HERO SECTION (untouched) ───────────────────────────────────────── */}
+      {/* ── 1. HERO BANNER ────────────────────────────────────────────────── */}
       <div className="db-hero">
         <div className="db-hero__overlay" aria-hidden="true" />
         <div className="db-hero__inner">
           <div className="db-hero__header">
             <div>
               <div className="db-hero__greeting">{greeting},</div>
-              <h1 className="db-hero__name">Welcome back, {firstName}!</h1>
-              <p className="db-hero__sub">{"Here's your PermitEase overview \u2014 Municipality of Roxas."}</p>
+              <h1 className="db-hero__name">
+                {isTl ? `Maligayang pagbabalik, ${firstName}!` : `Welcome back, ${firstName}!`}
+              </h1>
+              <p className="db-hero__sub">
+                {isTl
+                  ? 'Narito ang buod ng iyong PermitEase — Munisipalidad ng Roxas.'
+                  : "Here's your PermitEase overview — Municipality of Roxas."}
+              </p>
             </div>
             <div className="db-hero__date">
               <Calendar size={15} />
@@ -238,353 +335,674 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
             </div>
           </div>
           <div className="db-hero__text">
-            <div className="db-hero__city-title">Roxas City Business Permit</div>
-            <div className="db-hero__tagline">Prepare. Comply. Grow.</div>
+            <div className="db-hero__city-title">
+              {isTl ? 'Munisipalidad ng Roxas, Oriental Mindoro' : 'Municipality of Roxas, Oriental Mindoro'}
+            </div>
+            <div className="db-hero__tagline">
+              {isTl ? 'Maghanda. Sumunod. Umunlad.' : 'Prepare. Comply. Grow.'}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── ACTIVE FAST-TRACK WALK-IN BANNER (IF SCHEDULED) ─────────────── */}
-      {stats?.active_walkin && (
+      {/* ── 2. ACTIVE BUSINESS PROFILE BAR ────────────────────────────────── */}
+      <div style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: '10px',
+        border: '1px solid #E5E7EB',
+        padding: '0.75rem 1.2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '0.75rem',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '11px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Building2 size={14} color="#15803D" />
+            {isTl ? 'Aktibong Negosyo' : 'Active Business'}
+          </div>
+
+          {businessesList.length > 1 ? (
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <select
+                value={selectedBizId}
+                onChange={(e) => setSelectedBizId(e.target.value)}
+                style={{
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  padding: '0.35rem 2rem 0.35rem 0.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid #D1D5DB',
+                  fontWeight: 700,
+                  color: '#111827',
+                  backgroundColor: '#FFFFFF',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                {businessesList.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.business_name} ({b.business_type || b.industry_category || 'Retail'})
+                  </option>
+                ))}
+              </select>
+              <span style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9CA3AF', fontSize: '10px' }}>▼</span>
+            </div>
+          ) : (
+            <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>
+              {selectedBiz.business_name || (isTl ? 'Aking Negosyo' : 'My Business')}
+            </span>
+          )}
+
+          {selectedBiz && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.2rem 0.6rem',
+              borderRadius: '5px',
+              backgroundColor: '#F9FAFB',
+              color: '#4B5563',
+              border: '1px solid #E5E7EB',
+              fontSize: '11.5px',
+              fontWeight: 500
+            }}>
+              <span>{selectedBiz.business_type || selectedBiz.industry_category || 'Retail'}</span>
+              <span style={{ color: '#D1D5DB' }}>·</span>
+              <span style={{ color: '#15803D', fontWeight: 700 }}>
+                {selectedBiz.business_status
+                  ? (isTl && selectedBiz.business_status === 'New Application'
+                      ? 'Bagong Aplikasyon'
+                      : (isTl && selectedBiz.business_status.includes('Renew')
+                          ? 'Pagpapanibago'
+                          : selectedBiz.business_status))
+                  : (isTl ? 'Bagong Aplikasyon' : 'New Application')}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <Link
+          to="/profile"
+          style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: '#15803D',
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.25rem'
+          }}
+        >
+          {isTl ? 'Pamahalaan ang mga Profile' : 'Manage Profiles'} <ChevronRight size={13} />
+        </Link>
+      </div>
+
+      {/* ── 3. SMART "NEXT BEST ACTION" ACTION CARD ───────────────────────── */}
+      {nextAction && (
         <div style={{
-          backgroundColor: stats.active_walkin.walkin_status === 'ATTENDED' ? '#F0FDF4' : '#EFF6FF',
-          border: `1px solid ${stats.active_walkin.walkin_status === 'ATTENDED' ? '#BBF7D0' : '#BFDBFE'}`,
-          borderRadius: '10px',
-          padding: '1rem 1.25rem',
-          marginBottom: '1.25rem',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1px solid #E2E8F0',
+          borderLeft: `4px solid ${nextAction.tagColor}`,
+          padding: '1.25rem 1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.75rem'
+          gap: '1.25rem',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ flex: '1 1 520px' }}>
             <div style={{
-              width: '38px', height: '38px', borderRadius: '8px',
-              backgroundColor: stats.active_walkin.walkin_status === 'ATTENDED' ? '#DCFCE7' : '#DBEAFE',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.18rem 0.6rem',
+              borderRadius: '4px',
+              backgroundColor: nextAction.tagBg,
+              border: `1px solid ${nextAction.tagBorder || nextAction.tagBg}`,
+              color: nextAction.tagColor,
+              fontSize: '10.5px',
+              fontWeight: 800,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: '0.5rem'
             }}>
-              <Calendar size={20} color={stats.active_walkin.walkin_status === 'ATTENDED' ? '#166534' : '#1D4ED8'} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--government-navy)' }}>
-                  Scheduled Walk-in: {stats.active_walkin.business_name}
-                </span>
-                {stats.active_walkin.walkin_status === 'ATTENDED' ? (
-                  <span style={{ backgroundColor: '#DCFCE7', color: '#166534', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
-                    ✓ Documents Sighted
-                  </span>
-                ) : (
-                  <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
-                    Scheduled Window
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '0.2rem' }}>
-                <strong>{new Date(stats.active_walkin.walkin_date).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-                {' • '}
-                <span>{stats.active_walkin.walkin_time_slot || 'Morning Window'}</span>
-                {' • '}
-                <span>Window 1, Ground Floor, Roxas Municipal Hall</span>
-              </div>
-            </div>
-          </div>
-          <Link
-            to="/schedule-walkin"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-              backgroundColor: 'white', color: 'var(--government-navy)', border: '1px solid #CBD5E1',
-              padding: '0.45rem 0.85rem', borderRadius: '6px', fontSize: '12.5px', fontWeight: '600',
-              textDecoration: 'none'
-            }}
-          >
-            View Appointment & Form <ArrowRight size={13} />
-          </Link>
-        </div>
-      )}
-
-      {/* ── KPI METRIC CARDS ──────────────────────────────────────────────── */}
-      <div className="db-kpi-grid">
-        {kpiCards.map((card, idx) => (
-          <Link key={idx} to={card.to} className="db-kpi-card">
-            <div className="db-kpi-card__accent" style={{ backgroundColor: card.accent }} />
-            <div className="db-kpi-card__body">
-              <div className="db-kpi-card__icon" style={{ backgroundColor: card.accentBg, color: card.accent }}>
-                <card.icon size={18} strokeWidth={2} />
-              </div>
-              <div className="db-kpi-card__meta">
-                <div className="db-kpi-card__label">{card.label}</div>
-                <div className="db-kpi-card__value" style={{ color: card.accent }}>{card.value}</div>
-                <div className="db-kpi-card__sub">{card.sub}</div>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* ── READINESS + QUICK ACTIONS ─────────────────────────────────────── */}
-      <div className="db-row">
-
-        {/* Permit Readiness — upgraded */}
-        <div className="card db-readiness-v2">
-          <div className="db-readiness-v2__header">
-            <div className="db-readiness-v2__title-row">
-              <div className="db-readiness-v2__icon-wrap">
-                <ShieldCheck size={20} strokeWidth={2} />
-              </div>
-              <div>
-                <h2 className="db-readiness-v2__title">Permit Readiness</h2>
-                <p className="db-readiness-v2__biz">{stats?.businesses?.[0]?.business_name || 'Your Business'}</p>
-              </div>
-            </div>
-            {readScore === 100 ? (
-              <span className="db-badge db-badge--green">&#10003; Complete</span>
-            ) : (
-              <span className="db-badge db-badge--amber">In Progress</span>
-            )}
-          </div>
-
-          {/* Score ring area */}
-          <div className="db-readiness-v2__score-area">
-            <div className="db-score-ring-wrap">
-              <svg className="db-score-ring" viewBox="0 0 80 80" aria-hidden="true">
-                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border-light)" strokeWidth="7" />
-                <circle
-                  cx="40" cy="40" r="34"
-                  fill="none"
-                  stroke={readColor}
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - readScore / 100)}`}
-                  transform="rotate(-90 40 40)"
-                  style={{ transition: 'stroke-dashoffset 0.9s ease' }}
-                />
-              </svg>
-              <div className="db-score-ring__label">
-                <span className="db-score-ring__pct" style={{ color: readColor }}>{readScore}%</span>
-                <span className="db-score-ring__sub">ready</span>
-              </div>
+              {nextAction.tag}
             </div>
 
-            <div className="db-readiness-v2__breakdown">
-              <div className="db-breakdown-item db-breakdown-item--ok">
-                <CheckCircle size={14} />
-                <span><strong>{reqHave}</strong> Met</span>
-              </div>
-              <div className="db-breakdown-item db-breakdown-item--warn">
-                <AlertCircle size={14} />
-                <span><strong>{reqNeed}</strong> Incomplete</span>
-              </div>
-              <div className="db-breakdown-item db-breakdown-item--muted">
-                <Clock size={14} />
-                <span><strong>{reqNotChecked}</strong> Unchecked</span>
-              </div>
-              <p className="db-readiness-v2__desc">
-                {readScore === 100
-                  ? "All requirements are in order. You're ready to walk in to BPLO."
-                  : 'Run the AI Assessment and mark the items you already have to track your readiness.'}
-              </p>
-              <div style={{ marginTop: 'auto', paddingTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <Link to={readScore === 0 && !readiness ? '/assessment' : '/applications'} className="db-readiness-v2__cta-btn" style={{ flex: 1, minWidth: '130px', textAlign: 'center', justifyContent: 'center' }}>
-                  {readScore === 0 && !readiness ? 'Start AI Assessment' : 'Prepare Application'} <ArrowRight size={14} />
-                </Link>
-                <Link to="/assessment" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', color: 'var(--text-dark)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'white' }}>
-                  <BrainCircuit size={14} color="var(--primary-green)" /> Assessment
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0F172A', margin: '0 0 0.3rem', letterSpacing: '-0.015em', lineHeight: 1.3 }}>
+              {nextAction.title}
+            </h2>
 
-        {/* Quick Actions — tile grid */}
-        <div className="card db-quick-actions-v2">
-          <div className="db-quick-actions-v2__header">
-            <Zap size={17} strokeWidth={2} style={{ color: 'var(--primary-green)' }} />
-            <h2 className="db-quick-actions-v2__title">Quick Actions</h2>
-          </div>
-          <div className="db-quick-actions-v2__grid">
-            {quickActions.map((action, idx) => (
-              <Link key={idx} to={action.to} className={`db-qa-tile${action.primary ? ' db-qa-tile--primary' : ''}`}>
-                <div className="db-qa-tile__icon">
-                  <action.icon size={20} strokeWidth={1.75} />
-                </div>
-                <div className="db-qa-tile__label">{action.label}</div>
-                <div className="db-qa-tile__desc">{action.desc}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── PREPARATION PROGRESS + ESTIMATED COST ─────────────────────────── */}
-      <div className="db-row">
-
-        {/* Preparation Progress */}
-        <div className="card db-progress-v2">
-          <div className="db-section-title">
-            <TrendingUp size={18} style={{ color: 'var(--primary-green)' }} />
-            <h2>Permit Preparation Journey</h2>
-            <Link to="/assessment" className="db-section-link">Details <ChevronRight size={13} /></Link>
-          </div>
-
-          {/* Progress bar summary */}
-          <div className="db-journey-summary">
-            <span className="db-journey-summary__text">{stepsCompleted} of {timelineSteps.length} steps complete</span>
-            <span className="db-journey-summary__pct" style={{ color: progressPct === 100 ? 'var(--success)' : 'var(--warning)' }}>{progressPct}%</span>
-          </div>
-          <div className="db-journey-bar">
-            <div className="db-journey-bar__fill" style={{ width: `${progressPct}%` }} />
-          </div>
-
-          {/* Step list */}
-          <div className="db-step-list">
-            {timelineSteps.map((step, i) => (
-              <Link key={i} to={step.to || '/assessment'} style={{ textDecoration: 'none', color: 'inherit' }} className={`db-step-item${step.done ? ' db-step-item--done' : ''}`}>
-                <div className="db-step-item__dot">
-                  {step.done ? <CheckCircle size={14} /> : <span>{i + 1}</span>}
-                </div>
-                <div className="db-step-item__connector" aria-hidden="true" />
-                <div className="db-step-item__content">
-                  <div className="db-step-item__title">{step.title}</div>
-                  <div className="db-step-item__desc">{step.desc}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Estimated Cost */}
-        <div className="card db-cost-v2">
-          <div className="db-section-title">
-            <Receipt size={18} style={{ color: 'var(--primary-green)' }} />
-            <h2>Estimated Permit Cost</h2>
-            <Link to="/tax-estimation" className="db-section-link">Details <ChevronRight size={13} /></Link>
-          </div>
-
-          <div className="db-cost-v2__rows">
-            <div className="db-cost-v2__row">
-              <div className="db-cost-v2__row-label">
-                <span className="db-cost-v2__dot" style={{ backgroundColor: 'var(--government-navy)' }} />
-                Local Business Tax
-              </div>
-              <span className={`db-cost-v2__amount${hasUnassessedTax ? ' db-cost-v2__amount--assessed' : ''}`}>
-                {estimate ? (hasUnassessedTax ? 'To Be Assessed' : formatCurrency(taxTotal)) : '—'}
-              </span>
-            </div>
-            <div className="db-cost-v2__row">
-              <div className="db-cost-v2__row-label">
-                <span className="db-cost-v2__dot" style={{ backgroundColor: 'var(--primary-green)' }} />
-                Regulatory Fees
-              </div>
-              <span className={`db-cost-v2__amount${hasUnassessedFee ? ' db-cost-v2__amount--assessed' : ''}`}>
-                {estimate ? (hasUnassessedFee ? 'To Be Assessed' : formatCurrency(feeTotal)) : '—'}
-              </span>
-            </div>
-          </div>
-
-          <div className="db-cost-v2__total">
-            <span>Estimated Total</span>
-            <span className="db-cost-v2__total-value">
-              {estimate
-                ? ((hasUnassessedFee || hasUnassessedTax) ? 'To Be Assessed' : formatCurrency(taxTotal + feeTotal))
-                : '—'}
-            </span>
-          </div>
-
-          <div className="db-cost-v2__note">
-            <Info size={12} style={{ flexShrink: 0, marginTop: '1px' }} />
-            <span>Estimates only. Final amounts are officially assessed by the LGU/BPLO.</span>
-          </div>
-
-          {!estimate && (
-            <Link to="/tax-estimation" className="db-cost-v2__cta">
-              Run Cost Estimation <ArrowRight size={14} />
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* ── OFFICIAL PROCESS + NOTIFICATIONS ──────────────────────────────── */}
-      <div className="db-row db-row--bottom">
-
-        {/* Official Process — polished */}
-        <div className="card db-official-v2">
-          <div className="db-section-title" style={{ marginBottom: '1.5rem' }}>
-            <div className="db-official-v2__icon-wrap" aria-hidden="true">
-              <Info size={13} />
-            </div>
-            <h2>How the Official Permit Process Works</h2>
-          </div>
-
-          <div className="db-official-v2__steps">
-            {officialSteps.map((step, i) => (
-              <div key={i} className="db-official-step">
-                <div className="db-official-step__left">
-                  <div className="db-official-step__num">{step.num}</div>
-                  {i < officialSteps.length - 1 && <div className="db-official-step__line" />}
-                </div>
-                <div className="db-official-step__content">
-                  <div className="db-official-step__title">{step.title}</div>
-                  <div className="db-official-step__desc">{step.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="db-official-v2__disclaimer">
-            <AlertCircle size={12} style={{ flexShrink: 0 }} />
-            PermitEase helps you prepare for these steps. It does not replace official BPLO assessment or payment.
-          </div>
-        </div>
-
-        {/* Right col: Renewal + Notifications */}
-        <div className="db-right-col">
-
-          <div className="card db-renewal-v2">
-            <div className="db-renewal-v2__title">
-              <Calendar size={15} />
-              Annual Renewal Reminder
-            </div>
-            <p className="db-renewal-v2__body">
-              Under RA 7160, business permits in the Municipality of Roxas are renewed annually every January 1–20 at Window 1.
+            <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: 1.6 }}>
+              {nextAction.desc}
             </p>
           </div>
 
-          <div className="card db-notif-v2">
-            <div className="db-notif-v2__header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Bell size={15} style={{ color: 'var(--primary-green)' }} />
-                <span>Notifications</span>
-              </div>
-              {notifications.length > 0 && (
-                <Link to="/notifications" className="db-notif-v2__view-all">View All</Link>
-              )}
-            </div>
-
-            {notifications.length === 0 ? (
-              <div className="db-notif-v2__empty">
-                <div className="db-notif-v2__empty-icon">
-                  <CheckCircle size={22} strokeWidth={1.75} />
-                </div>
-                <p>All caught up! No new notifications.</p>
-              </div>
-            ) : (
-              <div className="db-notif-v2__list">
-                {notifications.map(n => (
-                  <div key={n.id} className="db-notif-item">
-                    <div className="db-notif-item__dot" aria-hidden="true" />
-                    <div>
-                      <div className="db-notif-item__title">{n.title}</div>
-                      <div className="db-notif-item__body">{n.message?.substring(0, 70)}…</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            {nextAction.secondaryBtnText && (
+              <Link
+                to={nextAction.secondaryBtnLink}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.6rem 1.1rem',
+                  borderRadius: '7px',
+                  border: '1px solid #D1D5DB',
+                  backgroundColor: '#FAFAFA',
+                  color: '#374151',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  transition: 'border-color 0.15s ease, background-color 0.15s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.borderColor = '#9CA3AF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FAFAFA'; e.currentTarget.style.borderColor = '#D1D5DB'; }}
+              >
+                {nextAction.secondaryBtnText}
+              </Link>
             )}
+
+            <Link
+              to={nextAction.primaryBtnLink}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.6rem 1.25rem',
+                borderRadius: '7px',
+                backgroundColor: '#15803D',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                transition: 'opacity 0.15s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.88'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <nextAction.primaryBtnIcon size={15} />
+              {nextAction.primaryBtnText}
+              <ArrowRight size={13} />
+            </Link>
           </div>
         </div>
+      )}
+
+      {/* ── 4. 3-METRIC KPI GRID ───────────────────────────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
+        gap: '1rem'
+      }}>
+
+        {/* Card 1: Clearance Readiness */}
+        <Link
+          to={`/assessment${selectedBizId ? `?businessId=${selectedBizId}` : ''}`}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '10px',
+            border: '1px solid #E5E7EB',
+            padding: '1.2rem 1.35rem',
+            textDecoration: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+            transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#15803D'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(21,128,61,0.08)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)'; }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6B7280', marginBottom: '0.5rem' }}>
+                  {isTl ? 'Paghahanda ng Clearance' : 'Clearance Readiness'}
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.025em', lineHeight: 1 }}>
+                  {loadingBizData ? '—' : totalReqs > 0 ? `${reqHave} / ${totalReqs}` : '—'}
+                </div>
+              </div>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#F0FDF4', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <ShieldCheck size={18} />
+              </div>
+            </div>
+
+            {/* Progress bar — based purely on requirements completion, not overall readiness score */}
+            <div style={{ height: '5px', backgroundColor: '#F3F4F6', borderRadius: '999px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${reqPct}%`, backgroundColor: reqColor, borderRadius: '999px', transition: 'width 0.8s ease' }} />
+            </div>
+            <div style={{ fontSize: '11.5px', color: '#6B7280', marginTop: '0.4rem' }}>
+              {loadingBizData ? '' : reqPct === 100
+                ? (isTl ? 'Kumpleto ang lahat ng clearance' : 'All clearances complete')
+                : totalReqs > 0
+                  ? (isTl ? `${reqPct}% kumpleto · ${reqNeed} natitira` : `${reqPct}% complete · ${reqNeed} remaining`)
+                  : (isTl ? 'Patakbuhin ang Assessment upang magsimula' : 'Run Assessment to get started')}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #F3F4F6' }}>
+            <span style={{ fontSize: '11.5px', color: '#6B7280' }}>
+              {isTl ? 'Tingnan ang checklist' : 'View checklist'}
+            </span>
+            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#15803D', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+              Assessment <ArrowRight size={11} />
+            </span>
+          </div>
+        </Link>
+
+        {/* Card 2: Estimated Municipal Cost */}
+        <Link
+          to={`/fee-estimation${selectedBizId ? `?business_id=${selectedBizId}` : ''}`}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '10px',
+            border: '1px solid #E5E7EB',
+            padding: '1.2rem 1.35rem',
+            textDecoration: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+            transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#15803D'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(21,128,61,0.08)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)'; }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6B7280', marginBottom: '0.5rem' }}>
+                  {isTl ? 'Tinatayang Gastos' : 'Estimated Cost'}
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.025em', lineHeight: 1 }}>
+                  {loadingBizData ? '—' : estimate ? (hasUnassessedFee || hasUnassessedTax ? (isTl ? 'Tatasahin Pa' : 'Pending') : formatCurrency(taxTotal + feeTotal)) : '—'}
+                </div>
+              </div>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#FFFBEB', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Receipt size={18} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: '11.5px', color: '#6B7280', lineHeight: 1.5 }}>
+              {estimate
+                ? (isTl ? 'Lokal na Buwis at Regulatory Fees' : 'Local Business Tax & Regulatory Fees')
+                : (isTl ? 'Patakbuhin ang Fee Estimator para makita ang iyong tinatayang bayarin' : 'Run the Fee Estimator to calculate your estimated fees')}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #F3F4F6' }}>
+            <span style={{ fontSize: '11.5px', color: '#6B7280' }}>
+              {estimate ? (isTl ? 'Tinatayang kalkulasyon' : 'Estimated calculation') : (isTl ? 'Kalkulahin ang bayarin' : 'Calculate fees')}
+            </span>
+            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#15803D', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+              Fee Estimator <ArrowRight size={11} />
+            </span>
+          </div>
+        </Link>
+
+        {/* Card 3: Filing Pathway */}
+        <Link
+          to="/schedule-walkin"
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '10px',
+            border: '1px solid #E5E7EB',
+            padding: '1.2rem 1.35rem',
+            textDecoration: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+            transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#15803D'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(21,128,61,0.08)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)'; }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6B7280', marginBottom: '0.5rem' }}>
+                  {isTl ? 'Paraan ng Pag-file' : 'Filing Pathway'}
+                </div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                  {isAttended
+                    ? (isTl ? 'Nasuri sa Counter' : 'Docs Verified')
+                    : isScheduled
+                      ? (isTl ? 'Window 1 — Nareserba' : 'Window 1 — Booked')
+                      : 'Window 1 Walk-In'}
+                </div>
+              </div>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#EFF6FF', color: '#1D4ED8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CalendarCheck size={18} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: '11.5px', color: '#6B7280', lineHeight: 1.5 }}>
+              {isScheduled
+                ? `${new Date(activeWalkin.walkin_date).toLocaleDateString(isTl ? 'fil-PH' : 'en-PH', { month: 'long', day: 'numeric', year: 'numeric' })} · ${activeWalkin.walkin_time_slot?.includes('Morning') ? (isTl ? 'Umaga' : 'Morning') : (isTl ? 'Hapon' : 'Afternoon')} Batch`
+                : (isTl ? 'Ground Floor Fast-Track Counter — walk-in lang, walang linya' : 'Ground Floor Fast-Track Counter · No queuing required')}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #F3F4F6' }}>
+            <span style={{ fontSize: '11.5px', color: '#6B7280' }}>
+              {isScheduled ? (isTl ? 'Nai-log na sa BPLO' : 'Slot logged at BPLO') : (isTl ? 'Pumili ng petsa ng pagbisita' : 'Select a visit date')}
+            </span>
+            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#15803D', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+              {isTl ? 'Iskedyul' : 'Schedule'} <ArrowRight size={11} />
+            </span>
+          </div>
+        </Link>
+
+      </div>
+
+      {/* ── 5. UNIFIED 4-STEP PERMIT ROADMAP ──────────────────────────────── */}
+      <div style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: '10px',
+        border: '1px solid #E5E7EB',
+        padding: '1.4rem',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+      }}>
+        {/* Header row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', margin: '0 0 0.15rem', letterSpacing: '-0.01em' }}>
+              {isTl ? 'Roadmap sa Paghahanda ng Permit' : 'Permit Preparation Roadmap'}
+            </h2>
+            <p style={{ fontSize: '12.5px', color: '#6B7280', margin: 0 }}>
+              {isTl
+                ? `Sumusunod ang ${selectedBiz.business_name || 'iyong negosyo'} sa 4 na yugto`
+                : `${selectedBiz.business_name || 'Your business'} follows a 4-stage compliance process`}
+            </p>
+          </div>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            padding: '0.3rem 0.75rem',
+            borderRadius: '6px',
+            backgroundColor: milestonesDoneCount === 4 ? '#F0FDF4' : '#F9FAFB',
+            border: `1px solid ${milestonesDoneCount === 4 ? '#BBF7D0' : '#E5E7EB'}`
+          }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: milestonesDoneCount === 4 ? '#15803D' : '#374151' }}>
+              {isTl
+                ? `${milestonesDoneCount} sa 4 kumpleto — ${roadmapPct}%`
+                : `${milestonesDoneCount} of 4 complete — ${roadmapPct}%`}
+            </span>
+          </div>
+        </div>
+
+        {/* Milestone cards grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '0.85rem'
+        }}>
+          {milestones.map((m) => {
+            const isDone = m.status === 'COMPLETE';
+            const isCur = m.status === 'CURRENT' || m.status === 'SCHEDULED';
+            const displayStatus = isTl
+              ? (m.status === 'COMPLETE' ? 'Kumpleto' : m.status === 'SCHEDULED' ? 'Naka-schedule' : m.status === 'CURRENT' ? 'Kasalukuyan' : 'Susunod')
+              : (m.status === 'COMPLETE' ? 'Complete' : m.status === 'SCHEDULED' ? 'Scheduled' : m.status === 'CURRENT' ? 'Current' : 'Upcoming');
+
+            return (
+              <Link
+                key={m.step}
+                to={m.link}
+                style={{
+                  backgroundColor: isDone ? '#F0FDF4' : isCur ? '#FAFAFA' : '#FFFFFF',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDone ? '#BBF7D0' : isCur ? '#15803D' : '#E5E7EB'}`,
+                  padding: '1rem 1.1rem',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '0.75rem',
+                  boxShadow: isCur ? '0 0 0 3px rgba(21,128,61,0.06)' : 'none',
+                  transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => { if (!isCur && !isDone) { e.currentTarget.style.borderColor = '#9CA3AF'; } }}
+                onMouseLeave={(e) => { if (!isCur && !isDone) { e.currentTarget.style.borderColor = '#E5E7EB'; } }}
+              >
+                <div>
+                  {/* Step number + status badge */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <div style={{
+                      width: '24px', height: '24px',
+                      borderRadius: '50%',
+                      backgroundColor: isDone ? '#15803D' : isCur ? '#111827' : '#F3F4F6',
+                      color: isDone || isCur ? '#FFFFFF' : '#9CA3AF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '11px', fontWeight: 800, flexShrink: 0
+                    }}>
+                      {isDone ? <CheckCircle2 size={14} color="#FFFFFF" /> : m.step}
+                    </div>
+                    <span style={{
+                      fontSize: '10px', fontWeight: 700,
+                      padding: '0.12rem 0.45rem',
+                      borderRadius: '4px',
+                      letterSpacing: '0.04em',
+                      backgroundColor: m.statusBg,
+                      color: m.statusColor
+                    }}>
+                      {displayStatus}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#111827', marginBottom: '0.2rem', lineHeight: 1.3 }}>
+                    {m.title}
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#6B7280', lineHeight: 1.5 }}>
+                    {m.label}
+                  </div>
+                </div>
+
+                <div style={{
+                  paddingTop: '0.6rem',
+                  borderTop: `1px solid ${isDone ? '#BBF7D0' : '#F3F4F6'}`,
+                  fontSize: '11.5px', fontWeight: 700,
+                  color: '#15803D',
+                  display: 'flex', alignItems: 'center', gap: '0.25rem'
+                }}>
+                  {isTl ? 'Buksan' : 'Open'} <ArrowRight size={11} />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 6. TWO-COLUMN UTILITY DECK (BOTTOM) ───────────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: '1rem'
+      }}>
+
+        {/* Column A: Recent Notifications */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '10px',
+          border: '1px solid #E5E7EB',
+          padding: '1.25rem',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Bell size={15} color="#15803D" />
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                {isTl ? 'Mga Kamakailang Abiso' : 'Recent Notifications'}
+              </h3>
+            </div>
+            {notifications.length > 0 && (
+              <Link to="/notifications" style={{ fontSize: '12px', fontWeight: 600, color: '#15803D', textDecoration: 'none' }}>
+                {isTl ? 'Tingnan Lahat' : 'View all'} →
+              </Link>
+            )}
+          </div>
+
+          {notifications.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+              <CheckCircle size={26} color="#15803D" style={{ margin: '0 auto 0.6rem' }} />
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+                {isTl ? 'Walang bagong abiso' : 'All caught up'}
+              </p>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#6B7280' }}>
+                {isTl ? 'Walang nakabinbing alerto para sa iyong account.' : 'No pending alerts for your account.'}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {notifications.map(n => (
+                <div key={n.id} style={{
+                  padding: '0.7rem 0.9rem',
+                  borderRadius: '7px',
+                  backgroundColor: n.is_read ? '#FAFAFA' : '#F0FDF4',
+                  border: `1px solid ${n.is_read ? '#F3F4F6' : '#BBF7D0'}`,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.65rem'
+                }}>
+                  <div style={{
+                    width: '7px', height: '7px',
+                    borderRadius: '50%',
+                    backgroundColor: n.is_read ? '#D1D5DB' : '#15803D',
+                    flexShrink: 0, marginTop: '5px'
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827', marginBottom: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {n.title}
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: '#6B7280', lineHeight: 1.4 }}>
+                      {n.message}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Column B: Compliance & Resources */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '10px',
+          border: '1px solid #E5E7EB',
+          padding: '1.25rem',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <Info size={15} color="#15803D" />
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                {isTl ? 'Pagsunod at Mga Mapagkukunan' : 'Compliance & Resources'}
+              </h3>
+            </div>
+
+            {/* Annual Renewal notice */}
+            <div style={{
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #DBEAFE',
+              borderRadius: '7px',
+              padding: '0.8rem 0.95rem',
+              marginBottom: '0.85rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.6rem'
+            }}>
+              <Calendar size={16} color="#1D4ED8" style={{ flexShrink: 0, marginTop: '1px' }} />
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#1E40AF', marginBottom: '2px' }}>
+                  {isTl ? 'Taunang Pagpapanibago: Enero 1–20' : 'Annual Renewal Window: January 1–20'}
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#334155', lineHeight: 1.5 }}>
+                  {isTl
+                    ? 'Ayon sa RA 7160, ang mga permit sa negosyo sa Munisipalidad ng Roxas, Oriental Mindoro ay pinapanibago tuwing Enero sa Window 1.'
+                    : 'Per RA 7160 (Local Government Code), business permits in Municipality of Roxas, Oriental Mindoro are renewed each January at Window 1.'}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              <a
+                href="/forms/Roxas_Business_Permit_Application_Form.pdf"
+                download="UNIFIED_APPLICATION_FORM_FOR_BUSINESS_PERMIT.pdf"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 0.8rem',
+                  borderRadius: '7px',
+                  backgroundColor: '#FAFAFA',
+                  border: '1px solid #E5E7EB',
+                  color: '#111827',
+                  textDecoration: 'none',
+                  fontSize: '12.5px',
+                  fontWeight: 500,
+                  transition: 'background-color 0.12s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Download size={13} color="#6B7280" />
+                  {isTl ? 'Blangkong Form BPLO-01 (PDF)' : 'Blank Form BPLO-01 (Official PDF)'}
+                </span>
+                <span style={{ fontSize: '11px', color: '#15803D', fontWeight: 700 }}>{isTl ? 'I-download' : 'Download'}</span>
+              </a>
+
+              <Link
+                to="/schedule-walkin"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 0.8rem',
+                  borderRadius: '7px',
+                  backgroundColor: '#FAFAFA',
+                  border: '1px solid #E5E7EB',
+                  color: '#111827',
+                  textDecoration: 'none',
+                  fontSize: '12.5px',
+                  fontWeight: 500,
+                  transition: 'background-color 0.12s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <MapPin size={13} color="#6B7280" />
+                  {isTl ? 'Gabay sa Window 1 Fast-Track Counter' : 'Window 1 Fast-Track Counter Guide'}
+                </span>
+                <span style={{ fontSize: '11px', color: '#15803D', fontWeight: 700 }}>
+                  {isTl ? 'Tingnan' : 'View'}
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1rem', paddingTop: '0.7rem', borderTop: '1px solid #F3F4F6', fontSize: '11px', color: '#9CA3AF', textAlign: 'center' }}>
+            {isTl
+              ? 'PermitEase · Munisipalidad ng Roxas, Oriental Mindoro · RA 11032'
+              : 'PermitEase · Municipality of Roxas, Oriental Mindoro · RA 11032'}
+          </div>
+        </div>
+
       </div>
 
     </div>

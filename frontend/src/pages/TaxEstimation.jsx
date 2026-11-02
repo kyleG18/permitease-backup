@@ -218,7 +218,7 @@ export default function TaxEstimation() {
 
   if (loadingBusinesses) {
     return (
-      <div className="animate-fade-in page-container" style={{ maxWidth: '820px', margin: '0 auto', padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+      <div className="animate-fade-in page-container" style={{ maxWidth: '1200px', padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
         <Calculator size={36} style={{ color: 'var(--primary-green)', marginBottom: '0.75rem' }} />
         <div>{isTl ? 'Naglo-load ng profile ng negosyo...' : 'Loading business profile...'}</div>
       </div>
@@ -249,7 +249,7 @@ export default function TaxEstimation() {
   const needsExpenses = taxElection === 'graduated' || taxElection === 'corporate' || taxElection === 'vat';
 
   return (
-    <div className="animate-fade-in page-container" style={{ maxWidth: '820px', margin: '0 auto', paddingBottom: '3rem' }}>
+    <div className="animate-fade-in page-container" style={{ maxWidth: '1200px', paddingBottom: '3rem' }}>
       
       {/* ── HEADER SECTION ── */}
       <div style={{ marginBottom: '1.75rem' }}>

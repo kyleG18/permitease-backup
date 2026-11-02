@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { Building2, Plus, Edit, Trash2, X, Users, MapPin, Calendar, AlertTriangle } from 'lucide-react';
 import { BUSINESS_TYPES, getCategoriesForType } from '../data/businessCategories';
 
@@ -8,6 +9,8 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const BusinessProfile = () => {
   const { user } = useContext(AuthContext);
+  const { lang } = useContext(LanguageContext);
+  const isTl = lang === 'tl';
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -212,12 +215,12 @@ const BusinessProfile = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this business?')) return;
+    if (!window.confirm(isTl ? 'Sigurado ka bang nais mong burahin ang profile ng negosyong ito?' : 'Are you sure you want to delete this business?')) return;
     try {
       await axios.delete(`${API}/businesses/${id}`, config);
       fetchBusinesses();
     } catch (err) {
-      setError('Failed to delete business');
+      setError(isTl ? 'Nabigong burahin ang negosyo' : 'Failed to delete business');
     }
   };
 
@@ -232,41 +235,51 @@ const BusinessProfile = () => {
 
     return (
       <div style={{ marginTop: '1.5rem', padding: '1.25rem', backgroundColor: 'var(--light-gray)', borderRadius: 'var(--radius-md)' }}>
-        <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-dark)', fontSize: '14px' }}>Operational Characteristics</h4>
+        <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-dark)', fontSize: '14px' }}>
+          {isTl ? 'Mga Katangian ng Operasyon' : 'Operational Characteristics'}
+        </h4>
         
         {isFood && (
           <>
             <div className="mb-3">
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Food prepared on premises?</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                {isTl ? 'Nagluluto o naghahanda ng pagkain sa puwesto?' : 'Food prepared on premises?'}
+              </label>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <label><input type="radio" checked={formData.business_characteristics.food_prep === 'Yes'} onChange={() => handleChar('food_prep', 'Yes')} /> Yes</label>
-                <label><input type="radio" checked={formData.business_characteristics.food_prep === 'No'} onChange={() => handleChar('food_prep', 'No')} /> No</label>
+                <label><input type="radio" checked={formData.business_characteristics.food_prep === 'Yes'} onChange={() => handleChar('food_prep', 'Yes')} /> {isTl ? 'Oo' : 'Yes'}</label>
+                <label><input type="radio" checked={formData.business_characteristics.food_prep === 'No'} onChange={() => handleChar('food_prep', 'No')} /> {isTl ? 'Hindi' : 'No'}</label>
               </div>
             </div>
             <div className="mb-3">
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Serves alcoholic beverages?</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                {isTl ? 'Naghahain o nagbebenta ng alak?' : 'Serves alcoholic beverages?'}
+              </label>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <label><input type="radio" checked={formData.business_characteristics.alcohol === 'Yes'} onChange={() => handleChar('alcohol', 'Yes')} /> Yes</label>
-                <label><input type="radio" checked={formData.business_characteristics.alcohol === 'No'} onChange={() => handleChar('alcohol', 'No')} /> No</label>
+                <label><input type="radio" checked={formData.business_characteristics.alcohol === 'Yes'} onChange={() => handleChar('alcohol', 'Yes')} /> {isTl ? 'Oo' : 'Yes'}</label>
+                <label><input type="radio" checked={formData.business_characteristics.alcohol === 'No'} onChange={() => handleChar('alcohol', 'No')} /> {isTl ? 'Hindi' : 'No'}</label>
               </div>
             </div>
           </>
         )}
         {isMfg && (
           <div className="mb-3">
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Manufacturing/processing on-site?</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+              {isTl ? 'May pagawaan o manufacturing sa mismong lugar?' : 'Manufacturing/processing on-site?'}
+            </label>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <label><input type="radio" checked={formData.business_characteristics.mfg_onsite === 'Yes'} onChange={() => handleChar('mfg_onsite', 'Yes')} /> Yes</label>
-              <label><input type="radio" checked={formData.business_characteristics.mfg_onsite === 'No'} onChange={() => handleChar('mfg_onsite', 'No')} /> No</label>
+              <label><input type="radio" checked={formData.business_characteristics.mfg_onsite === 'Yes'} onChange={() => handleChar('mfg_onsite', 'Yes')} /> {isTl ? 'Oo' : 'Yes'}</label>
+              <label><input type="radio" checked={formData.business_characteristics.mfg_onsite === 'No'} onChange={() => handleChar('mfg_onsite', 'No')} /> {isTl ? 'Hindi' : 'No'}</label>
             </div>
           </div>
         )}
         {isService && (
           <div className="mb-3">
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Repair/maintenance on-site?</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+              {isTl ? 'May pagkukumpuni o maintenance sa mismong puwesto?' : 'Repair/maintenance on-site?'}
+            </label>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <label><input type="radio" checked={formData.business_characteristics.repair_onsite === 'Yes'} onChange={() => handleChar('repair_onsite', 'Yes')} /> Yes</label>
-              <label><input type="radio" checked={formData.business_characteristics.repair_onsite === 'No'} onChange={() => handleChar('repair_onsite', 'No')} /> No</label>
+              <label><input type="radio" checked={formData.business_characteristics.repair_onsite === 'Yes'} onChange={() => handleChar('repair_onsite', 'Yes')} /> {isTl ? 'Oo' : 'Yes'}</label>
+              <label><input type="radio" checked={formData.business_characteristics.repair_onsite === 'No'} onChange={() => handleChar('repair_onsite', 'No')} /> {isTl ? 'Hindi' : 'No'}</label>
             </div>
           </div>
         )}
@@ -275,27 +288,37 @@ const BusinessProfile = () => {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="profile-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="animate-fade-in page-container">
+      <div className="page-heading-row profile-header-row" style={{ marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ color: 'var(--primary-green)', marginBottom: '0.25rem' }}>Business Profiles</h1>
-          <p className="text-muted">Manage your registered business information.</p>
+          <h1 style={{ color: 'var(--government-navy)', margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800 }}>
+            {isTl ? 'Mga Profile ng Negosyo' : 'Business Profiles'}
+          </h1>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>
+            {isTl ? 'Pamahalaan ang iyong mga nakarehistrong negosyo at establisyimento.' : 'Manage your registered business enterprises and establishments.'}
+          </p>
         </div>
         <button className="btn btn-primary" onClick={openAddModal}>
-          <Plus size={18} /> Add Business
+          <Plus size={18} /> {isTl ? 'Magdagdag ng Negosyo' : 'Add Business'}
         </button>
       </div>
 
-      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--status-expired-bg)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
+      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--danger-light)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid #FECACA' }}>{error}</div>}
 
       {loading ? (
-        <div className="text-muted text-center" style={{ padding: '4rem' }}>Loading...</div>
+        <div className="text-muted text-center" style={{ padding: '4rem' }}>
+          {isTl ? 'Ikinakarga ang mga profile ng negosyo...' : 'Loading business profiles...'}
+        </div>
       ) : businesses.length === 0 ? (
-        <div className="card text-center" style={{ padding: '4rem' }}>
-          <Building2 size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
-          <h3 className="text-muted">No Businesses Yet</h3>
-          <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Add your first business to get started.</p>
-          <button className="btn btn-primary" onClick={openAddModal}><Plus size={18} /> Add Business</button>
+        <div className="empty-state">
+          <Building2 size={48} className="empty-state__icon" style={{ color: 'var(--text-muted)' }} />
+          <h3 className="empty-state__title">{isTl ? 'Wala Pang Nakarehistrong Negosyo' : 'No Businesses Registered Yet'}</h3>
+          <p className="empty-state__desc">
+            {isTl ? 'Idagdag ang iyong unang profile ng negosyo upang malaman ang mga rekisito at makalkula ang mga bayarin.' : 'Add your first business profile to determine requirements and estimate fees.'}
+          </p>
+          <button className="btn btn-primary" onClick={openAddModal}>
+            <Plus size={18} /> {isTl ? 'Magdagdag ng Negosyo' : 'Add Business'}
+          </button>
         </div>
       ) : (
         <div className="profile-business-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
@@ -311,27 +334,31 @@ const BusinessProfile = () => {
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{biz.business_type}</span>
                   </div>
                 </div>
-                <span className={`badge ${biz.business_status === 'Renewal' ? 'badge-approved' : 'badge-pending'}`}>{biz.business_status}</span>
+                <span className={`badge ${biz.business_status === 'Renewal' ? 'badge-approved' : 'badge-pending'}`}>
+                  {biz.business_status === 'Renewal' 
+                    ? (isTl ? 'Renewal' : 'Renewal') 
+                    : (isTl ? 'Bagong Aplikasyon' : biz.business_status)}
+                </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
                   <MapPin size={14} style={{ marginTop: '2px', flexShrink: 0 }} /><span>{biz.address}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <Users size={14} /><span>{biz.employees} Employees</span>
+                  <Users size={14} /><span>{biz.employees} {isTl ? 'Kawani / Empleyado' : 'Employees'}</span>
                 </div>
                 {biz.date_established && (
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    <Calendar size={14} /><span>Est. {new Date(biz.date_established).toLocaleDateString()}</span>
+                    <Calendar size={14} /><span>{isTl ? 'Naitatag:' : 'Est.'} {new Date(biz.date_established).toLocaleDateString(isTl ? 'fil-PH' : 'en-PH')}</span>
                   </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button className="btn btn-outline" style={{ flex: 1, padding: '0.5rem' }} onClick={() => openEditModal(biz)}>
-                  <Edit size={16} /> Edit
+                  <Edit size={16} /> {isTl ? 'I-edit' : 'Edit'}
                 </button>
                 <button className="btn" style={{ flex: 1, padding: '0.5rem', background: 'var(--status-expired-bg)', color: 'var(--danger)', border: 'none' }} onClick={() => handleDelete(biz.id)}>
-                  <Trash2 size={16} /> Delete
+                  <Trash2 size={16} /> {isTl ? 'Burahin' : 'Delete'}
                 </button>
               </div>
             </div>
@@ -344,42 +371,57 @@ const BusinessProfile = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0.75rem', boxSizing: 'border-box' }}>
           <div className="card modal-content" style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '1.5rem', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '1rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--primary-dark)' }}>{editingBusiness ? 'Edit Business Profile' : 'Add Business'}</h2>
+              <h2 style={{ margin: 0, color: 'var(--primary-dark)' }}>
+                {editingBusiness ? (isTl ? 'I-edit ang Profile ng Negosyo' : 'Edit Business Profile') : (isTl ? 'Magdagdag ng Negosyo' : 'Add Business')}
+              </h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
               
               {/* Business Identity */}
-              <h3 style={{ fontSize: '15px', color: 'var(--primary-green)', marginBottom: '1rem' }}>1. Business Identity</h3>
+              <h3 style={{ fontSize: '15px', color: 'var(--primary-green)', marginBottom: '1rem' }}>
+                {isTl ? '1. Pagkakakilanlan ng Negosyo' : '1. Business Identity'}
+              </h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Business Name *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Pangalan ng Negosyo *' : 'Business Name *'}
+                  </label>
                   <input className="form-control" name="business_name" value={formData.business_name} onChange={handleChange} required />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Ownership Type *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Uri ng Pagmamay-ari *' : 'Ownership Type *'}
+                  </label>
                   <select className="form-control" name="ownership_type" value={formData.ownership_type} onChange={handleChange} required>
-                    <option value="">Select</option>
-                    <option>Sole Proprietorship</option><option>Partnership</option>
-                    <option>Corporation</option><option>Cooperative</option><option>Other</option>
+                    <option value="">{isTl ? 'Pumili' : 'Select'}</option>
+                    <option value="Sole Proprietorship">{isTl ? 'Isahang Pagmamay-ari (Sole Proprietorship)' : 'Sole Proprietorship'}</option>
+                    <option value="Partnership">{isTl ? 'Kasosyo (Partnership)' : 'Partnership'}</option>
+                    <option value="Corporation">{isTl ? 'Korporasyon (Corporation)' : 'Corporation'}</option>
+                    <option value="Cooperative">{isTl ? 'Kooperatiba (Cooperative)' : 'Cooperative'}</option>
+                    <option value="Other">{isTl ? 'Iba pa' : 'Other'}</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Business Type *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Uri ng Negosyo *' : 'Business Type *'}
+                  </label>
                   <select className="form-control" name="business_type" value={formData.business_type} onChange={handleChange} required>
-                    <option value="">Select Type</option>
+                    <option value="">{isTl ? 'Pumili ng Uri' : 'Select Type'}</option>
                     {BUSINESS_TYPES.map(bt => <option key={bt} value={bt}>{bt}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Industry Category *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Kategorya ng Industriya *' : 'Industry Category *'}
+                  </label>
                   <select className="form-control" name="industry_category" value={formData.industry_category} onChange={handleChange} required>
-                    <option value="">Select Category</option>
+                    <option value="">{isTl ? 'Pumili ng Kategorya' : 'Select Category'}</option>
                     {getCategoriesForType(formData.business_type).map((group, idx) => (
                       <optgroup key={idx} label={group.group}>
                         {group.options.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
@@ -390,30 +432,40 @@ const BusinessProfile = () => {
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Primary Products / Services *</label>
-                <input className="form-control" name="primary_products" value={formData.primary_products} onChange={handleChange} placeholder="e.g. Fried chicken, rice meals" required />
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                  {isTl ? 'Pangunahing Produkto / Serbisyo *' : 'Primary Products / Services *'}
+                </label>
+                <input className="form-control" name="primary_products" value={formData.primary_products} onChange={handleChange} placeholder={isTl ? 'hal. Fried chicken, rice meals' : 'e.g. Fried chicken, rice meals'} required />
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Business Description *</label>
-                <textarea className="form-control" name="business_description" value={formData.business_description} onChange={handleChange} rows="2" placeholder="Briefly describe operations" required></textarea>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                  {isTl ? 'Deskripsyon ng Negosyo *' : 'Business Description *'}
+                </label>
+                <textarea className="form-control" name="business_description" value={formData.business_description} onChange={handleChange} rows="2" placeholder={isTl ? 'Maikling deskripsyon ng operasyon' : 'Briefly describe operations'} required></textarea>
               </div>
 
               {/* Location */}
-              <h3 style={{ fontSize: '15px', color: 'var(--primary-green)', marginBottom: '1rem', borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>2. Business Location</h3>
+              <h3 style={{ fontSize: '15px', color: 'var(--primary-green)', marginBottom: '1rem', borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>
+                {isTl ? '2. Lokasyon ng Negosyo' : '2. Business Location'}
+              </h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Island Group *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Pangkat ng Isla *' : 'Island Group *'}
+                  </label>
                   <select className="form-control" name="island_group_id" value={formData.island_group_id} onChange={handleLocationChange} required>
-                    <option value="">Select</option>
+                    <option value="">{isTl ? 'Pumili' : 'Select'}</option>
                     {locations.islandGroups.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Region *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Rehiyon *' : 'Region *'}
+                  </label>
                   <select className="form-control" name="region_id" value={formData.region_id} onChange={handleLocationChange} required disabled={!formData.island_group_id}>
-                    <option value="">Select</option>
+                    <option value="">{isTl ? 'Pumili' : 'Select'}</option>
                     {locations.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                   </select>
                 </div>
@@ -421,16 +473,20 @@ const BusinessProfile = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Province *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Lalawigan *' : 'Province *'}
+                  </label>
                   <select className="form-control" name="province_id" value={formData.province_id} onChange={handleLocationChange} disabled={!formData.region_id || locations.provinces.length === 0}>
-                    <option value="">Select (Skip if NCR)</option>
+                    <option value="">{isTl ? 'Pumili (Laktawan kung NCR)' : 'Select (Skip if NCR)'}</option>
                     {locations.provinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>City / Municipality *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Lungsod / Munisipalidad *' : 'City / Municipality *'}
+                  </label>
                   <select className="form-control" name="city_municipality_id" value={formData.city_municipality_id} onChange={handleLocationChange} required disabled={!formData.province_id && (!formData.region_id || locations.provinces.length > 0)}>
-                    <option value="">Select</option>
+                    <option value="">{isTl ? 'Pumili' : 'Select'}</option>
                     {locations.cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
@@ -438,73 +494,100 @@ const BusinessProfile = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Barangay *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Barangay *' : 'Barangay *'}
+                  </label>
                   <select className="form-control" name="barangay_id" value={formData.barangay_id} onChange={handleLocationChange} required disabled={!formData.city_municipality_id}>
-                    <option value="">Select</option>
+                    <option value="">{isTl ? 'Pumili' : 'Select'}</option>
                     {locations.barangays.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Complete Address *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Kumpletong Tirahan / Kalye *' : 'Complete Address *'}
+                  </label>
                   <input className="form-control" name="address" value={formData.address} onChange={handleChange} required />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Premises Type *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Uri ng Puwesto *' : 'Premises Type *'}
+                  </label>
                   <select className="form-control" name="premises_type" value={formData.premises_type} onChange={handleChange} required>
-                    <option value="">Select</option>
-                    <option>Commercial Establishment</option><option>Home-Based</option>
-                    <option>Residential/Commercial</option><option>Shared/Leased Space</option>
-                    <option>Public Market Stall</option><option>Other</option>
+                    <option value="">{isTl ? 'Pumili' : 'Select'}</option>
+                    <option value="Commercial Establishment">{isTl ? 'Komersyal na Gusali (Commercial Establishment)' : 'Commercial Establishment'}</option>
+                    <option value="Home-Based">{isTl ? 'Nasa Bahay (Home-Based)' : 'Home-Based'}</option>
+                    <option value="Residential/Commercial">{isTl ? 'Residential / Commercial' : 'Residential/Commercial'}</option>
+                    <option value="Shared/Leased Space">{isTl ? 'Upa / Shared Space' : 'Shared/Leased Space'}</option>
+                    <option value="Public Market Stall">{isTl ? 'Puesto sa Pamilihang Bayan (Public Market Stall)' : 'Public Market Stall'}</option>
+                    <option value="Other">{isTl ? 'Iba pa' : 'Other'}</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Date Established</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Petsa ng Pagtatatag' : 'Date Established'}
+                  </label>
                   <input type="date" className="form-control" name="date_established" value={formData.date_established} onChange={handleChange} />
                 </div>
               </div>
 
               {/* Financials & Operations */}
-              <h3 style={{ fontSize: '15px', color: 'var(--primary-green)', marginBottom: '1rem', borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>3. Operations & Financials</h3>
+              <h3 style={{ fontSize: '15px', color: 'var(--primary-green)', marginBottom: '1rem', borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>
+                {isTl ? '3. Operasyon at Pananalapi' : '3. Operations & Financials'}
+              </h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Status *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Katayuan *' : 'Status *'}
+                  </label>
                   <select className="form-control" name="business_status" value={formData.business_status} onChange={handleChange} required>
-                    <option value="New Application">New Application</option>
-                    <option value="Renewal">Renewal</option>
+                    <option value="New Application">{isTl ? 'Bagong Negosyo' : 'New Application'}</option>
+                    <option value="Renewal">{isTl ? 'Renewal' : 'Renewal'}</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Employees *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Kawani / Empleyado *' : 'Employees *'}
+                  </label>
                   <input type="number" className="form-control" name="employees" value={formData.employees} onChange={handleChange} required />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Floor Area (sqm) *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Floor Area (sqm) *' : 'Floor Area (sqm) *'}
+                  </label>
                   <input type="number" className="form-control" name="floor_area" value={formData.floor_area} onChange={handleChange} required />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Capitalization (?) *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Puhunan / Kapital (₱) *' : 'Capitalization (₱) *'}
+                  </label>
                   <input type="number" step="0.01" className="form-control" name="capitalization" value={formData.capitalization} onChange={handleChange} required />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Gross Sales (?)</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Gross Sales / Benta (₱)' : 'Gross Sales (₱)'}
+                  </label>
                   <input type="number" step="0.01" className="form-control" name="gross_sales" value={formData.gross_sales} onChange={handleChange} required={formData.business_status === 'Renewal'} />
                 </div>
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Owner Name *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Pangalan ng May-ari *' : 'Owner Name *'}
+                  </label>
                   <input className="form-control" name="owner_name" value={formData.owner_name} onChange={handleChange} required />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>Contact Number *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Numero ng Telepono *' : 'Contact Number *'}
+                  </label>
                   <input className="form-control" name="contact_number" value={formData.contact_number} onChange={handleChange} required />
                 </div>
               </div>
@@ -512,8 +595,12 @@ const BusinessProfile = () => {
               {renderConditionalQuestions()}
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>
-                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{editingBusiness ? 'Save Changes' : 'Add Business'}</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>
+                  {isTl ? 'Kanselahin' : 'Cancel'}
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  {editingBusiness ? (isTl ? 'I-save ang Pagbabago' : 'Save Changes') : (isTl ? 'Idagdag ang Negosyo' : 'Add Business')}
+                </button>
               </div>
             </form>
           </div>
