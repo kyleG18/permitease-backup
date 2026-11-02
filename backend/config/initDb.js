@@ -635,6 +635,14 @@ const initDatabase = async () => {
             // chat_history: ensure question and response can store large messages
             await modifyColumn('chat_history', 'question', "TEXT NOT NULL");
             await modifyColumn('chat_history', 'response', "LONGTEXT NOT NULL");
+
+            // applications: walkin scheduling columns
+            await ensureColumn('applications', 'walkin_date', "DATE NULL");
+            await ensureColumn('applications', 'walkin_time_slot', "VARCHAR(100) NULL");
+            await ensureColumn('applications', 'queue_ticket_number', "VARCHAR(100) NULL");
+            await ensureColumn('applications', 'walkin_status', "ENUM('PENDING', 'SCHEDULED', 'CONFIRMED', 'ATTENDED', 'CANCELLED') DEFAULT 'PENDING'");
+            await ensureColumn('applications', 'counter_verified_by', "INT NULL");
+            await ensureColumn('applications', 'counter_verified_at', "TIMESTAMP NULL");
         });
 
         console.log('[DB Init] Database health check & bootstrap completed successfully.');
