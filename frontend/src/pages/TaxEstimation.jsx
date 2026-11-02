@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Receipt,
   Clock,
-  ArrowRight
+  ArrowRight,
+  MapPin
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -93,15 +94,18 @@ export default function TaxEstimation() {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const activeBiz = useMemo(
-    () => businesses.find((b) => String(b.id) === selectedBizId) || null,
+    () => {
+      if (!businesses || businesses.length === 0) return null;
+      return businesses.find((b) => String(b.id) === String(selectedBizId)) || businesses[0];
+    },
     [businesses, selectedBizId]
   );
 
   useEffect(() => {
-    if (businesses.length > 0 && !selectedBizId) {
+    if (businesses && businesses.length > 0 && !selectedBizId) {
       setSelectedBizId(String(businesses[0].id));
     }
-  }, [businesses]);
+  }, [businesses, selectedBizId]);
 
   const entityType = useMemo(() => detectEntityType(activeBiz), [activeBiz]);
   const eligible8 = isEligibleFlat8(entityType);
@@ -120,9 +124,15 @@ export default function TaxEstimation() {
 
   // Pre-fill from active business profile if available
   useEffect(() => {
-    if (activeBiz && activeBiz.gross_sales && parseFloat(activeBiz.gross_sales) > 0) {
-      setGrossRevenue(String(activeBiz.gross_sales));
+    if (activeBiz) {
+      if (activeBiz.gross_sales && parseFloat(activeBiz.gross_sales) > 0) {
+        setGrossRevenue(String(activeBiz.gross_sales));
+      } else {
+        setGrossRevenue('');
+      }
       setRevenueFrequency('annual');
+      setTotalExpenses('');
+      setShowBreakdown(false);
     }
   }, [activeBiz?.id]);
 
@@ -199,9 +209,6 @@ export default function TaxEstimation() {
 
   function handleBizChange(e) {
     setSelectedBizId(e.target.value);
-    setGrossRevenue('');
-    setTotalExpenses('');
-    setShowBreakdown(false);
   }
 
   function handleCalculate() {
@@ -265,6 +272,71 @@ export default function TaxEstimation() {
             ? 'Tantyahin ang pambansang buwis sa kita at negosyo (Income Tax, Percentage Tax, o VAT) na dapat i-file sa BIR batay sa iyong rehimeng buwis.'
             : 'Estimate national income and business taxes owed to the Bureau of Internal Revenue (BIR) based on your registered entity type and revenue regime.'}
         </p>
+
+        {/* Business Selector Header Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+          {loadingBusinesses ? (
+            <span style={{ fontSize: '13px', color: '#64748B' }}>
+              {isTl ? 'Ikinakarga ang mga profile...' : 'Loading profiles...'}
+            </span>
+          ) : !businesses || businesses.length === 0 ? (
+            <span style={{ fontSize: '13px', color: '#64748B' }}>
+              {isTl ? 'Walang nakarehistrong negosyo.' : 'No business registered.'}{' '}
+              <Link to="/onboarding" style={{ color: '#15803D', fontWeight: 600 }}>
+                {isTl ? 'Gumawa ngayon →' : 'Create one now →'}
+              </Link>
+            </span>
+          ) : (
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <select
+                value={selectedBizId}
+                onChange={handleBizChange}
+                style={{
+                  appearance: 'none', WebkitAppearance: 'none',
+                  padding: '0.45rem 2.25rem 0.45rem 0.85rem',
+                  borderRadius: '8px', border: '1px solid #D1D5DB',
+                  fontWeight: 600, color: '#0F172A', backgroundColor: '#FFFFFF',
+                  fontSize: '13.5px', cursor: 'pointer', outline: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                }}
+              >
+                {businesses.map((b) => (
+                  <option key={b.id} value={String(b.id)}>
+                    {b.business_name} ({b.business_type || b.industry_category || 'Retail'})
+                  </option>
+                ))}
+              </select>
+              <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748B', fontSize: '11px' }}>▼</span>
+            </div>
+          )}
+          {activeBiz && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+              padding: '0.35rem 0.75rem', borderRadius: '999px',
+              backgroundColor: '#F8FAFC', color: '#475569',
+              border: '1px solid #E2E8F0', fontSize: '12.5px', fontWeight: 600
+            }}>
+              <MapPin size={12} color="#64748B" />
+              <span>Brgy. <strong style={{ color: '#0F172A' }}>{activeBiz.barangay || 'Poblacion'}</strong></span>
+              <span style={{ color: '#CBD5E1' }}>•</span>
+              <span style={{ color: '#15803D' }}>
+                {activeBiz.business_status
+                  ? (isTl && activeBiz.business_status === 'New Application'
+                      ? 'Bagong Aplikasyon'
+                      : (isTl && activeBiz.business_status.includes('Renew')
+                          ? 'Pagpapanibago'
+                          : activeBiz.business_status))
+                  : (isTl ? 'Bagong Aplikasyon' : 'New Application')}
+              </span>
+              {entityType && (
+                <>
+                  <span style={{ color: '#CBD5E1' }}>•</span>
+                  <span style={{ color: '#0F172A' }}>{entityType.toUpperCase()}</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── JURISDICTION NOTICE ── */}
@@ -295,48 +367,45 @@ export default function TaxEstimation() {
 
         {/* STEP 1: BUSINESS PROFILE & AUTO-DETECTED STATUS */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.65rem', borderBottom: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.65rem', borderBottom: '1px solid var(--border-light)', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Building2 size={20} style={{ color: 'var(--primary-green)' }} />
               <h2 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--government-navy)', margin: 0 }}>
                 {isTl ? '1. Katayuan ng Negosyo at Rehimeng Buwis' : '1. Business Profile & Auto-Detected Tax Status'}
               </h2>
             </div>
-            {activeBiz && entityType && (
-              <span className="badge" style={{ backgroundColor: 'var(--primary-green-light)', color: 'var(--primary-green)' }}>
-                {entityType.toUpperCase()}
-              </span>
-            )}
-          </div>
-
-          {/* Business Switcher (if multiple) */}
-          {businesses.length > 1 && (
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: '600', color: 'var(--text-dark)', marginBottom: '0.35rem' }}>
-                {isTl ? 'Piliin ang Negosyo:' : 'Select Business Profile:'}
-              </label>
-              <select
-                value={selectedBizId}
-                onChange={handleBizChange}
-                style={{
-                  width: '100%',
-                  padding: '0.65rem 0.85rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-medium)',
-                  backgroundColor: 'var(--surface)',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  color: 'var(--text-dark)'
-                }}
-              >
-                {businesses.map((b) => (
-                  <option key={b.id} value={String(b.id)}>
-                    {b.business_name} {b.business_status ? `(${b.business_status})` : ''}
-                  </option>
-                ))}
-              </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {businesses && businesses.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>{isTl ? 'Negosyo:' : 'Business:'}</span>
+                  <select
+                    value={selectedBizId}
+                    onChange={handleBizChange}
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-medium)',
+                      backgroundColor: 'var(--surface)',
+                      fontSize: '0.8125rem',
+                      fontWeight: '700',
+                      color: 'var(--primary-green)'
+                    }}
+                  >
+                    {businesses.map((b) => (
+                      <option key={b.id} value={String(b.id)}>
+                        {b.business_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {activeBiz && entityType && (
+                <span className="badge" style={{ backgroundColor: 'var(--primary-green-light)', color: 'var(--primary-green)' }}>
+                  {entityType.toUpperCase()}
+                </span>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Status Details Box */}
           {activeBiz && entityType && (

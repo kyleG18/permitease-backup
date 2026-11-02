@@ -24,7 +24,8 @@ import {
   Library,
   Calculator,
   Loader2,
-  RotateCcw
+  RotateCcw,
+  MapPin
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -39,7 +40,7 @@ const php = (amount) =>
 
 export default function FeeEstimation() {
   const { user, token } = useContext(AuthContext);
-  const { businesses, refreshBusinesses } = useContext(BusinessContext);
+  const { businesses, loadingBusinesses, refreshBusinesses } = useContext(BusinessContext);
   const { lang } = useTranslation();
   const isTl = lang === 'tl';
 
@@ -386,6 +387,67 @@ export default function FeeEstimation() {
             ? 'Kalkulahin ang tinatayang mga bayarin sa permit ng munisipyo, regulatory clearances, at lokal na buwis na babayaran sa Munisipyo ng Roxas.'
             : 'Estimate mandatory municipal clearances, regulatory permits, and base business taxes paid directly to the Municipal Hall of Roxas, Oriental Mindoro.'}
         </p>
+
+        {/* Business Selector Header Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+          {loadingBusinesses ? (
+            <span style={{ fontSize: '13px', color: '#64748B' }}>
+              {isTl ? 'Ikinakarga ang mga profile...' : 'Loading profiles...'}
+            </span>
+          ) : !businesses || businesses.length === 0 ? (
+            <span style={{ fontSize: '13px', color: '#64748B' }}>
+              {isTl ? 'Walang nakarehistrong negosyo.' : 'No business registered.'}{' '}
+              <Link to="/onboarding" style={{ color: '#15803D', fontWeight: 600 }}>
+                {isTl ? 'Gumawa ngayon →' : 'Create one now →'}
+              </Link>
+            </span>
+          ) : (
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <select
+                value={selectedBizId}
+                onChange={(e) => setSelectedBizId(e.target.value)}
+                style={{
+                  appearance: 'none', WebkitAppearance: 'none',
+                  padding: '0.45rem 2.25rem 0.45rem 0.85rem',
+                  borderRadius: '8px', border: '1px solid #D1D5DB',
+                  fontWeight: 600, color: '#0F172A', backgroundColor: '#FFFFFF',
+                  fontSize: '13.5px', cursor: 'pointer', outline: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                }}
+              >
+                {businesses.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.business_name} ({b.business_type || b.industry_category || 'Retail'})
+                  </option>
+                ))}
+              </select>
+              <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748B', fontSize: '11px' }}>▼</span>
+            </div>
+          )}
+          {activeBiz && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+              padding: '0.35rem 0.75rem', borderRadius: '999px',
+              backgroundColor: '#F8FAFC', color: '#475569',
+              border: '1px solid #E2E8F0', fontSize: '12.5px', fontWeight: 600
+            }}>
+              <MapPin size={12} color="#64748B" />
+              <span>Brgy. <strong style={{ color: '#0F172A' }}>{activeBiz.barangay || 'Poblacion'}</strong></span>
+              <span style={{ color: '#CBD5E1' }}>•</span>
+              <span style={{ color: '#15803D' }}>
+                {activeBiz.business_status
+                  ? (isTl && activeBiz.business_status === 'New Application'
+                      ? 'Bagong Aplikasyon'
+                      : (isTl && activeBiz.business_status.includes('Renew')
+                          ? 'Pagpapanibago'
+                          : activeBiz.business_status))
+                  : (isTl ? 'Bagong Aplikasyon' : 'New Application')}
+              </span>
+              <span style={{ color: '#CBD5E1' }}>•</span>
+              <span style={{ color: '#0F172A' }}>{businessScale}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── JURISDICTION CLARITY BANNER ── */}
@@ -437,9 +499,9 @@ export default function FeeEstimation() {
                 {isTl ? '1. Pagkakakilanlan at Lokasyon ng Negosyo' : '1. Business Identity & Location'}
               </h2>
             </div>
-            {businesses && businesses.length > 1 && (
+            {businesses && businesses.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{isTl ? 'Negosyo:' : 'Business:'}</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>{isTl ? 'Negosyo:' : 'Business:'}</span>
                 <select
                   value={selectedBizId}
                   onChange={(e) => setSelectedBizId(e.target.value)}
@@ -449,8 +511,8 @@ export default function FeeEstimation() {
                     border: '1px solid var(--border-medium)',
                     backgroundColor: 'var(--surface)',
                     fontSize: '0.8125rem',
-                    fontWeight: '600',
-                    color: 'var(--text-dark)'
+                    fontWeight: '700',
+                    color: 'var(--primary-green)'
                   }}
                 >
                   {businesses.map((b) => (
