@@ -33,6 +33,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'always',
         condition_value: '',
         is_mandatory: 1,
+        issuing_agency: 'Barangay Office',
+        ordinance_reference: 'RA 7160 Sec 152 / Roxas Revenue Code',
+        estimated_fee: 150.00,
         required_documents: 'Proof of Business Registration, Contract of Lease or Transfer Certificate of Title'
     },
     {
@@ -43,6 +46,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'always',
         condition_value: '',
         is_mandatory: 1,
+        issuing_agency: 'Municipal Treasurer Office (MTO)',
+        ordinance_reference: 'RA 7160 Sec 156-164',
+        estimated_fee: 55.00,
         required_documents: 'Valid Government Issued ID, Sworn Statement of Gross Receipts / Financial Statement'
     },
     {
@@ -53,6 +59,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'always',
         condition_value: '',
         is_mandatory: 1,
+        issuing_agency: 'Municipal Health Office (MHO)',
+        ordinance_reference: 'Code on Sanitation (PD 856)',
+        estimated_fee: 300.00,
         required_documents: 'Medical Certificates / Health Cards of Personnel, Water Potability Test'
     },
     {
@@ -63,6 +72,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'always',
         condition_value: '',
         is_mandatory: 1,
+        issuing_agency: 'DTI / SEC / CDA',
+        ordinance_reference: 'Act No. 3883 / RA 11232 / RA 9520',
+        estimated_fee: 230.00,
         required_documents: 'DTI Certificate of Registration, SEC Certificate with Articles of Incorporation, or CDA Certificate'
     },
     {
@@ -73,6 +85,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'always',
         condition_value: '',
         is_mandatory: 1,
+        issuing_agency: 'Bureau of Fire Protection (BFP)',
+        ordinance_reference: 'Revised Fire Code (RA 9514)',
+        estimated_fee: 500.00,
         required_documents: 'Fire Extinguisher Official Receipt / Inspection Fee Receipt, Building / Floor Plan'
     },
     {
@@ -83,6 +98,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'business_status',
         condition_value: 'New Application',
         is_mandatory: 0,
+        issuing_agency: 'Municipal Planning & Development (MPDO)',
+        ordinance_reference: 'Comprehensive Land Use Plan (CLUP)',
+        estimated_fee: 250.00,
         required_documents: 'Vicinity Map / Sketch, Site Development Plan, Proof of Property Ownership or Contract of Lease'
     },
     {
@@ -93,6 +111,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'business_status',
         condition_value: 'New Application',
         is_mandatory: 0,
+        issuing_agency: 'Municipal Engineering Office (MEO)',
+        ordinance_reference: 'National Building Code (PD 1096)',
+        estimated_fee: 500.00,
         required_documents: 'Certificate of Completion / Occupancy, As-Built Building Plans'
     },
     {
@@ -103,6 +124,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'always',
         condition_value: '',
         is_mandatory: 1,
+        issuing_agency: 'Municipal Economic Enterprise / ESO',
+        ordinance_reference: 'Municipal Ordinance No. 2022-14',
+        estimated_fee: 200.00,
         required_documents: 'Solid Waste Management Plan, Garbage Fee Official Receipt'
     },
     {
@@ -113,6 +137,9 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'industry_category',
         condition_value: 'Tourism',
         is_mandatory: 0,
+        issuing_agency: 'Municipal Tourism Operations Office',
+        ordinance_reference: 'Tourism Act of 2009 (RA 9593)',
+        estimated_fee: 200.00,
         required_documents: 'DOT Accreditation Certificate or Municipal Tourism Registration Form'
     },
     {
@@ -123,7 +150,49 @@ const ROXAS_REQUIREMENTS = [
         condition_field: 'business_status',
         condition_value: 'Renewal',
         is_mandatory: 0,
+        issuing_agency: 'Bureau of Internal Revenue (BIR)',
+        ordinance_reference: 'National Internal Revenue Code (NIRC)',
+        estimated_fee: 0.00,
         required_documents: 'Previous Year BIR Form 1701 / 1702 with Official Financial Statements'
+    },
+    {
+        permit_name: 'Food Handler Health Examination & Laboratory Clearance',
+        description: 'Mandatory medical diagnostic tests (Chest X-Ray, Stool & Urine exams) and official health cards for food and beverage handling personnel.',
+        applicable_business_type: 'Food & Beverage',
+        renewal_period: 'Annual',
+        condition_field: 'industry_category',
+        condition_value: 'Food & Beverage',
+        is_mandatory: 1,
+        issuing_agency: 'Municipal Health Office (MHO)',
+        ordinance_reference: 'Code on Sanitation (PD 856)',
+        estimated_fee: 450.00,
+        required_documents: 'Chest X-Ray, Stool Exam, Urinalysis, 1x1 Photos'
+    },
+    {
+        permit_name: 'Calibration & Sealing of Weights and Measures (Timbangan)',
+        description: 'Annual inspection, testing and official tamper-proof sealing of weighing scales and measurement devices used in commercial retail trading.',
+        applicable_business_type: 'Retail',
+        renewal_period: 'Annual',
+        condition_field: 'industry_category',
+        condition_value: 'Retail',
+        is_mandatory: 1,
+        issuing_agency: 'Municipal Treasurer Office (MTO)',
+        ordinance_reference: 'RA 7160 Sec 148 / Municipal Revenue Code',
+        estimated_fee: 150.00,
+        required_documents: 'Weighing Scale, Official Receipt of Device'
+    },
+    {
+        permit_name: 'Professional / Occupational Tax Clearance (PTR/OTR)',
+        description: 'Occupational tax receipt and municipal clearance for registered service professionals, therapists, technicians, and specialized service personnel.',
+        applicable_business_type: 'Services',
+        renewal_period: 'Annual',
+        condition_field: 'industry_category',
+        condition_value: 'Services',
+        is_mandatory: 1,
+        issuing_agency: 'Municipal Treasurer Office (MTO)',
+        ordinance_reference: 'RA 7160 Sec 139 / Municipal Revenue Code',
+        estimated_fee: 300.00,
+        required_documents: 'PRC ID / Technical Certification, Cedula'
     }
 ];
 
@@ -244,7 +313,10 @@ const initDatabase = async () => {
                     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                     condition_field VARCHAR(100) DEFAULT 'always',
                     condition_value VARCHAR(255) DEFAULT '',
-                    is_mandatory TINYINT(1) DEFAULT 1
+                    is_mandatory TINYINT(1) DEFAULT 1,
+                    issuing_agency VARCHAR(255) DEFAULT 'BPLO / LGU Roxas',
+                    ordinance_reference VARCHAR(255) NULL,
+                    estimated_fee DECIMAL(10,2) DEFAULT 0.00
                 )
             `);
         });
@@ -452,8 +524,37 @@ const initDatabase = async () => {
             `);
         });
 
-        // 12. Barangays table
-        await safeStep('ph_barangays table', async () => {
+        // 12. Location tables (ph_island_groups, ph_regions, ph_provinces, ph_cities_municipalities, ph_barangays)
+        await safeStep('ph_location tables', async () => {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS ph_island_groups (
+                    id VARCHAR(20) PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL
+                )
+            `);
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS ph_regions (
+                    id VARCHAR(20) PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    island_group_id VARCHAR(20) NULL
+                )
+            `);
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS ph_provinces (
+                    id VARCHAR(20) PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    region_id VARCHAR(20) NULL
+                )
+            `);
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS ph_cities_municipalities (
+                    id VARCHAR(20) PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    type VARCHAR(50) DEFAULT 'Municipality',
+                    province_id VARCHAR(20) NULL,
+                    region_id VARCHAR(20) NULL
+                )
+            `);
             await db.query(`
                 CREATE TABLE IF NOT EXISTS ph_barangays (
                     id VARCHAR(20) PRIMARY KEY,
@@ -461,6 +562,12 @@ const initDatabase = async () => {
                     name VARCHAR(255) NOT NULL
                 )
             `);
+
+            // Seed primary Roxas location hierarchy if empty
+            await db.query(`INSERT IGNORE INTO ph_island_groups (id, name) VALUES ('luzon', 'Luzon')`);
+            await db.query(`INSERT IGNORE INTO ph_regions (id, name, island_group_id) VALUES ('170000000', 'MIMAROPA Region', 'luzon')`);
+            await db.query(`INSERT IGNORE INTO ph_provinces (id, name, region_id) VALUES ('175200000', 'Oriental Mindoro', '170000000')`);
+            await db.query(`INSERT IGNORE INTO ph_cities_municipalities (id, name, type, province_id, region_id) VALUES ('175212000', 'Roxas', 'Municipality', '175200000', '170000000')`);
         });
 
         // 13. Ensure default admin user
@@ -481,17 +588,27 @@ const initDatabase = async () => {
             }
         });
 
-        // 14. Seed permit requirements if empty
+        // 14. Seed permit requirements if empty or update missing fields
         await safeStep('seed permit requirements', async () => {
             const [existingReqs] = await db.query('SELECT COUNT(*) as count FROM permit_requirements');
             if (existingReqs[0].count === 0) {
                 for (const req of ROXAS_REQUIREMENTS) {
                     await db.query(`
-                        INSERT INTO permit_requirements (permit_name, description, applicable_business_type, renewal_period, condition_field, condition_value, is_mandatory, required_documents)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    `, [req.permit_name, req.description, req.applicable_business_type, req.renewal_period, req.condition_field, req.condition_value, req.is_mandatory, req.required_documents]);
+                        INSERT INTO permit_requirements (permit_name, description, applicable_business_type, renewal_period, condition_field, condition_value, is_mandatory, required_documents, issuing_agency, ordinance_reference, estimated_fee)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `, [req.permit_name, req.description, req.applicable_business_type, req.renewal_period, req.condition_field, req.condition_value, req.is_mandatory, req.required_documents, req.issuing_agency, req.ordinance_reference, req.estimated_fee]);
                 }
                 console.log(`[DB Init] Seeded ${ROXAS_REQUIREMENTS.length} official Roxas permit requirements.`);
+            } else {
+                for (const req of ROXAS_REQUIREMENTS) {
+                    await db.query(`
+                        UPDATE permit_requirements 
+                        SET issuing_agency = COALESCE(NULLIF(issuing_agency, ''), ?),
+                            ordinance_reference = COALESCE(NULLIF(ordinance_reference, ''), ?),
+                            estimated_fee = CASE WHEN estimated_fee IS NULL OR estimated_fee = 0 THEN ? ELSE estimated_fee END
+                        WHERE permit_name = ?
+                    `, [req.issuing_agency, req.ordinance_reference, req.estimated_fee, req.permit_name]);
+                }
             }
         });
 
@@ -606,11 +723,14 @@ const initDatabase = async () => {
             await ensureColumn('assessments', 'readiness_score', "INT DEFAULT 0");
             await modifyColumn('assessments', 'assessment_result', "LONGTEXT NULL");
 
-            // permit_requirements: conditional evaluation fields
+            // permit_requirements: conditional evaluation fields & official agency/fee metadata
             await ensureColumn('permit_requirements', 'condition_field', "VARCHAR(100) DEFAULT 'always'");
             await ensureColumn('permit_requirements', 'condition_value', "VARCHAR(255) DEFAULT ''");
             await ensureColumn('permit_requirements', 'is_mandatory', "TINYINT(1) DEFAULT 1");
             await ensureColumn('permit_requirements', 'required_documents', "TEXT NULL");
+            await ensureColumn('permit_requirements', 'issuing_agency', "VARCHAR(255) DEFAULT 'BPLO / LGU Roxas'");
+            await ensureColumn('permit_requirements', 'ordinance_reference', "VARCHAR(255) NULL");
+            await ensureColumn('permit_requirements', 'estimated_fee', "DECIMAL(10,2) DEFAULT 0.00");
 
             // businesses: extended registration & operation fields
             await ensureColumn('businesses', 'email', "VARCHAR(255) NULL");
