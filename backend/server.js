@@ -144,7 +144,7 @@ const PORT = process.env.PORT || 5000;
 
 let server;
 if (require.main === module) {
-    server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    server = app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT} (0.0.0.0)`));
 }
 
 module.exports = { app, server, getAuthRateLimitMax };
