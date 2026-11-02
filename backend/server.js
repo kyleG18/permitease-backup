@@ -113,9 +113,13 @@ app.use('/api/renewals', require('./routes/renewalRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/schedule', require('./routes/holidayRoutes'));
 
-// Basic route for testing
+// Basic route for testing & uptime keep-alive ping
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to PermitEase API' });
+});
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
 // ─────────────────────────────────────────────

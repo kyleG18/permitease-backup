@@ -10,9 +10,23 @@ const password = process.env.DB_PASSWORD !== undefined
 const database = process.env.DB_NAME || process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'smartpermit_db';
 const port = parseInt(process.env.DB_PORT || process.env.MYSQLPORT || process.env.MYSQL_PORT || '3306', 10);
 
+// Auto-detect SSL requirements (TiDB Cloud, Aiven, or DB_SSL=true)
+const requiresSSL = process.env.DB_SSL === 'true' ||
+                    process.env.MYSQL_SSL === 'true' ||
+                    host.includes('tidbcloud.com') ||
+                    host.includes('aivencloud.com');
+
+const sslOption = requiresSSL ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } : undefined;
+
 const connectionConfig = (process.env.MYSQL_URL || process.env.DATABASE_URL)
-    ? { uri: process.env.MYSQL_URL || process.env.DATABASE_URL }
-    : { host, user, password, database, port };
+    ? { 
+        uri: process.env.MYSQL_URL || process.env.DATABASE_URL,
+        ...(sslOption ? { ssl: sslOption } : {})
+      }
+    : { 
+        host, user, password, database, port,
+        ...(sslOption ? { ssl: sslOption } : {})
+      };
 
 const pool = mysql.createPool({
     ...connectionConfig,
