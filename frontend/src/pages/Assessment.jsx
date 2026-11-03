@@ -7,7 +7,7 @@ import AssessmentChecklistPrint from '../components/AssessmentChecklistPrint';
 import {
   BrainCircuit, CheckCircle, CheckCircle2, FileText, ChevronDown, ChevronUp,
   History, Info, Building2, AlertCircle, Sparkles, Send, X,
-  ArrowRight, HelpCircle, MapPin, ClipboardList, Loader2, Clock, Printer,
+  ArrowRight, HelpCircle, MapPin, ClipboardList, Loader2, Clock, Printer, Download,
   PenLine, StickyNote, ShieldCheck, BookOpen, ExternalLink, Library,
   Landmark, Building, Filter, Layers
 } from 'lucide-react';
@@ -572,10 +572,10 @@ Instructions:
                 padding: '0.5rem 1rem', fontWeight: 700,
                 cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,122,61,0.25)'
               }}
-              title={isTl ? 'I-print ang opisyal na checklist ng mga kinakailangan' : 'Print official requirements checklist'}
-              aria-label="Print Requirements Checklist"
+              title={isTl ? 'I-download ang opisyal na checklist ng mga kinakailangan' : 'Download official requirements checklist'}
+              aria-label="Download Requirements Checklist"
             >
-              <Printer size={14} /> {isTl ? 'I-print ang Checklist' : 'Print Checklist'}
+              <Download size={14} /> {isTl ? 'I-download ang Checklist' : 'Download Checklist'}
             </button>
           )}
           <Link
