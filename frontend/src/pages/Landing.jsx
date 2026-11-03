@@ -73,15 +73,15 @@ const Landing = ({ initialAuthModal = null }) => {
         .hero-gradient {
           background: linear-gradient(to right,
             rgba(255,255,255,1) 0%,
-            rgba(255,255,255,1) 40%,
-            rgba(255,255,255,0.8) 55%,
+            rgba(255,255,255,1) 45%,
+            rgba(255,255,255,0.85) 62%,
             rgba(255,255,255,0) 100%);
         }
 
         /* Hero heading sizes */
         .hero-h1 { font-size: 4rem; }
         .hero-h2 { font-size: 2.5rem; }
-        .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 
         /* Nav desktop */
         .nav-desktop { display: flex; gap: 2.5rem; align-items: center; }
@@ -236,7 +236,7 @@ const Landing = ({ initialAuthModal = null }) => {
         <div className="hero-gradient" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
 
         {/* Text Content */}
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '600px', width: '100%' }}>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: '850px', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
             <div style={{ width: '36px', height: '4px', backgroundColor: '#16A34A', flexShrink: 0 }} />
             <span style={{ color: '#374151', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -247,7 +247,7 @@ const Landing = ({ initialAuthModal = null }) => {
           <h1 className="hero-h1" style={{ fontWeight: '900', margin: '0 0 0.4rem 0', color: '#1E3A8A', lineHeight: 1.05 }}>
             {t.landing.heroTitle1}
           </h1>
-          <h2 className="hero-h2" style={{ fontWeight: '700', margin: '0 0 1.25rem 0', color: '#1E3A8A', lineHeight: 1.2 }}>
+          <h2 className="hero-h2" style={{ fontWeight: '700', margin: '0 0 1.25rem 0', color: '#1E3A8A', lineHeight: 1.2, maxWidth: '580px' }}>
             {t.landing.heroTitle2}
           </h2>
 
@@ -256,13 +256,13 @@ const Landing = ({ initialAuthModal = null }) => {
           </p>
 
           <div className="hero-btns">
-            <button onClick={() => openAuth('register')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}>
+            <button onClick={() => openAuth('register')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: 'white', padding: '0.85rem 1.25rem', borderRadius: '6px', border: '1.5px solid transparent', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s ease', whiteSpace: 'nowrap' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}>
               <FileText size={17} /> {t.landing.startNewBtn} &rarr;
             </button>
-            <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#15803D', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1.5px solid #15803D', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(21, 128, 61, 0.08)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+            <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#15803D', padding: '0.85rem 1.25rem', borderRadius: '6px', border: '1.5px solid #15803D', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(21, 128, 61, 0.08)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
               <RefreshCw size={17} /> {t.landing.prepareRenewalBtn} &rarr;
             </button>
-            <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#1E3A8A', padding: '0.85rem 1.5rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+            <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ffffff', color: '#1E3A8A', padding: '0.85rem 1.25rem', borderRadius: '6px', border: '1.5px solid #CBD5E1', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.borderColor = '#94A3B8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.borderColor = '#CBD5E1'; }}>
               <User size={17} /> {t.landing.loginPortalBtn}
             </button>
           </div>
