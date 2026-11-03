@@ -458,13 +458,15 @@ Instructions:
    - **Why It Is Required**
    - **Prerequisites Needed**
    - **Current Status Note**
-3. Use bullet points (* Item) for lists of requirements or steps. Keep explanations concise and easy to read.`;
+3. Use bullet points (* Item) for lists of requirements or steps. Keep explanations concise and easy to read.
+4. CRITICAL: DO NOT introduce yourself or say "Hello!", "I am PermitEase AI Assistant", etc. Start directly with the first section heading.`;
 
     try {
       const res = await axios.post(`${API}/chat`, {
         question: fullPrompt,
         message: fullPrompt,
-        language: lang || 'en'
+        language: lang || 'en',
+        is_advisory: true
       }, config);
       
       const replyText = res.data?.response || res.data?.reply || 'No detailed explanation available at this time.';

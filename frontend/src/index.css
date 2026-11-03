@@ -3529,13 +3529,19 @@ tbody td {
   background: var(--background);
   border-radius: var(--radius-sm);
   padding: 1rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .assessment-ai-helper__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.5rem;
   margin-bottom: 0.65rem;
+  width: 100%;
 }
 
 .assessment-ai-helper__label {
@@ -3545,8 +3551,14 @@ tbody td {
   letter-spacing: 0.04em;
   color: var(--ai-accent-dark);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.35;
 }
 
 .assessment-ai-helper__close {
@@ -3557,6 +3569,7 @@ tbody td {
   padding: 2px;
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .assessment-ai-helper__close:hover {
@@ -3916,18 +3929,22 @@ tbody td {
 /* Requirement Cards Grid */
 .req-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: 1rem;
   padding: 1.25rem;
   background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .req-cards-grid {
-    grid-template-columns: 1fr;
-    padding: 0.85rem;
+    grid-template-columns: 100%;
+    padding: 0.75rem;
+    gap: 0.75rem;
   }
 }
 
@@ -3943,6 +3960,11 @@ tbody td {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .req-card:hover {
@@ -4351,6 +4373,163 @@ tbody td {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE: Assessment AI Helper Panel — Prevent overflow on small screens
+   ========================================================================== */
+@media (max-width: 768px) {
+
+  /* Ensure req card doesn't overflow viewport */
+  .req-card {
+    padding: 0.85rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* AI helper panel: full width, strictly no horizontal overflow */
+  .assessment-ai-helper {
+    padding: 0.75rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Helper header: wrap items if needed */
+  .assessment-ai-helper__header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Label: wraps smoothly without overflowing */
+  .assessment-ai-helper__label {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Chip buttons: allow wrapping, smaller text */
+  .assessment-ai-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .assessment-ai-chip {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    padding: 0.35rem 0.6rem !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    text-align: left !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Input + Submit: stack vertically on mobile */
+  .assessment-ai-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .assessment-ai-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .assessment-ai-submit {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.5rem !important;
+  }
+
+  /* AI response area */
+  .assessment-ai-response {
+    padding: 0.75rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    word-break: break-word !important;
+  }
+
+  .assessment-ai-response__header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.3rem !important;
+    width: 100% !important;
+  }
+
+  .assessment-ai-response__title {
+    font-size: 0.78rem !important;
+    line-height: 1.3 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+
+  .assessment-ai-response__question {
+    max-width: 100% !important;
+    width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    word-break: break-word !important;
+  }
+
+  /* Card footer: stack vertically */
+  .req-card-footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+
+  .req-status-segmented {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .req-seg-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  .req-ask-ai-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Prevent card-top tags overflowing */
+  .req-card-top {
+    flex-wrap: wrap !important;
+  }
+
+  .req-card-tags {
+    flex-wrap: wrap !important;
+    row-gap: 0.3rem !important;
   }
 }
 

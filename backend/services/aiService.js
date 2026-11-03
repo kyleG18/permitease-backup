@@ -212,13 +212,25 @@ You MUST respond ONLY with valid JSON exactly matching this structure, with no m
 /**
  * Generate a conversational response for the AI Chatbot.
  */
-const generateChatResponse = async (messages, userContext, staticContext, availablePermits, knowledgeDocs, preferredLanguage = "en") => {
+const generateChatResponse = async (messages, userContext, staticContext, availablePermits, knowledgeDocs, preferredLanguage = "en", isAdvisory = false) => {
     const groq = getGroqClient();
     if (!groq) {
         return "I'm currently in offline mode — AI is not configured. Please contact the System Administrator!";
     }
 
+    // Determine greeting behavior based on context (only greet once on the first turn of main chat)
+    const hasPreviousAssistantResponse = messages.some(m => m.role === 'assistant');
+    const isFirstMessage = !hasPreviousAssistantResponse && messages.filter(m => m.role === 'user').length <= 1;
+
+    const greetingInstruction = isAdvisory
+        ? 'CRITICAL MANDATORY: Do NOT greet or introduce yourself under any circumstances. Do NOT say Hello, Hi, Mabuhay, Welcome, or I am PermitEase AI Assistant. Skip all introductions completely. Go directly to the first structured section heading or answer.'
+        : isFirstMessage
+            ? 'This is the start of the conversation. Greet the user with a brief, friendly one-sentence welcome, then immediately answer.'
+            : 'CRITICAL MANDATORY: Do NOT greet or introduce yourself again. Do NOT say Hello, Welcome, or repeat I am PermitEase AI Assistant. The user already knows who you are. Jump directly into your answer.';
+
     const systemPrompt = `You are the official "PermitEase AI Assistant", an intelligent and welcoming business advisor for the Municipality of Roxas, Oriental Mindoro.
+
+${greetingInstruction}
 
 PRIMARY PURPOSE & FLEXIBLE SCOPE GUIDELINES:
 1. CORE EXPERTISE & BROAD BUSINESS CONNECTION:
@@ -296,6 +308,18 @@ Instructions & Clean Formatting Rules:
         if (response.includes('</think>')) {
             response = response.split('</think>')[1].trim();
         }
+
+        // Remove repetitive greetings if it's an advisory query or a follow-up turn in chat
+        if (isAdvisory || !isFirstMessage) {
+            response = response
+                .replace(/^(hello!?|hi!?|mabuhay!?|greetings!?)[^\n]*?(permitease|ai assistant|municipality of roxas|kyle tech|business)[^\n]*?\n*/i, '')
+                .replace(/^(i am (the )?permitease ai assistant[^\n]*?\n*)/i, '')
+                .replace(/^(as the official permitease[^\n]*?\n*)/i, '')
+                .replace(/^(regarding your question about[^\n]*?\n*)/i, '')
+                .replace(/^(hello!?|hi!?|mabuhay!?|greetings!?)\s*[,!\.-]?\s*/i, '')
+                .trim();
+        }
+
         return response;
     } catch (error) {
         console.error('[aiService] generateChatResponse error:', error.message);

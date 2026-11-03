@@ -155,10 +155,18 @@ const sendMessage = async (req, res) => {
         }
         messages.push({ role: 'user', content: question.trim() });
 
+        // Check if query is an advisory request from the permit assessment page
+        const isAdvisory = Boolean(
+            req.body.is_advisory ||
+            req.body.isAdvisory ||
+            question.includes('BPLO Permit Advisor') ||
+            question.includes('Permit Requirement:')
+        );
+
         // 7. Call AI Service
         let response = '';
         try {
-            response = await generateChatResponse(messages, userContext, staticContext, requirements, knowledgeDocs, language);
+            response = await generateChatResponse(messages, userContext, staticContext, requirements, knowledgeDocs, language, isAdvisory);
         } catch (aiError) {
             return res.status(503).json({ message: aiError.message });
         }
