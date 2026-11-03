@@ -119,10 +119,19 @@ const Landing = ({ initialAuthModal = null }) => {
           /* Hero */
           .hero-gradient {
             background: linear-gradient(to bottom,
-              rgba(255,255,255,0.97) 0%,
-              rgba(255,255,255,0.97) 60%,
-              rgba(255,255,255,0.7) 80%,
-              rgba(255,255,255,0) 100%);
+              rgba(255,255,255,0.72) 0%,
+              rgba(255,255,255,0.58) 45%,
+              rgba(255,255,255,0.25) 75%,
+              rgba(255,255,255,0.08) 100%);
+          }
+          .hero-text-content h1,
+          .hero-text-content h2 {
+            text-shadow: 0 1px 4px rgba(255, 255, 255, 0.95), 0 2px 8px rgba(255, 255, 255, 0.8);
+          }
+          .hero-text-content p {
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            color: #1F2937 !important;
           }
           .hero-section {
             padding: 5rem 6% 9rem 6% !important;
@@ -236,7 +245,7 @@ const Landing = ({ initialAuthModal = null }) => {
         <div className="hero-gradient" style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
 
         {/* Text Content */}
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '850px', width: '100%' }}>
+        <div className="hero-text-content" style={{ position: 'relative', zIndex: 2, maxWidth: '850px', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
             <div style={{ width: '36px', height: '4px', backgroundColor: '#16A34A', flexShrink: 0 }} />
             <span style={{ color: '#374151', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
