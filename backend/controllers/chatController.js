@@ -147,11 +147,14 @@ const sendMessage = async (req, res) => {
         // 5. Build live user context
         const userContext = await buildUserContext(req.user.id);
 
-        // 6. Format messages array for Groq
+        // 6. Format messages array for Groq (ignore any offline/error messages from history)
         const messages = [];
         for (const msg of history) {
-            messages.push({ role: 'user', content: msg.question });
-            messages.push({ role: 'assistant', content: msg.response });
+            const resp = String(msg.response || '');
+            if (resp && !resp.includes('offline mode') && !resp.includes('temporary error') && !resp.includes('AI is not configured')) {
+                messages.push({ role: 'user', content: msg.question });
+                messages.push({ role: 'assistant', content: msg.response });
+            }
         }
         messages.push({ role: 'user', content: question.trim() });
 
