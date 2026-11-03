@@ -62,7 +62,7 @@ export default function FeeAssessmentCard({ applicationId, isAdminView = false }
   const grouped = groupByCategory(data.breakdown || []);
 
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeft: '4px solid #15803D', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>

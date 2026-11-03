@@ -223,23 +223,25 @@ const UserManagement = () => {
 
       {/* Stat Cards */}
       <div className="um-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #16A34A' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Total Users</span>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #15803D', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#15803D', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Directory</span>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-dark)', marginTop: '0.2rem' }}>{stats.total}</div>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Registered accounts</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #0284C7' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>BPLO Personnel</span>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0369A1', marginTop: '0.2rem' }}>{stats.bplo}</div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>LGU Processing Officers</span>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #166534', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#166534', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <span style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>BPLO Personnel</span>
+          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#166534', marginTop: '0.2rem' }}>{stats.bplo}</div>
+          <span style={{ fontSize: '0.75rem', color: '#15803D' }}>LGU Processing Officers</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #10B981' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Business Owners</span>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#047857', marginTop: '0.2rem' }}>{stats.msme}</div>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #0284C7', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#0284C7', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <span style={{ fontSize: '0.8rem', color: '#0369A1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Business Owners</span>
+          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0369A1', marginTop: '0.2rem' }}>{stats.msme}</div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Registered MSMEs</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #7C3AED' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>System Admins</span>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#6D28D9', marginTop: '0.2rem' }}>{stats.admin}</div>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #0F172A', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#0F172A', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <span style={{ fontSize: '0.8rem', color: '#0F172A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>System Admins</span>
+          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', marginTop: '0.2rem' }}>{stats.admin}</div>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Full system access</span>
         </div>
       </div>
 
@@ -332,8 +334,8 @@ const UserManagement = () => {
                             width: '38px',
                             height: '38px',
                             borderRadius: '50%',
-                            backgroundColor: u.role === 'system_admin' ? '#EDE9FE' : u.role === 'lgu_admin' ? '#E0F2FE' : '#DCFCE7',
-                            color: u.role === 'system_admin' ? '#6D28D9' : u.role === 'lgu_admin' ? '#0369A1' : '#15803D',
+                            backgroundColor: u.role === 'system_admin' ? '#F1F5F9' : u.role === 'lgu_admin' ? '#DCFCE7' : '#E0F2FE',
+                            color: u.role === 'system_admin' ? '#0F172A' : u.role === 'lgu_admin' ? '#15803D' : '#0369A1',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -486,17 +488,17 @@ const UserManagement = () => {
               {/* Notice Banner */}
               <div style={{
                 padding: '0.75rem 0.9rem',
-                backgroundColor: '#EFF6FF',
-                border: '1px solid #BFDBFE',
-                borderRadius: '6px',
-                color: '#1E40AF',
+                backgroundColor: '#F0FDF4',
+                border: '1px solid #BBF7D0',
+                borderRadius: '8px',
+                color: '#166534',
                 fontSize: '0.825rem',
                 marginBottom: '1.25rem',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: '0.5rem'
               }}>
-                <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <ShieldCheck size={18} color="#15803D" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <strong>BPLO Personnel Provisioning:</strong> Public registration is restricted to business owners. BPLO personnel and LGU staff accounts must be created here by the System Administrator.
                 </div>

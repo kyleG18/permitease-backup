@@ -72,9 +72,9 @@ const Landing = ({ initialAuthModal = null }) => {
         /* Hero gradient — desktop: left-to-right fade */
         .hero-gradient {
           background: linear-gradient(to right,
-            rgba(255,255,255,1) 0%,
-            rgba(255,255,255,1) 45%,
-            rgba(255,255,255,0.85) 62%,
+            rgba(255,255,255,0.92) 0%,
+            rgba(255,255,255,0.88) 35%,
+            rgba(255,255,255,0.55) 58%,
             rgba(255,255,255,0) 100%);
         }
 

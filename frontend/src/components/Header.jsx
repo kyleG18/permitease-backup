@@ -553,15 +553,36 @@ const Header = ({ toggleSidebar }) => {
         {/* User Profile */}
         <div className="header-profile-wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1.25rem', borderLeft: '1px solid var(--border-light)' }}>
           <div style={{ textAlign: 'right', display: 'none' }} className="user-profile-info">
-            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: '600', color: 'var(--text-primary)', lineHeight: 1.2 }}>{user?.full_name || 'User'}</p>
-            <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user?.email || ''}</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+              <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.2 }}>
+                {user?.full_name || 'User'}
+              </p>
+              {user?.role === 'lgu_admin' && (
+                <span style={{ fontSize: '10px', fontWeight: 800, padding: '0.12rem 0.45rem', borderRadius: '4px', backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0', letterSpacing: '0.04em' }}>
+                  BPLO
+                </span>
+              )}
+              {user?.role === 'system_admin' && (
+                <span style={{ fontSize: '10px', fontWeight: 800, padding: '0.12rem 0.45rem', borderRadius: '4px', backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0', letterSpacing: '0.04em' }}>
+                  ADMIN
+                </span>
+              )}
+            </div>
+            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+              {user?.role === 'lgu_admin'
+                ? 'BPLO Licensing Officer'
+                : user?.role === 'system_admin'
+                ? 'System Administrator'
+                : (user?.email || 'Business Owner')}
+            </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ 
-              width: '32px', height: '32px', borderRadius: '50%', 
-              backgroundColor: 'var(--primary-green-light)', color: 'var(--primary-green)', 
+              width: '34px', height: '34px', borderRadius: '50%', 
+              backgroundColor: '#DCFCE7', color: '#15803D', 
+              border: '1.5px solid #BBF7D0',
               display: 'flex', alignItems: 'center', justifyContent: 'center', 
-              fontWeight: '700', fontSize: '0.85rem'
+              fontWeight: '800', fontSize: '0.85rem'
             }}>
               {user?.full_name?.charAt(0).toUpperCase() || 'U'}
             </div>
@@ -570,7 +591,7 @@ const Header = ({ toggleSidebar }) => {
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)', padding: '0.25rem' }} 
               title="Logout"
               aria-label="Logout"
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#DC2626'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-light)'}
             >
               <LogOut size={18} strokeWidth={2} />

@@ -18,15 +18,15 @@ const RoleManagement = () => {
       <div className="role-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
         
         {/* System Admin */}
-        <div className="card" style={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderTop: '3px solid #DC2626' }}>
+        <div className="card" style={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderTop: '3px solid #0F172A' }}>
           <div className="card-header" style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '1rem', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ padding: '0.75rem', backgroundColor: '#FEE2E2', color: '#DC2626', borderRadius: '10px' }}>
+              <div style={{ padding: '0.75rem', backgroundColor: '#F1F5F9', color: '#0F172A', borderRadius: '10px' }}>
                 <Shield size={24} />
               </div>
               <div>
                 <h3 className="m-0" style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>System Administrator</h3>
-                <span className="badge" style={{ background: '#FEE2E2', color: '#DC2626', marginTop: '0.25rem', fontWeight: 700 }}>system_admin</span>
+                <span className="badge" style={{ background: '#0F172A', color: '#FFFFFF', marginTop: '0.25rem', fontWeight: 700 }}>system_admin</span>
               </div>
             </div>
           </div>

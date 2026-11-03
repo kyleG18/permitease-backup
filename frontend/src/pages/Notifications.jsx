@@ -100,7 +100,10 @@ export default function Notifications() {
       
       <div className="page-heading-row" style={{ marginBottom: '1.75rem' }}>
         <div>
-          <h1 style={{ margin: 0, color: 'var(--government-navy)', fontSize: '1.5rem', fontWeight: 800 }}>{tn.title}</h1>
+          <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#15803D" }}>
+            MUNICIPAL ADVISORY & ALERT CENTER
+          </span>
+          <h1 style={{ margin: '0.2rem 0 0', color: '#0F172A', fontSize: '1.75rem', fontWeight: 800 }}>{tn.title}</h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             {isTl 
               ? `${unreadCount} ${unreadCount === 1 ? 'hindi pa nababasang abiso' : 'mga hindi pa nababasang abiso'}`
@@ -111,7 +114,7 @@ export default function Notifications() {
           <button
             onClick={markAllRead}
             className="btn btn-outline btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: '#166534', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', padding: '0.45rem 0.9rem', borderRadius: '6px', cursor: 'pointer' }}
           >
             <CheckCheck size={16} /> {isTl ? 'Markahan Lahat Bilang Nabasa' : tn.markAllRead}
           </button>

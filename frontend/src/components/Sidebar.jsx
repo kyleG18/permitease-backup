@@ -169,6 +169,16 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         <div className="sidebar-logo-text">
           <h2>PermitEase</h2>
           <span>Municipality of Roxas</span>
+          {user?.role === 'lgu_admin' && (
+            <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#15803D', backgroundColor: '#DCFCE7', border: '1px solid #BBF7D0', padding: '0.12rem 0.45rem', borderRadius: '4px', display: 'inline-block', marginTop: '3px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              BPLO Licensing Portal
+            </div>
+          )}
+          {user?.role === 'system_admin' && (
+            <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#166534', backgroundColor: '#DCFCE7', border: '1px solid #BBF7D0', padding: '0.12rem 0.45rem', borderRadius: '4px', display: 'inline-block', marginTop: '3px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Admin Command Center
+            </div>
+          )}
         </div>
         <button
           className="sidebar-close-btn"

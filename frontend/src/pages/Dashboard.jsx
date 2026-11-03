@@ -1891,18 +1891,18 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 <Link to="/requirements" style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
                   padding: '0.55rem 0.75rem', borderRadius: '8px',
-                  backgroundColor: '#F5F3FF', color: '#7C3AED',
+                  backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #DCFCE7',
                   textDecoration: 'none', fontSize: '12px', fontWeight: 700
                 }}>
-                  <Scale size={14} /> Requirements
+                  <Scale size={14} color="#15803D" /> Requirements
                 </Link>
                 <Link to="/admin/analytics" style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
                   padding: '0.55rem 0.75rem', borderRadius: '8px',
-                  backgroundColor: '#F0F9FF', color: '#0284C7',
+                  backgroundColor: '#F8FAFC', color: '#334155', border: '1px solid #E2E8F0',
                   textDecoration: 'none', fontSize: '12px', fontWeight: 700
                 }}>
-                  <BarChart2 size={14} /> Reports
+                  <BarChart2 size={14} color="#15803D" /> Reports
                 </Link>
               </div>
 
@@ -1924,12 +1924,12 @@ const AdminDashboard = ({ user, stats, loading }) => {
             boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#F5F3FF', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Scale size={22} />
               </div>
               <div>
                 <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#0F172A' }}>
-                  Municipal Requirements Masterlist — <span style={{ color: '#7C3AED' }}>{loading ? '…' : fmt(stats?.configured_requirements)} Clearances Configured</span>
+                  Municipal Requirements Masterlist — <span style={{ color: '#15803D' }}>{loading ? '…' : fmt(stats?.configured_requirements)} Clearances Configured</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748B' }}>
                   Statutory prerequisites under RA 11032 (Ease of Doing Business) · Maintain clearance ordinances.
@@ -1940,13 +1940,14 @@ const AdminDashboard = ({ user, stats, loading }) => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem',
-              backgroundColor: '#7C3AED',
+              backgroundColor: '#15803D',
               color: '#FFFFFF',
               borderRadius: '8px',
               padding: '0.6rem 1.1rem',
               fontSize: '13px',
               fontWeight: 700,
-              textDecoration: 'none'
+              textDecoration: 'none',
+              boxShadow: '0 2px 8px rgba(21,128,61,0.25)'
             }}>
               <Scale size={15} /> Manage Clearances
             </Link>

@@ -140,8 +140,8 @@ const AuditLogs = () => {
     switch (role) {
       case 'system_admin':
         return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.55rem', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: '#EDE9FE', color: '#6D28D9' }}>
-            <Shield size={11} /> System Admin
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.55rem', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}>
+            <Shield size={11} color="#0F172A" /> System Admin
           </span>
         );
       case 'lgu_admin':
@@ -218,10 +218,10 @@ const AuditLogs = () => {
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#D97706', marginTop: '0.2rem' }}>{todayCount}</div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Activity in last 24 hrs</span>
         </div>
-        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #8B5CF6', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#8B5CF6', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Active Actors</span>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#6D28D9', marginTop: '0.2rem' }}>{uniqueUsers}</div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Distinct users logged</span>
+        <div className="card" style={{ padding: '1.1rem 1.25rem', borderLeft: '4px solid #166534', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeftWidth: '4px', borderLeftColor: '#166534', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
+          <span style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Active Actors</span>
+          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#166534', marginTop: '0.2rem' }}>{uniqueUsers}</div>
+          <span style={{ fontSize: '0.75rem', color: '#15803D' }}>Distinct users logged</span>
         </div>
       </div>
 
@@ -315,7 +315,7 @@ const AuditLogs = () => {
           {/* 2. User Role Filter: BPLO, Admin, Business Owner */}
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', minWidth: '95px', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Users size={13} color="#1D4ED8" /> User Role:
+              <Users size={13} color="#15803D" /> User Role:
             </span>
             <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
               {[
@@ -332,9 +332,9 @@ const AuditLogs = () => {
                     padding: '0.35rem 0.75rem',
                     borderRadius: '6px',
                     fontWeight: roleFilter === r.id ? 700 : 500,
-                    backgroundColor: roleFilter === r.id ? '#1D4ED8' : '#F1F5F9',
+                    backgroundColor: roleFilter === r.id ? '#15803D' : '#F1F5F9',
                     color: roleFilter === r.id ? '#FFFFFF' : '#475569',
-                    border: roleFilter === r.id ? '1px solid #1D4ED8' : '1px solid #E2E8F0',
+                    border: roleFilter === r.id ? '1px solid #15803D' : '1px solid #E2E8F0',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
@@ -348,7 +348,7 @@ const AuditLogs = () => {
           {/* 3. Action Category Filter */}
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', minWidth: '95px', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Filter size={13} color="#D97706" /> Category:
+              <Filter size={13} color="#15803D" /> Category:
             </span>
             <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
               {[
@@ -365,9 +365,9 @@ const AuditLogs = () => {
                     padding: '0.35rem 0.75rem',
                     borderRadius: '6px',
                     fontWeight: actionFilter === tab.id ? 700 : 500,
-                    backgroundColor: actionFilter === tab.id ? '#334155' : '#F1F5F9',
+                    backgroundColor: actionFilter === tab.id ? '#15803D' : '#F1F5F9',
                     color: actionFilter === tab.id ? '#FFFFFF' : '#475569',
-                    border: actionFilter === tab.id ? '1px solid #334155' : '1px solid #E2E8F0',
+                    border: actionFilter === tab.id ? '1px solid #15803D' : '1px solid #E2E8F0',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}

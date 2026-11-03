@@ -400,8 +400,8 @@ h4 { font-size: 1rem; }
 }
 
 .role-bar-badge.business-owner { background-color: var(--primary-green); color: #fff; }
-.role-bar-badge.lgu-admin      { background-color: #2569A8; color: #fff; }
-.role-bar-badge.system-admin   { background-color: var(--accent-gold); color: var(--government-navy); }
+.role-bar-badge.lgu-admin      { background-color: #15803D; color: #fff; }
+.role-bar-badge.system-admin   { background-color: #14532D; color: #fff; }
 
 /* App Layout */
 .app-layout {

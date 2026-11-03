@@ -973,13 +973,23 @@ const getWalkinRoster = async (req, res) => {
             [targetDate]
         );
 
+        // Check if this date is declared closed in bplo_schedule
+        const [schedRows] = await db.query(
+            `SELECT day_type, label FROM bplo_schedule WHERE schedule_date = ? AND is_active = 1 LIMIT 1`,
+            [targetDate]
+        );
+        const closureEntry = schedRows.length > 0 ? schedRows[0] : null;
+
         const summary = {
             targetDate,
             totalScheduled: rows.length,
             morningBatch: rows.filter(r => (r.walkin_time_slot || '').toLowerCase().includes('morning') || (r.walkin_time_slot || '').includes('8:00')).length,
             afternoonBatch: rows.filter(r => (r.walkin_time_slot || '').toLowerCase().includes('afternoon') || (r.walkin_time_slot || '').includes('1:00')).length,
             attendedCount: rows.filter(r => r.walkin_status === 'ATTENDED').length,
-            pendingCount: rows.filter(r => r.walkin_status === 'SCHEDULED' || r.walkin_status === 'PENDING').length
+            pendingCount: rows.filter(r => r.walkin_status === 'SCHEDULED' || r.walkin_status === 'PENDING').length,
+            isClosed: !!closureEntry,
+            dayType: closureEntry?.day_type || null,
+            closureLabel: closureEntry?.label || null
         };
 
         res.json({ summary, roster: rows });
@@ -1179,6 +1189,19 @@ const scheduleWalkinByBusiness = async (req, res) => {
             return res.status(404).json({ message: 'Business not found or unauthorized.' });
         }
         const business = bizRows[0];
+
+        // ── Check if date is declared closed in bplo_schedule ──
+        const [schedRows] = await db.query(
+            `SELECT day_type, label FROM bplo_schedule WHERE schedule_date = ? AND is_active = 1 LIMIT 1`,
+            [walkin_date]
+        );
+        if (schedRows.length > 0) {
+            const s = schedRows[0];
+            const typeLabel = { bplo_closed: 'BPLO Office Closed', holiday: 'Official Public Holiday', special_nonworking: 'Special Non-Working Day' }[s.day_type] || s.day_type;
+            return res.status(400).json({
+                message: `Cannot schedule appointment on ${walkin_date}: ${typeLabel}${s.label ? ` — "${s.label}"` : ''}. Please choose a different date.`
+            });
+        }
 
         // Find existing application or create a new draft
         let [appRows] = await db.query(
