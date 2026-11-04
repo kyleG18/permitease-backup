@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, RefreshCw, ListChecks, Coins, ShieldCheck, Landmark, User, BarChart3, CheckCircle, ArrowRight, Menu, X } from 'lucide-react';
+import { FileText, RefreshCw, ListChecks, Coins, ShieldCheck, Landmark, User, BarChart3, CheckCircle, ArrowRight } from 'lucide-react';
 import Footer from '../components/Footer';
 import LanguageSwitchButton from '../components/LanguageSwitchButton';
 import AuthModal from '../components/AuthModal';
@@ -10,7 +10,6 @@ const Landing = ({ initialAuthModal = null }) => {
   const { t } = useTranslation();
   const [authModalOpen, setAuthModalOpen] = useState(Boolean(initialAuthModal));
   const [authMode, setAuthMode] = useState(initialAuthModal || 'login');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
 
@@ -78,6 +77,54 @@ const Landing = ({ initialAuthModal = null }) => {
             rgba(255,255,255,0) 100%);
         }
 
+        /* Header base */
+        .landing-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.1rem 5%;
+          background-color: #ffffff;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          border-bottom: 1px solid #F1F5F9;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+          box-sizing: border-box;
+          width: 100%;
+          max-width: 100vw;
+        }
+        .landing-logo-container {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+          min-width: 0;
+          flex-shrink: 1;
+        }
+        .landing-logo-img {
+          width: 48px;
+          height: 48px;
+          object-fit: contain;
+          flex-shrink: 0;
+        }
+        .landing-logo-text {
+          min-width: 0;
+        }
+        .landing-logo-sub {
+          font-size: 0.62rem;
+          font-weight: 700;
+          color: #64748B;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          line-height: 1.3;
+        }
+        .landing-logo-title {
+          font-size: 1.18rem;
+          margin: 0;
+          color: #1E3A8A;
+          font-weight: 800;
+          line-height: 1.2;
+        }
+
         /* Hero heading sizes */
         .hero-h1 { font-size: 4rem; }
         .hero-h2 { font-size: 2.5rem; }
@@ -86,7 +133,26 @@ const Landing = ({ initialAuthModal = null }) => {
         /* Nav desktop */
         .nav-desktop { display: flex; gap: 2.5rem; align-items: center; }
         .nav-mobile { display: none; }
-        .mobile-menu { display: none; }
+        .nav-mobile-lang {
+          padding: 0.4rem 0.65rem !important;
+          font-size: 0.82rem !important;
+          flex-shrink: 0 !important;
+        }
+        .nav-mobile-login {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          background-color: #16A34A;
+          color: white;
+          padding: 0.45rem 0.8rem;
+          border-radius: 6px;
+          border: none;
+          font-weight: 600;
+          font-size: 0.82rem;
+          cursor: pointer;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
 
         /* Section headings */
         .section-h2 { font-size: 2.5rem; }
@@ -103,44 +169,36 @@ const Landing = ({ initialAuthModal = null }) => {
         @media (max-width: 768px) {
           /* Header */
           .landing-header {
-            padding: 0.75rem 1rem !important;
+            padding: 0.75rem 0.75rem !important;
           }
           .landing-logo-container {
             gap: 0.5rem !important;
           }
           .landing-logo-img {
-            width: 38px !important;
-            height: 38px !important;
+            width: 42px !important;
+            height: 42px !important;
           }
           .landing-logo-sub {
             font-size: 0.55rem !important;
+            letter-spacing: 0.02em !important;
           }
           .landing-logo-title {
-            font-size: 0.95rem !important;
-            white-space: nowrap !important;
+            font-size: 1.05rem !important;
           }
-
-          /* Nav */
           .nav-desktop { display: none; }
           .nav-mobile {
-            display: flex;
+            display: flex !important;
             align-items: center;
             gap: 0.45rem !important;
+            flex-shrink: 0 !important;
+          }
+          .nav-mobile-lang {
+            padding: 0.36rem 0.55rem !important;
+            font-size: 0.78rem !important;
           }
           .nav-mobile-login {
-            padding: 0.4rem 0.75rem !important;
-            font-size: 0.8rem !important;
-          }
-          .mobile-menu {
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, #0F4A28 0%, #0A361D 100%);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-            gap: 2rem;
+            padding: 0.4rem 0.68rem !important;
+            font-size: 0.78rem !important;
           }
 
           /* Hero */
@@ -195,49 +253,80 @@ const Landing = ({ initialAuthModal = null }) => {
 
         @media (max-width: 480px) {
           .landing-header {
-            padding: 0.65rem 0.75rem !important;
+            padding: 0.65rem 0.5rem !important;
           }
           .landing-logo-container {
             gap: 0.4rem !important;
+          }
+          .landing-logo-img {
+            width: 38px !important;
+            height: 38px !important;
+          }
+          .landing-logo-sub {
+            font-size: 0.48rem !important;
+            line-height: 1.2 !important;
+          }
+          .landing-logo-title {
+            font-size: 0.92rem !important;
+            line-height: 1.15 !important;
+          }
+          .nav-mobile {
+            gap: 0.35rem !important;
+          }
+          .nav-mobile-lang {
+            padding: 0.32rem 0.45rem !important;
+            font-size: 0.74rem !important;
+          }
+          .nav-mobile-login {
+            padding: 0.36rem 0.55rem !important;
+            font-size: 0.75rem !important;
+            gap: 0.25rem !important;
+          }
+          .hero-h1 { font-size: 2.1rem; }
+          .hero-h2 { font-size: 1.3rem; }
+        }
+
+        @media (max-width: 360px) {
+          .landing-header {
+            padding: 0.5rem 0.35rem !important;
+          }
+          .landing-logo-container {
+            gap: 0.3rem !important;
           }
           .landing-logo-img {
             width: 34px !important;
             height: 34px !important;
           }
           .landing-logo-sub {
-            display: none !important;
+            font-size: 0.44rem !important;
           }
           .landing-logo-title {
-            font-size: 0.92rem !important;
-            white-space: nowrap !important;
+            font-size: 0.85rem !important;
           }
           .nav-mobile {
-            gap: 0.35rem !important;
+            gap: 0.25rem !important;
+          }
+          .nav-mobile-lang {
+            padding: 0.28rem 0.38rem !important;
+            font-size: 0.7rem !important;
           }
           .nav-mobile-login {
-            display: none !important;
+            padding: 0.32rem 0.45rem !important;
+            font-size: 0.7rem !important;
           }
-          .hero-h1 { font-size: 2.1rem; }
-          .hero-h2 { font-size: 1.3rem; }
         }
       `}</style>
 
       {/* ── HEADER ── */}
-      <header className="landing-header" style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '1.25rem 5%', backgroundColor: '#ffffff',
-        position: 'sticky', top: 0, zIndex: 100,
-        borderBottom: '1px solid #F1F5F9',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
-      }}>
+      <header className="landing-header">
         {/* Logo */}
-        <div className="landing-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-          <img className="landing-logo-img" src="/images/roxas-seal.png" alt="Roxas Seal" style={{ width: '50px', height: '50px', objectFit: 'contain', flexShrink: 0 }} />
-          <div className="landing-logo-text" style={{ minWidth: 0 }}>
-            <div className="landing-logo-sub" style={{ fontSize: '0.6rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.3 }}>
+        <div className="landing-logo-container">
+          <img className="landing-logo-img" src="/images/roxas-seal.png" alt="Roxas Seal" />
+          <div className="landing-logo-text">
+            <div className="landing-logo-sub">
               Province of Oriental Mindoro
             </div>
-            <h1 className="landing-logo-title" style={{ fontSize: '1.15rem', margin: 0, color: '#1E3A8A', fontWeight: '800', lineHeight: 1.2 }}>Municipality of Roxas</h1>
+            <h1 className="landing-logo-title">Municipality of Roxas</h1>
           </div>
         </div>
 
@@ -252,32 +341,14 @@ const Landing = ({ initialAuthModal = null }) => {
           </button>
         </nav>
 
-        {/* Mobile Nav Toggle */}
+        {/* Mobile Nav */}
         <div className="nav-mobile">
-          <LanguageSwitchButton variant="landing" style={{ padding: '0.38rem 0.58rem', fontSize: '0.8rem' }} />
-          <button className="nav-mobile-login" onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#16A34A', color: 'white', padding: '0.45rem 0.75rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            <User size={13} /> Login
-          </button>
-          <button onClick={() => setMobileMenuOpen(true)} aria-label="Open Menu" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#1E3A8A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Menu size={25} />
+          <LanguageSwitchButton variant="landing" className="nav-mobile-lang" />
+          <button className="nav-mobile-login" onClick={() => openAuth('login')}>
+            <User size={14} /> Login
           </button>
         </div>
       </header>
-
-      {/* ── MOBILE FULL-SCREEN MENU ── */}
-      {mobileMenuOpen && (
-        <div className="mobile-menu">
-          <button onClick={() => setMobileMenuOpen(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'white' }}>
-            <X size={30} />
-          </button>
-          <a href="#" onClick={() => setMobileMenuOpen(false)} style={{ color: 'white', fontSize: '1.5rem', fontWeight: '700', textDecoration: 'none' }}>Home</a>
-          <a href="#services" onClick={() => setMobileMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.5rem', fontWeight: '600', textDecoration: 'none' }}>Services</a>
-          <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.5rem', fontWeight: '600', textDecoration: 'none' }}>About</a>
-          <button onClick={() => { setMobileMenuOpen(false); openAuth('login'); }} style={{ backgroundColor: '#16A34A', color: 'white', padding: '0.85rem 2.5rem', borderRadius: '8px', border: 'none', fontWeight: '700', fontSize: '1.1rem', cursor: 'pointer', marginTop: '1rem' }}>
-            Login to Portal
-          </button>
-        </div>
-      )}
 
       {/* ── HERO SECTION ── */}
       <section className="hero-section" style={{

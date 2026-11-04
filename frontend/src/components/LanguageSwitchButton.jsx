@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from '../context/LanguageContext';
 import { Globe } from 'lucide-react';
 
-export const LanguageSwitchButton = ({ variant = 'default', style = {} }) => {
+export const LanguageSwitchButton = ({ variant = 'default', style = {}, className = '' }) => {
   const { lang, toggleLanguage } = useTranslation();
 
   const isEnglish = lang === 'en';
@@ -11,6 +11,7 @@ export const LanguageSwitchButton = ({ variant = 'default', style = {} }) => {
     return (
       <button
         onClick={toggleLanguage}
+        className={`landing-lang-btn ${className}`}
         title={isEnglish ? 'Palitan sa Tagalog' : 'Switch to English'}
         style={{
           display: 'inline-flex',
