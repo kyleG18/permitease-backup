@@ -32,7 +32,7 @@ export const ONBOARDING_STEPS = [
     stepNumber: 3,
     title: 'AI Permit Assessment',
     subtitle: 'Find out which permits you need',
-    description: 'Run the AI assessment to instantly identify which permits, clearances, and national registrations your business requires. No guessing needed.',
+    description: 'Run the AI assessment to instantly identify which permits, clearances, and national registrations your business requires — then download your personalised checklist.',
     action: 'Run your AI Assessment',
     nextLabel: 'Next: Tax Estimation →',
   },
@@ -42,7 +42,7 @@ export const ONBOARDING_STEPS = [
     stepNumber: 4,
     title: 'Tax Estimation',
     subtitle: 'Estimate your national taxes',
-    description: 'Get a planning estimate for your BIR taxes (8% flat, VAT, or Corporate) before you visit the Municipal Treasurer\'s Office. Includes bilingual disclaimers.',
+    description: 'Get a planning estimate for your BIR taxes (8% flat, VAT, or Corporate) before you visit the Municipal Treasurer\'s Office.',
     action: 'Estimate your taxes',
     nextLabel: 'Next: Fee Estimation →',
   },
@@ -54,23 +54,13 @@ export const ONBOARDING_STEPS = [
     subtitle: 'Budget your LGU regulatory fees',
     description: "See indicative fees for your Mayor's Permit, Sanitary Permit, Zoning, Fire Safety, and more. Plan your budget before permit day.",
     action: 'Estimate your fees',
-    nextLabel: 'Next: Permit Readiness →',
+    nextLabel: 'Next: Prepare Application →',
   },
   {
-    id: 'permit-readiness',
-    path: '/readiness',
-    stepNumber: 6,
-    title: 'Permit Readiness',
-    subtitle: 'Build your document checklist',
-    description: 'Your personalised checklist of every document you need to bring to the BPLO. Mark items as ready as you prepare them.',
-    action: 'Check your Permit Readiness',
-    nextLabel: 'Next: My Applications →',
-  },
-  {
-    id: 'my-applications',
+    id: 'prepare-application',
     path: '/applications',
-    stepNumber: 7,
-    title: 'My Applications',
+    stepNumber: 6,
+    title: 'Prepare Application',
     subtitle: 'Track your permit preparation',
     description: 'Submit and track your permit preparation here. Download the official Roxas Unified Business Permit Application Form pre-filled with your business data.',
     action: 'Go to My Applications',
@@ -79,16 +69,26 @@ export const ONBOARDING_STEPS = [
   {
     id: 'schedule-walkin',
     path: '/schedule-walkin',
-    stepNumber: 8,
+    stepNumber: 7,
     title: 'Schedule Walk-in',
     subtitle: 'Book your slot at Window 1',
-    description: 'Submit your preferred visit date to Roxas BPLO. Avoid the rush and receive a preparation checklist for your appointment.',
+    description: 'Pick your preferred visit date at the Roxas BPLO, choose a morning or afternoon batch, and receive your Queue Ticket. No more long queues.',
     action: 'Book Walk-in Slot',
+    nextLabel: 'Next: AI Help →',
+  },
+  {
+    id: 'ai-help',
+    path: '/assistant',
+    stepNumber: 8,
+    title: 'AI Assistant',
+    subtitle: 'Ask anything about your permit',
+    description: 'Have questions about requirements, fees, or the BPLO process? The AI Assistant gives you instant, bilingual answers anytime.',
+    action: 'Try the AI Assistant',
     nextLabel: 'Finish Onboarding ✓',
   },
 ];
 
-const STORAGE_KEY_PREFIX = 'permitease_onboarding_v2_';
+const STORAGE_KEY_PREFIX = 'permitease_onboarding_v3_';
 
 function getStorageKey(userId) {
   return `${STORAGE_KEY_PREFIX}${userId}`;

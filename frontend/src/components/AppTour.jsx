@@ -140,6 +140,13 @@ export default function AppTour() {
     const vh = window.innerHeight;
     setViewSize({ w: vw, h: vh });
 
+    // On mobile (< 768px) the sidebar is hidden — skip spotlight, show centered tooltip
+    if (vw < 768) {
+      setSpot(null);
+      setTooltipPos(getTooltipStyle(null, vw, vh));
+      return;
+    }
+
     if (!el && retry < 5) {
       setTimeout(() => measure(retry + 1), 200);
       return;
@@ -372,6 +379,21 @@ export default function AppTour() {
           <p style={{ margin: '0 0 1.1rem', fontSize: '13.5px', color: '#334155', lineHeight: 1.6, fontWeight: 400 }}>
             {currentStep.description}
           </p>
+
+          {/* Mobile hint — no sidebar on small screens */}
+          {viewSize.w < 768 && (
+            <div style={{
+              backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0',
+              borderRadius: '8px', padding: '0.6rem 0.75rem',
+              marginBottom: '1rem', fontSize: '12px', color: '#166534',
+              display: 'flex', alignItems: 'flex-start', gap: '0.4rem', lineHeight: 1.5
+            }}>
+              <span style={{ flexShrink: 0, marginTop: '1px' }}>📱</span>
+              <span>
+                On mobile, tap the <strong>☰ menu</strong> (top-right) to open the navigation and find this feature.
+              </span>
+            </div>
+          )}
 
           {/* Step dots */}
           <div style={{ display: 'flex', gap: '5px', marginBottom: '1.1rem' }} aria-hidden="true">
