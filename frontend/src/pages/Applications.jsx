@@ -205,18 +205,18 @@ export default function Applications() {
     <div className="page-container applications-page" style={{ maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif', paddingBottom: '3rem' }}>
       
       {/* ── MINIMALIST HEADER ────────────────────────────────────────────── */}
-      <header className="no-print" style={{ marginBottom: '1.75rem' }}>
+      <header className="no-print" style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.35rem', color: '#0F172A', letterSpacing: '-0.02em' }}>
           {isTl ? 'Maghanda ng Aplikasyon' : 'Prepare Application'}
         </h1>
-        <p style={{ color: '#64748B', fontSize: '14.5px', margin: '0 0 1.25rem' }}>
+        <p style={{ color: '#64748B', fontSize: '14.5px', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
           {isTl 
             ? 'Pumili ng paraan ng pag-file ng iyong business permit sa Roxas.' 
             : 'Choose how to file your business permit in Roxas.'}
         </p>
 
         {/* Minimalist Profile Selector + Readiness Pill */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="applications-header-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           {loadingBiz ? (
             <span style={{ fontSize: '13px', color: '#64748B' }}>{isTl ? 'Ikinakarga ang mga profile...' : 'Loading profiles...'}</span>
           ) : businesses.length === 0 ? (
@@ -227,17 +227,18 @@ export default function Applications() {
               </Link>
             </span>
           ) : (
-            <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div className="applications-profile-select-wrap" style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', width: 'auto' }}>
               <select
                 value={selectedBizId}
                 onChange={(e) => {
                   setSelectedBizId(e.target.value);
                   setViewingForm(false);
                 }}
+                className="applications-profile-select"
                 style={{
                   appearance: 'none',
                   WebkitAppearance: 'none',
-                  padding: '0.45rem 2.25rem 0.45rem 0.85rem',
+                  padding: '0.55rem 2.25rem 0.55rem 0.85rem',
                   borderRadius: '8px',
                   border: '1px solid #D1D5DB',
                   fontWeight: 600,
@@ -246,7 +247,9 @@ export default function Applications() {
                   fontSize: '13.5px',
                   cursor: 'pointer',
                   outline: 'none',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                  boxSizing: 'border-box',
+                  maxWidth: '100%'
                 }}
               >
                 {businesses.map(b => (
@@ -286,28 +289,30 @@ export default function Applications() {
         /* ═══════════════════════════════════════════════════════════════════ */
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-          <div className="applications-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+          <div className="applications-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
 
             {/* ── PATHWAY 1: WALK-IN ────────────────────────────────────────── */}
-            <div style={{
+            <div className="card application-pathway-card" style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '12px',
               border: '1px solid #E2E8F0',
               padding: '1.75rem',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              boxSizing: 'border-box',
+              minWidth: 0
             }}>
               
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', marginBottom: '0.4rem' }}>
                 {isTl ? 'Paraan 1: Pagbisita sa Munisipyo (Walk-In)' : 'Pathway 1: Walk-In'}
               </div>
 
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.35rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.35rem', lineHeight: 1.25 }}>
                 {isTl ? 'I-print ang Form BPLO-01' : 'Print Form BPLO-01'}
               </h2>
 
-              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 1.25rem', lineHeight: 1.5, minHeight: '40px' }}>
+              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 1.25rem', lineHeight: 1.5, minHeight: '38px' }}>
                 {isTl
                   ? 'I-format at i-print ang iyong Unified Business Permit Application.'
                   : 'Format and print your Unified Business Permit Application.'}
@@ -316,16 +321,17 @@ export default function Applications() {
               {/* Main Action Button - Consistent Green Theme */}
               <button
                 onClick={() => setViewingForm(true)}
+                className="pathway-primary-btn"
                 style={{
                   backgroundColor: 'var(--primary-green, #15803D)',
                   color: '#FFFFFF',
                   border: 'none',
                   borderRadius: '8px',
-                  padding: '0.8rem 1.25rem',
+                  padding: '0.8rem 1.15rem',
                   minHeight: '44px',
                   boxSizing: 'border-box',
                   fontWeight: 700,
-                  fontSize: '14px',
+                  fontSize: '13.5px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -333,16 +339,19 @@ export default function Applications() {
                   cursor: 'pointer',
                   width: '100%',
                   marginBottom: '0.65rem',
-                  transition: 'background-color 0.15s ease'
+                  transition: 'background-color 0.15s ease',
+                  textAlign: 'center',
+                  lineHeight: 1.3
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#166534'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#15803D'}
               >
-                <Printer size={16} /> {isTl ? 'Tingnan at I-print ang Form BPLO-01' : 'View & Print Pre-Filled Form BPLO-01'}
+                <Printer size={16} style={{ flexShrink: 0 }} /> 
+                <span>{isTl ? 'Tingnan at I-print ang Form BPLO-01' : 'View & Print Pre-Filled Form BPLO-01'}</span>
               </button>
 
               {/* Secondary Buttons Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1.25rem' }}>
+              <div className="pathway-btn-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1.25rem' }}>
                 <button
                   onClick={() => setIsEditModalOpen(true)}
                   style={{
@@ -350,20 +359,24 @@ export default function Applications() {
                     color: '#0F172A',
                     border: '1px solid #CBD5E1',
                     borderRadius: '8px',
-                    padding: '0.65rem 0.85rem',
+                    padding: '0.65rem 0.75rem',
                     fontWeight: 600,
-                    fontSize: '13px',
+                    fontSize: '12.5px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.4rem',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    boxSizing: 'border-box',
+                    minWidth: 0,
+                    whiteSpace: 'nowrap'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#94A3B8'}
                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#CBD5E1'}
                 >
-                  <Edit3 size={14} color="#64748B" /> {isTl ? 'I-edit ang Impormasyon' : 'Edit Fields'}
+                  <Edit3 size={14} color="#64748B" style={{ flexShrink: 0 }} /> 
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{isTl ? 'I-edit ang Impormasyon' : 'Edit Fields'}</span>
                 </button>
                 <a
                   href="/forms/Roxas_Business_Permit_Application_Form.pdf"
@@ -375,20 +388,24 @@ export default function Applications() {
                     color: '#0F172A',
                     border: '1px solid #CBD5E1',
                     borderRadius: '8px',
-                    padding: '0.65rem 0.85rem',
+                    padding: '0.65rem 0.75rem',
                     fontWeight: 600,
-                    fontSize: '13px',
+                    fontSize: '12.5px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.4rem',
                     textDecoration: 'none',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    boxSizing: 'border-box',
+                    minWidth: 0,
+                    whiteSpace: 'nowrap'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#94A3B8'}
                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#CBD5E1'}
                 >
-                  <Download size={14} color="#64748B" /> {isTl ? 'Blangkong PDF' : 'Blank PDF'}
+                  <Download size={14} color="#64748B" style={{ flexShrink: 0 }} /> 
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{isTl ? 'Blangkong PDF' : 'Blank PDF'}</span>
                 </a>
               </div>
 
@@ -398,13 +415,14 @@ export default function Applications() {
                 border: `1px solid ${isAllReady ? '#BBF7D0' : '#FDE68A'}`,
                 borderRadius: '8px',
                 padding: '0.85rem 1rem',
-                marginBottom: '1.25rem'
+                marginBottom: '1.25rem',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
                   {isAllReady ? (
-                    <CheckCircle2 size={16} color="#15803D" />
+                    <CheckCircle2 size={16} color="#15803D" style={{ flexShrink: 0 }} />
                   ) : (
-                    <AlertTriangle size={16} color="#B45309" />
+                    <AlertTriangle size={16} color="#B45309" style={{ flexShrink: 0 }} />
                   )}
                   {isAllReady ? (
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#15803D' }}>
@@ -466,14 +484,16 @@ export default function Applications() {
             </div>
 
             {/* ── PATHWAY 2: ONLINE (eBPLS PORTAL) ─────────────────────────── */}
-            <div style={{
+            <div className="card application-pathway-card" style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '12px',
               border: '1px solid #E2E8F0',
               padding: '1.75rem',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              boxSizing: 'border-box',
+              minWidth: 0
             }}>
               
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', marginBottom: '0.4rem' }}>
@@ -531,7 +551,9 @@ export default function Applications() {
                   textAlign: 'center',
                   display: 'block',
                   margin: '0.5rem 0 1.25rem',
-                  textDecoration: 'none'
+                  textDecoration: 'none',
+                  wordBreak: 'break-all',
+                  overflowWrap: 'anywhere'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#15803D'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#64748B'}
@@ -540,18 +562,19 @@ export default function Applications() {
               </a>
 
               {/* Prepare the following infos Box */}
-              <div style={{
+              <div className="pathway-infos-box" style={{
                 marginTop: 'auto',
                 backgroundColor: '#F8FAFC',
                 border: '1px solid #E2E8F0',
                 borderRadius: '10px',
-                padding: '1rem'
+                padding: '1rem',
+                boxSizing: 'border-box'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748B', letterSpacing: '0.05em' }}>
-                    {isTl ? 'IHANDA ANG MGA SUMUSUNOD NA IMPORMASYON' : 'PREPARE THE FOLLOWING INFOS'}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748B', letterSpacing: '0.04em' }}>
+                    {isTl ? 'IHANDA ANG MGA IMPORMASYON' : 'PREPARE THE FOLLOWING INFOS'}
                   </span>
-                  <span style={{ fontSize: '11px', color: '#15803D', fontWeight: 600 }}>
+                  <span style={{ fontSize: '11px', color: '#15803D', fontWeight: 600, flexShrink: 0 }}>
                     {isTl ? '1-click kopyahin' : '1-click copy'}
                   </span>
                 </div>
@@ -573,18 +596,20 @@ export default function Applications() {
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           gap: '0.5rem',
-                          fontSize: '13px'
+                          fontSize: '13px',
+                          minWidth: 0
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-                          <span style={{ color: '#64748B', width: '58px', flexShrink: 0, fontSize: '12.5px' }}>{item.label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden', minWidth: 0, flex: 1 }}>
+                          <span style={{ color: '#64748B', width: '52px', flexShrink: 0, fontSize: '12px', fontWeight: 600 }}>{item.label}</span>
                           <span style={{
                             fontWeight: hasVal ? 700 : 500,
                             color: hasVal ? '#0F172A' : '#94A3B8',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
+                            whiteSpace: 'nowrap',
+                            minWidth: 0
+                          }} title={hasVal ? item.val : ''}>
                             {hasVal ? item.val : (isTl ? 'Hindi pa nakalagay' : 'Not set')}
                           </span>
                         </div>
@@ -655,9 +680,9 @@ export default function Applications() {
           </div>
 
           {/* ── DISCLAIMER / INFORMATIVE BANNER ────────────────────────────── */}
-          <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 'var(--radius-md)', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+          <div className="card" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 'var(--radius-md)', padding: '1.15rem 1.25rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', boxSizing: 'border-box' }}>
             <Info size={20} color="#64748B" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '0.8125rem', color: '#475569', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '0.8125rem', color: '#475569', lineHeight: 1.55 }}>
               <strong>{isTl ? 'Paunawa ng Munisipyo:' : 'Municipal Advisory:'}</strong>{' '}
               {isTl
                 ? 'Ang PermitEase ang nag-fo-format at nagpi-fill-out ng opisyal na Roxas Unified Business Permit Application Form (Form BPLO-01) alinsunod sa mga ordinansa ng munisipyo. Ang opisyal na pag-file, beripikasyon ng bayarin, at pag-isyu ng permit ay isinasagawa ng Roxas BPLO sa pamamagitan ng personal na pagbisita sa Munisipyo o sa opisyal na DICT eBPLS portal.'

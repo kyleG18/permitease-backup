@@ -229,7 +229,7 @@ export const translations = {
     },
     // Landing Page (Body Sections)
     landing: {
-      portalBadge: 'Official Business Permit Preparation & Support Portal',
+      portalBadge: 'Business Permit Preparation & Support Portal',
       heroTitle1: 'PermitEase',
       heroTitle2: 'Your Business Permit Preparation, Made Simple.',
       heroDesc: 'Prepare your requirements, track your progress, monitor your readiness, and stay informed — all in one place, before you visit the BPLO.',
@@ -609,7 +609,7 @@ export const translations = {
     },
     // Landing Page (Body Sections in Tagalog)
     landing: {
-      portalBadge: 'Opisyal na Portal sa Paghahanda at Gabay sa Business Permit',
+      portalBadge: 'Portal sa Paghahanda at Gabay sa Business Permit',
       heroTitle1: 'PermitEase',
       heroTitle2: 'Paghahanda ng Business Permit, Ginawang Mas Simple.',
       heroDesc: 'Ihanda ang iyong mga rekisito, subaybayan ang iyong progreso, alamin ang iyong kahandaan, at manatiling may sapat na kaalaman — lahat sa isang lugar, bago pumunta sa BPLO.',

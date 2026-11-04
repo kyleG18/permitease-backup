@@ -101,9 +101,36 @@ const Landing = ({ initialAuthModal = null }) => {
         }
 
         @media (max-width: 768px) {
+          /* Header */
+          .landing-header {
+            padding: 0.75rem 1rem !important;
+          }
+          .landing-logo-container {
+            gap: 0.5rem !important;
+          }
+          .landing-logo-img {
+            width: 38px !important;
+            height: 38px !important;
+          }
+          .landing-logo-sub {
+            font-size: 0.55rem !important;
+          }
+          .landing-logo-title {
+            font-size: 0.95rem !important;
+            white-space: nowrap !important;
+          }
+
           /* Nav */
           .nav-desktop { display: none; }
-          .nav-mobile { display: flex; align-items: center; gap: 1rem; }
+          .nav-mobile {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem !important;
+          }
+          .nav-mobile-login {
+            padding: 0.4rem 0.75rem !important;
+            font-size: 0.8rem !important;
+          }
           .mobile-menu {
             display: flex;
             flex-direction: column;
@@ -167,13 +194,36 @@ const Landing = ({ initialAuthModal = null }) => {
         }
 
         @media (max-width: 480px) {
+          .landing-header {
+            padding: 0.65rem 0.75rem !important;
+          }
+          .landing-logo-container {
+            gap: 0.4rem !important;
+          }
+          .landing-logo-img {
+            width: 34px !important;
+            height: 34px !important;
+          }
+          .landing-logo-sub {
+            display: none !important;
+          }
+          .landing-logo-title {
+            font-size: 0.92rem !important;
+            white-space: nowrap !important;
+          }
+          .nav-mobile {
+            gap: 0.35rem !important;
+          }
+          .nav-mobile-login {
+            display: none !important;
+          }
           .hero-h1 { font-size: 2.1rem; }
           .hero-h2 { font-size: 1.3rem; }
         }
       `}</style>
 
       {/* ── HEADER ── */}
-      <header style={{
+      <header className="landing-header" style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '1.25rem 5%', backgroundColor: '#ffffff',
         position: 'sticky', top: 0, zIndex: 100,
@@ -181,13 +231,13 @@ const Landing = ({ initialAuthModal = null }) => {
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
       }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/images/roxas-seal.png" alt="Roxas Seal" style={{ width: '50px', height: '50px', objectFit: 'contain', flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: '0.6rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.3 }}>
+        <div className="landing-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+          <img className="landing-logo-img" src="/images/roxas-seal.png" alt="Roxas Seal" style={{ width: '50px', height: '50px', objectFit: 'contain', flexShrink: 0 }} />
+          <div className="landing-logo-text" style={{ minWidth: 0 }}>
+            <div className="landing-logo-sub" style={{ fontSize: '0.6rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.3 }}>
               Province of Oriental Mindoro
             </div>
-            <h1 style={{ fontSize: '1.15rem', margin: 0, color: '#1E3A8A', fontWeight: '800', lineHeight: 1.2 }}>Municipality of Roxas</h1>
+            <h1 className="landing-logo-title" style={{ fontSize: '1.15rem', margin: 0, color: '#1E3A8A', fontWeight: '800', lineHeight: 1.2 }}>Municipality of Roxas</h1>
           </div>
         </div>
 
@@ -204,12 +254,12 @@ const Landing = ({ initialAuthModal = null }) => {
 
         {/* Mobile Nav Toggle */}
         <div className="nav-mobile">
-          <LanguageSwitchButton variant="landing" style={{ padding: '0.45rem 0.65rem' }} />
-          <button onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#16A34A', color: 'white', padding: '0.55rem 1rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}>
-            <User size={14} /> Login
+          <LanguageSwitchButton variant="landing" style={{ padding: '0.38rem 0.58rem', fontSize: '0.8rem' }} />
+          <button className="nav-mobile-login" onClick={() => openAuth('login')} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#16A34A', color: 'white', padding: '0.45rem 0.75rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <User size={13} /> Login
           </button>
-          <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#1E3A8A' }}>
-            <Menu size={26} />
+          <button onClick={() => setMobileMenuOpen(true)} aria-label="Open Menu" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#1E3A8A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Menu size={25} />
           </button>
         </div>
       </header>

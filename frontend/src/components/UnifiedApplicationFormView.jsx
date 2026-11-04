@@ -68,7 +68,7 @@ export default function UnifiedApplicationFormView({
 
       {/* ── TOP ACTION BAR (no-print) ─────────────────────────────────── */}
       {printable && (
-        <div className="no-print" style={{
+        <div className="no-print unified-form-top-bar" style={{
           display: 'flex', flexWrap: 'wrap', alignItems: 'center',
           justifyContent: 'space-between', gap: '1rem',
           backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1',
@@ -86,7 +86,7 @@ export default function UnifiedApplicationFormView({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="unified-form-actions" style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {onBack && (
               <button type="button" onClick={onBack} style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
@@ -147,6 +147,24 @@ export default function UnifiedApplicationFormView({
           </div>
         </div>
       )}
+
+      {/* ── MOBILE HORIZONTAL SCROLL HINT (no-print) ──────────────────── */}
+      <div className="mobile-form-scroll-hint no-print" style={{
+        display: 'none',
+        alignItems: 'center',
+        gap: '0.5rem',
+        backgroundColor: '#EFF6FF',
+        border: '1px solid #BFDBFE',
+        borderRadius: '6px',
+        padding: '0.55rem 0.75rem',
+        marginBottom: '0.85rem',
+        fontSize: '12px',
+        color: '#1E40AF',
+        fontWeight: 600
+      }}>
+        <span style={{ fontSize: '14px' }}>↔️</span>
+        <span>{isTl ? 'Mag-swipe pakanan at pakaliwa upang makita ang buong Form BPLO-01' : 'Swipe left & right on the document to view and inspect all columns'}</span>
+      </div>
 
       {/* ============================================================= */}
       {/* OFFICIAL DOCUMENT                                              */}
