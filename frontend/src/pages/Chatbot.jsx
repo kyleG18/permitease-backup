@@ -184,20 +184,6 @@ const Chatbot = () => {
         </button>
       </div>
 
-      {/* Suggested Questions Horizontal Chips */}
-      <div className="chatbot-suggested-scroll">
-        {suggestedQuestions.map((q, i) => (
-          <button 
-            key={i} 
-            onClick={() => sendMessage(q)} 
-            disabled={loading}
-            className="chatbot-suggest-chip"
-          >
-            {q}
-          </button>
-        ))}
-      </div>
-
       {/* Main Chat Window Card */}
       <div className="card chatbot-window">
         {/* Advisory Banner */}
@@ -209,6 +195,20 @@ const Chatbot = () => {
               ? 'Gabay lamang ang sagot ng AI batay sa opisyal na talaan ng Roxas City.' 
               : 'AI responses are advisory guidance based on official Roxas City records.'}
           </span>
+        </div>
+
+        {/* Suggested Questions — pinned below banner, always visible */}
+        <div className="chatbot-suggested-scroll">
+          {suggestedQuestions.map((q, i) => (
+            <button 
+              key={i} 
+              onClick={() => sendMessage(q)} 
+              disabled={loading}
+              className="chatbot-suggest-chip"
+            >
+              {q}
+            </button>
+          ))}
         </div>
 
         {/* Scrollable Messages Area */}

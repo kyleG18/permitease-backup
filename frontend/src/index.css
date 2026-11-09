@@ -2390,8 +2390,19 @@ tbody td {
 
 .chatbot-suggested-scroll {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  background: #f8fafc;
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+
+.chatbot-suggested-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .chatbot-suggest-chip {
@@ -2810,8 +2821,7 @@ tbody td {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    padding: 2px 2px 4px 2px !important;
-    margin-bottom: 0.15rem !important;
+    padding: 0.45rem 0.65rem !important;
     gap: 0.35rem !important;
     scrollbar-width: none !important;
   }
