@@ -80,8 +80,9 @@ const KnowledgeBase = () => {
       {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', background: 'var(--danger-light)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid #FECACA' }}>{error}</div>}
 
       {!isAdmin && (
-        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '0.85rem 1rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#166534' }}>
-          📚 These official municipal documents guide the AI in evaluating your permit requirements and fee calculations.
+        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '0.85rem 1rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Library size={16} color="#15803D" style={{ flexShrink: 0 }} />
+          <span>These official municipal documents guide the AI in evaluating your permit requirements and fee calculations.</span>
         </div>
       )}
 

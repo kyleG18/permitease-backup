@@ -407,16 +407,16 @@ const AuditLogs = () => {
       </div>
 
       {/* Audit Log Table */}
-      <div className="card" style={{ borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+      <div className="card" style={{ borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)' }}>
         <div className="table-responsive">
           <table className="table" style={{ margin: 0 }}>
             <thead>
-              <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Timestamp</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Operator & Role</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Action</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Details</th>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Origin IP</th>
+              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569' }}>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Timestamp</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Operator & Role</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Action</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Details</th>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Origin IP</th>
               </tr>
             </thead>
             <tbody>

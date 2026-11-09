@@ -60,7 +60,7 @@ export default function ComplianceHistory() {
       <div className="page-heading-row" style={{ marginBottom: '1.75rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--government-navy)', margin: '0 0 0.25rem' }}>Compliance History</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>Track how your compliance score has changed over time in Roxas City.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>Track how your compliance score has changed over time in the Municipality of Roxas.</p>
         </div>
       </div>
 

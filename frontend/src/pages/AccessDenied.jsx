@@ -12,7 +12,7 @@ const AccessDenied = () => {
         <p className="text-muted" style={{ marginBottom: '2rem' }}>
           Sorry, you don't have permission to view this page. If you believe this is a mistake, please contact your System Administrator.
         </p>
-        <Link to="/" className="btn btn-primary" style={{ display: 'inline-flex', justifyContent: 'center', minWidth: '200px' }}>
+        <Link to="/dashboard" className="btn btn-primary" style={{ display: 'inline-flex', justifyContent: 'center', minWidth: '200px' }}>
           <ArrowLeft size={18} /> Return to Dashboard
         </Link>
       </div>

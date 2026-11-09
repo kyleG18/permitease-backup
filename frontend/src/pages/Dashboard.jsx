@@ -77,9 +77,14 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
 
   // Fetch notifications
   useEffect(() => {
-    axios.get(`${API}/notifications`, { headers })
-      .then(r => setNotifications(Array.isArray(r.data) ? r.data.slice(0, 4) : []))
-      .catch(() => {});
+    const fetchNotifs = () => {
+      axios.get(`${API}/notifications`, { headers })
+        .then(r => setNotifications(Array.isArray(r.data) ? r.data.slice(0, 4) : []))
+        .catch(() => {});
+    };
+    fetchNotifs();
+    window.addEventListener('notificationUpdate', fetchNotifs);
+    return () => window.removeEventListener('notificationUpdate', fetchNotifs);
   }, [headers]);
 
   // Fetch readiness & estimate for selected business
@@ -313,132 +318,155 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
   return (
     <div className="animate-fade-in db-msme" style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: 'Inter, sans-serif' }}>
 
-      {/* ── 1. HERO BANNER ────────────────────────────────────────────────── */}
-      <div className="db-hero">
-        <div className="db-hero__overlay" aria-hidden="true" />
-        <div className="db-hero__inner">
-          <div className="db-hero__header">
-            <div>
-              <div className="db-hero__greeting">{greeting},</div>
-              <h1 className="db-hero__name">
-                {isTl ? `Maligayang pagbabalik, ${firstName}!` : `Welcome back, ${firstName}!`}
-              </h1>
-              <p className="db-hero__sub">
-                {isTl
-                  ? 'Narito ang buod ng iyong PermitEase — Munisipalidad ng Roxas.'
-                  : "Here's your PermitEase overview — Municipality of Roxas."}
-              </p>
-            </div>
-            <div className="db-hero__date">
-              <Calendar size={15} />
-              {currentDate}
-            </div>
-          </div>
-          <div className="db-hero__text">
-            <div className="db-hero__city-title">
-              {isTl ? 'Munisipalidad ng Roxas, Oriental Mindoro' : 'Municipality of Roxas, Oriental Mindoro'}
-            </div>
-            <div className="db-hero__tagline">
-              {isTl ? 'Maghanda. Sumunod. Umunlad.' : 'Prepare. Comply. Grow.'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 2. ACTIVE BUSINESS PROFILE BAR ────────────────────────────────── */}
+      {/* ── 1. MUNICIPAL WORKSPACE HEADER & ACTIVE BUSINESS BAR ───────── */}
       <div style={{
         backgroundColor: '#FFFFFF',
         borderRadius: '10px',
-        border: '1px solid #E5E7EB',
-        padding: '0.75rem 1.2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '0.75rem',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+        border: '1px solid #E2E8F0',
+        borderTop: '3px solid #15803D',
+        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+        overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '11px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <Building2 size={14} color="#15803D" />
-            {isTl ? 'Aktibong Negosyo' : 'Active Business'}
+        {/* Top Row: Official Greeting & Date */}
+        <div style={{
+          padding: '1.15rem 1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          borderBottom: '1px solid #F1F5F9'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+            <img
+              src="/images/roxas-seal.png"
+              alt="Municipality of Roxas Official Seal"
+              style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }}
+            />
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.15rem' }}>
+                {isTl ? 'Munisipalidad ng Roxas, Oriental Mindoro · BPLO Portal' : 'Municipality of Roxas, Oriental Mindoro · BPLO Portal'}
+              </div>
+              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+                {greeting}, {firstName}
+              </h1>
+              <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '0.1rem' }}>
+                {isTl
+                  ? 'Gabay sa Paghahanda at Pagsusuri ng Kahandaan sa Business Permit'
+                  : 'Guided Business Permit Preparation & Readiness Overview'}
+              </div>
+            </div>
           </div>
 
-          {businessesList.length > 1 ? (
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <select
-                value={selectedBizId}
-                onChange={(e) => setSelectedBizId(e.target.value)}
-                style={{
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  padding: '0.35rem 2rem 0.35rem 0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #D1D5DB',
-                  fontWeight: 700,
-                  color: '#111827',
-                  backgroundColor: '#FFFFFF',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  outline: 'none'
-                }}
-              >
-                {businessesList.map(b => (
-                  <option key={b.id} value={b.id}>
-                    {b.business_name} ({b.business_type || b.industry_category || 'Retail'})
-                  </option>
-                ))}
-              </select>
-              <span style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9CA3AF', fontSize: '10px' }}>▼</span>
-            </div>
-          ) : (
-            <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>
-              {selectedBiz.business_name || (isTl ? 'Aking Negosyo' : 'My Business')}
-            </span>
-          )}
-
-          {selectedBiz && (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.2rem 0.6rem',
-              borderRadius: '5px',
-              backgroundColor: '#F9FAFB',
-              color: '#4B5563',
-              border: '1px solid #E5E7EB',
-              fontSize: '11.5px',
-              fontWeight: 500
-            }}>
-              <span>{selectedBiz.business_type || selectedBiz.industry_category || 'Retail'}</span>
-              <span style={{ color: '#D1D5DB' }}>·</span>
-              <span style={{ color: '#15803D', fontWeight: 700 }}>
-                {selectedBiz.business_status
-                  ? (isTl && selectedBiz.business_status === 'New Application'
-                      ? 'Bagong Aplikasyon'
-                      : (isTl && selectedBiz.business_status.includes('Renew')
-                          ? 'Pagpapanibago'
-                          : selectedBiz.business_status))
-                  : (isTl ? 'Bagong Aplikasyon' : 'New Application')}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <Link
-          to="/profile"
-          style={{
-            fontSize: '12px',
-            fontWeight: 600,
-            color: '#15803D',
-            textDecoration: 'none',
+          <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.25rem'
-          }}
-        >
-          {isTl ? 'Pamahalaan ang mga Profile' : 'Manage Profiles'} <ChevronRight size={13} />
-        </Link>
+            gap: '0.45rem',
+            padding: '0.4rem 0.85rem',
+            borderRadius: '6px',
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            color: '#334155',
+            fontSize: '12.5px',
+            fontWeight: 600
+          }}>
+            <Calendar size={14} color="#15803D" />
+            <span>{currentDate}</span>
+          </div>
+        </div>
+
+        {/* Bottom Row: Active Business Selector & Status */}
+        <div style={{
+          backgroundColor: '#F8FAFC',
+          padding: '0.7rem 1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.75rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <Building2 size={14} color="#15803D" />
+              {isTl ? 'Aktibong Negosyo:' : 'Active Business:'}
+            </div>
+
+            {businessesList.length > 1 ? (
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <select
+                  value={selectedBizId}
+                  onChange={(e) => setSelectedBizId(e.target.value)}
+                  style={{
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    padding: '0.35rem 2rem 0.35rem 0.75rem',
+                    borderRadius: '6px',
+                    border: '1px solid #CBD5E1',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    backgroundColor: '#FFFFFF',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  {businessesList.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.business_name} ({b.business_type || b.industry_category || 'Retail'})
+                    </option>
+                  ))}
+                </select>
+                <span style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748B', fontSize: '10px' }}>▼</span>
+              </div>
+            ) : (
+              <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>
+                {selectedBiz.business_name || (isTl ? 'Aking Negosyo' : 'My Business')}
+              </span>
+            )}
+
+            {selectedBiz && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.2rem 0.6rem',
+                borderRadius: '5px',
+                backgroundColor: '#FFFFFF',
+                color: '#475569',
+                border: '1px solid #E2E8F0',
+                fontSize: '11.5px',
+                fontWeight: 600
+              }}>
+                <span>{selectedBiz.business_type || selectedBiz.industry_category || 'Retail'}</span>
+                <span style={{ color: '#CBD5E1' }}>·</span>
+                <span style={{ color: '#15803D', fontWeight: 700 }}>
+                  {selectedBiz.business_status
+                    ? (isTl && selectedBiz.business_status === 'New Application'
+                        ? 'Bagong Aplikasyon'
+                        : (isTl && selectedBiz.business_status.includes('Renew')
+                            ? 'Pagpapanibago'
+                            : selectedBiz.business_status))
+                    : (isTl ? 'Bagong Aplikasyon' : 'New Application')}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <Link
+            to="/profile"
+            style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#15803D',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            {isTl ? 'Pamahalaan ang mga Profile' : 'Manage Business Profiles'} <ChevronRight size={13} />
+          </Link>
+        </div>
       </div>
 
       {/* ── 3. SMART "NEXT BEST ACTION" ACTION CARD ───────────────────────── */}
@@ -864,12 +892,14 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {notifications.map(n => (
+              {notifications.map(n => {
+                const isRead = n.status === 'Read' || Boolean(n.is_read);
+                return (
                 <div key={n.id} style={{
                   padding: '0.7rem 0.9rem',
                   borderRadius: '7px',
-                  backgroundColor: n.is_read ? '#FAFAFA' : '#F0FDF4',
-                  border: `1px solid ${n.is_read ? '#F3F4F6' : '#BBF7D0'}`,
+                  backgroundColor: isRead ? '#FAFAFA' : '#F0FDF4',
+                  border: `1px solid ${isRead ? '#F3F4F6' : '#BBF7D0'}`,
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '0.65rem'
@@ -877,7 +907,7 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
                   <div style={{
                     width: '7px', height: '7px',
                     borderRadius: '50%',
-                    backgroundColor: n.is_read ? '#D1D5DB' : '#15803D',
+                    backgroundColor: isRead ? '#D1D5DB' : '#15803D',
                     flexShrink: 0, marginTop: '5px'
                   }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -889,7 +919,8 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1108,113 +1139,84 @@ const AdminDashboard = ({ user, stats, loading }) => {
   return (
     <div className="animate-fade-in" style={{ fontFamily: 'Inter, sans-serif' }}>
 
-      {/* ── HERO BANNER ────────────────────────────────────────────── */}
+      {/* ── MUNICIPAL COMMAND CENTER HEADER ─────────────────────────────── */}
       <div style={{
-        position: 'relative',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        backgroundImage: "url('/images/roxas-hall.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 38%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '10px',
+        border: '1px solid #E2E8F0',
+        borderTop: '3px solid #15803D',
+        padding: '1.2rem 1.5rem',
         marginBottom: '1.5rem',
-        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.25)',
-        minHeight: '160px',
+        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
         display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center'
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem'
       }}>
-        {/* Cinematic Government Dark Overlay with Forest Municipal Accent */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.94) 0%, rgba(20, 83, 45, 0.82) 48%, rgba(15, 23, 42, 0.58) 100%)',
-          zIndex: 1
-        }} />
-
-        {/* Inner Content */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          padding: '1.75rem 2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.25rem',
-          color: 'white'
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+          <img
+            src="/images/roxas-seal.png"
+            alt="Roxas Official Seal"
+            style={{ width: '44px', height: '44px', objectFit: 'contain', flexShrink: 0 }}
+          />
           <div>
             <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.14)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
-              padding: '0.3rem 0.85rem',
-              borderRadius: '20px',
-              fontSize: '11.5px',
-              fontWeight: '800',
+              fontSize: '11px',
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
-              color: '#DCFCE7',
-              marginBottom: '0.65rem'
+              color: '#15803D',
+              marginBottom: '0.15rem'
             }}>
-              <img src="/images/roxas-seal.png" alt="Roxas Seal" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-              Municipality of Roxas, Oriental Mindoro • {user?.role === 'system_admin' ? 'Admin Command Center' : 'BPLO Command Center'}
+              Municipality of Roxas, Oriental Mindoro · {user?.role === 'system_admin' ? 'System Administration' : 'BPLO Operations Division'}
             </div>
             <h1 style={{
-              margin: '0 0 0.35rem',
-              fontSize: '28px',
-              fontWeight: '800',
-              color: '#FFFFFF',
-              letterSpacing: '-0.02em',
-              textShadow: '0 2px 4px rgba(0,0,0,0.35)'
+              margin: '0 0 0.15rem',
+              fontSize: '21px',
+              fontWeight: 800,
+              color: '#0F172A',
+              letterSpacing: '-0.02em'
             }}>
-              {greeting}, {firstName}!
+              {greeting}, {firstName}
             </h1>
             <p style={{
               margin: 0,
-              fontSize: '14px',
-              color: 'rgba(255, 255, 255, 0.9)',
-              textShadow: '0 1px 2px rgba(0,0,0,0.35)'
+              fontSize: '12.5px',
+              color: '#64748B'
             }}>
               {user?.role === 'system_admin'
-                ? 'System Administration & Security · User Access & Municipal Audit Logs'
-                : 'Business Permit & Licensing Oversight · PermitEase Administration'}
+                ? 'System Security, Role Access Control & Municipal Audit Monitoring'
+                : 'Business Permit Pre-Assessment Verification & Municipal Readiness Oversight'}
             </p>
           </div>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-            <div style={{
-              fontSize: '12.5px',
-              color: '#FFFFFF',
-              backgroundColor: 'rgba(0, 0, 0, 0.35)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '0.4rem 0.9rem',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              fontWeight: '600'
-            }}>
-              <Calendar size={14} color="#86EFAC" /> {today}
-            </div>
-            <div style={{
-              backgroundColor: statutoryBg,
-              color: statutoryColor,
-              borderRadius: '20px',
-              padding: '0.35rem 0.95rem',
-              fontSize: '11px',
-              fontWeight: '800',
-              letterSpacing: '0.05em',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-            }}>
-              RA 7160 — {statutoryPeriod}
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.45rem' }}>
+          <div style={{
+            fontSize: '12.5px',
+            color: '#334155',
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            padding: '0.35rem 0.85rem',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            fontWeight: 600
+          }}>
+            <Calendar size={14} color="#15803D" /> {today}
+          </div>
+          <div style={{
+            backgroundColor: statutoryBg,
+            color: statutoryColor,
+            borderRadius: '6px',
+            padding: '0.25rem 0.7rem',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.04em'
+          }}>
+            RA 7160 — {statutoryPeriod}
           </div>
         </div>
       </div>
@@ -1241,7 +1243,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
             }
           `}</style>
 
-          {/* ════ MAIN TWO-COLUMN MODERN GRID (Matches reference layout) ════ */}
+          {/* ════ MAIN TWO-COLUMN MUNICIPAL GRID ════ */}
           <div className="admin-modern-grid">
             
             {/* ── LEFT COLUMN (WIDER, ~60-65%) ─────────────────────── */}
@@ -1250,22 +1252,22 @@ const AdminDashboard = ({ user, stats, loading }) => {
               {/* 1. Statutory Compliance & Renewal Radar (Real RA 7160 data) */}
               <div style={{
                 backgroundColor: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '1.4rem 1.5rem',
+                borderRadius: '10px',
+                padding: '1.35rem 1.5rem',
                 border: '1px solid #E2E8F0',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)'
+                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <div style={{
-                      width: '38px', height: '38px', borderRadius: '10px',
-                      backgroundColor: '#DCFCE7', color: '#15803D',
+                      width: '36px', height: '36px', borderRadius: '8px',
+                      backgroundColor: '#F0FDF4', color: '#15803D', border: '1px solid #DCFCE7',
                       display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                      <Scale size={20} strokeWidth={2.5} />
+                      <Scale size={18} strokeWidth={2.2} />
                     </div>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>
+                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
                         Statutory Renewal & Compliance Radar
                       </h3>
                       <div style={{ fontSize: '12px', color: '#64748B' }}>
@@ -1277,10 +1279,10 @@ const AdminDashboard = ({ user, stats, loading }) => {
                   <div style={{
                     backgroundColor: statutoryBg,
                     color: statutoryColor,
-                    padding: '0.3rem 0.75rem',
-                    borderRadius: '20px',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '6px',
                     fontSize: '11px',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     letterSpacing: '0.04em'
                   }}>
                     {statutoryPeriod}
@@ -1291,15 +1293,14 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 <div style={{ marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: '#64748B', fontWeight: 600, marginBottom: '0.4rem' }}>
                     <span>Municipal Portfolio Compliance Flow</span>
-                    <span style={{ color: '#0F172A', fontWeight: 700 }}>{fmt(statutoryTotal)} Tracked Permits</span>
+                    <span className="tabular-nums" style={{ color: '#0F172A', fontWeight: 700 }}>{fmt(statutoryTotal)} Tracked Permits</span>
                   </div>
                   <div style={{
-                    height: '10px',
+                    height: '8px',
                     backgroundColor: '#F1F5F9',
-                    borderRadius: '20px',
+                    borderRadius: '4px',
                     overflow: 'hidden',
-                    display: 'flex',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)'
+                    display: 'flex'
                   }}>
                     <div style={{ width: `${activePct}%`, backgroundColor: '#15803D', transition: 'width 0.8s ease' }} title={`Active Compliant: ${activePct}%`} />
                     <div style={{ width: `${expiringPct}%`, backgroundColor: '#D97706', transition: 'width 0.8s ease' }} title={`Expiring Soon (Dec): ${expiringPct}%`} />
@@ -1312,51 +1313,47 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
                   
                   {/* Active Compliant */}
-                  <div style={{ backgroundColor: '#F0FDF4', borderRadius: '10px', padding: '0.75rem', border: '1px solid #DCFCE7' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11.5px', fontWeight: 700, color: '#166534', marginBottom: '0.2rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22C55E' }} />
+                  <div style={{ backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '0.75rem', border: '1px solid #E2E8F0', borderLeft: '3px solid #15803D' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.2rem' }}>
                       Active Compliant
                     </div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#166534', lineHeight: 1.2 }}>
+                    <div className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: '#166534', lineHeight: 1.2 }}>
                       {loading ? '…' : fmt(stats?.active_count)}
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#15803D', marginTop: '0.2rem' }}>Good standing</div>
+                    <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.2rem' }}>Good standing</div>
                   </div>
 
                   {/* Expiring Soon */}
-                  <div style={{ backgroundColor: '#FEF3C7', borderRadius: '10px', padding: '0.75rem', border: '1px solid #FDE68A' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11.5px', fontWeight: 700, color: '#92400E', marginBottom: '0.2rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#D97706' }} />
+                  <div style={{ backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '0.75rem', border: '1px solid #E2E8F0', borderLeft: '3px solid #D97706' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.2rem' }}>
                       Expiring Dec
                     </div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#92400E', lineHeight: 1.2 }}>
+                    <div className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: '#B45309', lineHeight: 1.2 }}>
                       {loading ? '…' : fmt(stats?.expiring_soon_count)}
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#B45309', marginTop: '0.2rem' }}>Pre-renewal watch</div>
+                    <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.2rem' }}>Pre-renewal watch</div>
                   </div>
 
                   {/* Jan Renewal Window */}
-                  <div style={{ backgroundColor: '#EFF6FF', borderRadius: '10px', padding: '0.75rem', border: '1px solid #BFDBFE' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11.5px', fontWeight: 700, color: '#1E40AF', marginBottom: '0.2rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3B82F6' }} />
+                  <div style={{ backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '0.75rem', border: '1px solid #E2E8F0', borderLeft: '3px solid #2563EB' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.2rem' }}>
                       Jan 1–20 Window
                     </div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#1E40AF', lineHeight: 1.2 }}>
+                    <div className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: '#1E40AF', lineHeight: 1.2 }}>
                       {loading ? '…' : fmt(stats?.renewal_window_count)}
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#1D4ED8', marginTop: '0.2rem' }}>Standard renewal</div>
+                    <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.2rem' }}>Standard renewal</div>
                   </div>
 
                   {/* Delinquent */}
-                  <div style={{ backgroundColor: '#FEE2E2', borderRadius: '10px', padding: '0.75rem', border: '1px solid #FECACA' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11.5px', fontWeight: 700, color: '#991B1B', marginBottom: '0.2rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#EF4444' }} />
+                  <div style={{ backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '0.75rem', border: '1px solid #E2E8F0', borderLeft: '3px solid #DC2626' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.2rem' }}>
                       Delinquent
                     </div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#991B1B', lineHeight: 1.2 }}>
+                    <div className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: '#991B1B', lineHeight: 1.2 }}>
                       {loading ? '…' : fmt(stats?.delinquent_count)}
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#DC2626', marginTop: '0.2rem' }}>RA 7160 Surcharges</div>
+                    <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.2rem' }}>RA 7160 Surcharges</div>
                   </div>
 
                 </div>
@@ -1376,25 +1373,26 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 </div>
               </div>
 
-              {/* 2. Table Card (Matches clean table with solid emerald header bar in screenshot) */}
+              {/* 2. Recent Pre-Assessment Submissions Table Card */}
               <div style={{
                 backgroundColor: '#FFFFFF',
-                borderRadius: '16px',
+                borderRadius: '10px',
                 overflow: 'hidden',
                 border: '1px solid #E2E8F0',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)'
+                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
               }}>
                 <div style={{
-                  background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)',
+                  backgroundColor: '#F8FAFC',
+                  borderBottom: '1px solid #E2E8F0',
                   padding: '0.85rem 1.25rem',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
-                  <div style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <ClipboardCheck size={16} /> Recent Pre-Assessment Submissions (Form BPLO-01)
+                  <div style={{ color: '#0F172A', fontSize: '13.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <ClipboardCheck size={16} color="#15803D" /> Recent Pre-Assessment Submissions (Form BPLO-01)
                   </div>
-                  <Link to="/admin/applications" style={{ color: '#DCFCE7', fontSize: '12px', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <Link to="/admin/applications" style={{ color: '#15803D', fontSize: '12px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                     View All ({stats?.recent_applications?.length || 0}) <ChevronRight size={13} />
                   </Link>
                 </div>
@@ -1448,7 +1446,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
                                 <span style={{
                                   display: 'inline-block',
                                   padding: '0.2rem 0.55rem',
-                                  borderRadius: '6px',
+                                  borderRadius: '5px',
                                   fontSize: '11px',
                                   fontWeight: 700,
                                   backgroundColor: statusConfig.bg,
@@ -1479,41 +1477,37 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 </div>
               </div>
 
-              {/* 3. Bottom Two Statutory Warning Cards (Matches 2 summary cards below table in screenshot) */}
+              {/* 3. Bottom Two Statutory Warning Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 
                 {/* Delinquent MSMEs Warning */}
                 <div style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
-                  padding: '1.25rem',
-                  border: '1px solid #FECACA',
-                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.05)'
+                  borderRadius: '10px',
+                  padding: '1.15rem 1.25rem',
+                  border: '1px solid #E2E8F0',
+                  borderLeft: '4px solid #DC2626',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                     <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#991B1B' }}>
                       DELINQUENT MSMES (RA 7160)
                     </span>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <AlertTriangle size={14} />
-                    </div>
+                    <AlertTriangle size={15} color="#DC2626" />
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: '800', color: '#DC2626', lineHeight: 1.1 }}>
+                  <div className="tabular-nums" style={{ fontSize: '26px', fontWeight: 800, color: '#991B1B', lineHeight: 1.1 }}>
                     {loading ? '…' : fmt(stats?.delinquent_count)}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '0.4rem' }}>
+                  <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '0.35rem' }}>
                     Past Jan 20 · Mandatory 25% statutory surcharge applied
                   </div>
-                  <div style={{ marginTop: '0.75rem' }}>
+                  <div style={{ marginTop: '0.65rem' }}>
                     <Link to="/admin/analytics" style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.25rem',
-                      backgroundColor: '#FEE2E2',
                       color: '#991B1B',
-                      padding: '0.2rem 0.6rem',
-                      borderRadius: '6px',
-                      fontSize: '11px',
+                      fontSize: '11.5px',
                       fontWeight: 700,
                       textDecoration: 'none'
                     }}>
@@ -1525,35 +1519,31 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 {/* Expiring Soon Pre-Renewal */}
                 <div style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
-                  padding: '1.25rem',
-                  border: '1px solid #FED7AA',
-                  boxShadow: '0 4px 14px rgba(234, 88, 12, 0.05)'
+                  borderRadius: '10px',
+                  padding: '1.15rem 1.25rem',
+                  border: '1px solid #E2E8F0',
+                  borderLeft: '4px solid #D97706',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9A3412' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#92400E' }}>
                       EXPIRING SOON (DECEMBER)
                     </span>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#FFEDD5', color: '#EA580C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Clock size={14} />
-                    </div>
+                    <Clock size={15} color="#D97706" />
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: '800', color: '#EA580C', lineHeight: 1.1 }}>
+                  <div className="tabular-nums" style={{ fontSize: '26px', fontWeight: 800, color: '#92400E', lineHeight: 1.1 }}>
                     {loading ? '…' : fmt(stats?.expiring_soon_count)}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '0.4rem' }}>
+                  <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '0.35rem' }}>
                     Expires Dec 31 · Pre-renewal watch & advisory dispatch
                   </div>
-                  <div style={{ marginTop: '0.75rem' }}>
+                  <div style={{ marginTop: '0.65rem' }}>
                     <Link to="/admin/analytics" style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.25rem',
-                      backgroundColor: '#FFEDD5',
-                      color: '#9A3412',
-                      padding: '0.2rem 0.6rem',
-                      borderRadius: '6px',
-                      fontSize: '11px',
+                      color: '#92400E',
+                      fontSize: '11.5px',
                       fontWeight: 700,
                       textDecoration: 'none'
                     }}>
@@ -1569,132 +1559,136 @@ const AdminDashboard = ({ user, stats, loading }) => {
             {/* ── RIGHT COLUMN (NARROWER, ~35-40%) ─────────────────── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               
-              {/* 1. 2x2 Vibrant Metric Cards (Matches 4 colored cards in top right of screenshot) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.9rem' }}>
+              {/* 1. 2x2 Restrained Municipal KPI Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                 
-                {/* Top Left: Municipal Emerald (MSME Registry) */}
+                {/* Top Left: MSME Registry */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
-                  borderRadius: '16px',
-                  padding: '1.2rem',
-                  color: '#FFFFFF',
-                  boxShadow: '0 10px 20px -5px rgba(21, 128, 61, 0.35)',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '10px',
+                  padding: '1.1rem 1.15rem',
+                  border: '1px solid #E2E8F0',
+                  borderTop: '3px solid #15803D',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '115px'
+                  minHeight: '110px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       MSME Registry
                     </span>
-                    <Building2 size={16} color="rgba(255,255,255,0.85)" />
+                    <Building2 size={16} color="#15803D" />
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: '#FFFFFF', margin: '0.35rem 0' }}>
+                  <div className="tabular-nums" style={{ fontSize: '26px', fontWeight: 800, color: '#0F172A', margin: '0.25rem 0' }}>
                     {loading ? '…' : fmt(stats?.total_businesses)}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#BBF7D0', fontWeight: 600 }}>
+                  <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>
                     Business profiles on record
                   </div>
                 </div>
 
-                {/* Top Right: Warm Amber (Pending Review) */}
+                {/* Top Right: Pending Review */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
-                  borderRadius: '16px',
-                  padding: '1.2rem',
-                  color: '#FFFFFF',
-                  boxShadow: '0 10px 20px -5px rgba(217, 119, 6, 0.35)',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '10px',
+                  padding: '1.1rem 1.15rem',
+                  border: '1px solid #E2E8F0',
+                  borderTop: '3px solid #D97706',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '115px'
+                  minHeight: '110px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Pending Review
                     </span>
-                    <ClipboardCheck size={16} color="rgba(255,255,255,0.85)" />
+                    <ClipboardCheck size={16} color="#D97706" />
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: '#FFFFFF', margin: '0.35rem 0' }}>
+                  <div className="tabular-nums" style={{ fontSize: '26px', fontWeight: 800, color: '#B45309', margin: '0.25rem 0' }}>
                     {loading ? '…' : fmt(stats?.pending_pre_assessments)}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#FEF3C7', fontWeight: 600 }}>
+                  <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>
                     Submitted & awaiting review
                   </div>
                 </div>
 
-                {/* Bottom Left: Forest Green (Prep Verified) */}
+                {/* Bottom Left: Prep Verified */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  borderRadius: '16px',
-                  padding: '1.2rem',
-                  color: '#FFFFFF',
-                  boxShadow: '0 10px 20px -5px rgba(5, 150, 105, 0.35)',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '10px',
+                  padding: '1.1rem 1.15rem',
+                  border: '1px solid #E2E8F0',
+                  borderTop: '3px solid #166534',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '115px'
+                  minHeight: '110px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Prep Verified
                     </span>
-                    <CheckCircle size={16} color="rgba(255,255,255,0.85)" />
+                    <CheckCircle size={16} color="#15803D" />
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: '#FFFFFF', margin: '0.35rem 0' }}>
+                  <div className="tabular-nums" style={{ fontSize: '26px', fontWeight: 800, color: '#166534', margin: '0.25rem 0' }}>
                     {loading ? '…' : fmt(stats?.verified_pre_assessments)}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#A7F3D0', fontWeight: 600 }}>
-                    BPLO-01 Pre-assessment approved
+                  <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>
+                    BPLO-01 pre-assessment ready
                   </div>
                 </div>
 
-                {/* Bottom Right: Municipal Navy (Today's Walk-in Queue) */}
+                {/* Bottom Right: Today's Walk-ins */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%)',
-                  borderRadius: '16px',
-                  padding: '1.2rem',
-                  color: '#FFFFFF',
-                  boxShadow: '0 10px 20px -5px rgba(30, 64, 175, 0.35)',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '10px',
+                  padding: '1.1rem 1.15rem',
+                  border: '1px solid #E2E8F0',
+                  borderTop: '3px solid #1E40AF',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '115px'
+                  minHeight: '110px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Today's Walk-ins
                     </span>
-                    <Ticket size={16} color="rgba(255,255,255,0.85)" />
+                    <Ticket size={16} color="#1E40AF" />
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: '#FFFFFF', margin: '0.35rem 0' }}>
+                  <div className="tabular-nums" style={{ fontSize: '26px', fontWeight: 800, color: '#1E40AF', margin: '0.25rem 0' }}>
                     {loading ? '…' : fmt(stats?.todays_walkin_count)}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#BFDBFE', fontWeight: 600 }}>
-                    <span style={{ color: '#86EFAC', fontWeight: 700 }}>{fmt(stats?.todays_attended_count)}</span> sighted at Window 1
+                  <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>
+                    <span className="tabular-nums" style={{ color: '#15803D', fontWeight: 700 }}>{fmt(stats?.todays_attended_count)}</span> sighted at Window 1
                   </div>
                 </div>
 
               </div>
 
-              {/* 2. Donut Municipal Readiness Radar (Matches bottom right card in reference screenshot) */}
+              {/* 2. Donut Municipal Readiness Radar */}
               <div style={{
                 backgroundColor: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '1.5rem',
+                borderRadius: '10px',
+                padding: '1.35rem 1.5rem',
                 border: '1px solid #E2E8F0',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)',
+                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between'
               }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '7px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#F0FDF4', color: '#15803D', border: '1px solid #DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ShieldCheck size={16} />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '14.5px', fontWeight: 800, color: '#0F172A' }}>
+                    <h3 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, color: '#0F172A' }}>
                       MSME Readiness Overview
                     </h3>
                   </div>
@@ -1732,15 +1726,15 @@ const AdminDashboard = ({ user, stats, loading }) => {
                   marginTop: '1.25rem',
                   borderTop: '1px solid #F1F5F9'
                 }}>
-                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.6rem 0.75rem', borderRadius: '8px' }}>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.6rem 0.75rem', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
                     <div style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Total Reqs Tracked</div>
-                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginTop: '0.15rem' }}>
+                    <div className="tabular-nums" style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginTop: '0.15rem' }}>
                       {fmt(stats?.total_requirements)}
                     </div>
                   </div>
-                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.6rem 0.75rem', borderRadius: '8px', textAlign: 'right' }}>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.6rem 0.75rem', borderRadius: '6px', border: '1px solid #E2E8F0', textAlign: 'right' }}>
                     <div style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Assessed MSMEs</div>
-                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#15803D', marginTop: '0.15rem' }}>
+                    <div className="tabular-nums" style={{ fontSize: '16px', fontWeight: 800, color: '#15803D', marginTop: '0.15rem' }}>
                       {fmt(stats?.assessed_businesses)}
                     </div>
                   </div>
@@ -1758,18 +1752,18 @@ const AdminDashboard = ({ user, stats, loading }) => {
             {/* Left: Common Missing Clearances (Authentic top_missing_requirements) */}
             <div style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: '16px',
+              borderRadius: '10px',
               padding: '1.35rem 1.5rem',
               border: '1px solid #E2E8F0',
-              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)'
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <AlertCircle size={17} />
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>
+                    <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>
                       Common Missing Clearances
                     </h3>
                     <div style={{ fontSize: '11.5px', color: '#64748B' }}>
@@ -1777,7 +1771,7 @@ const AdminDashboard = ({ user, stats, loading }) => {
                     </div>
                   </div>
                 </div>
-                <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#FEE2E2', color: '#991B1B', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#FEF2F2', color: '#991B1B', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
                   Top Bottlenecks
                 </span>
               </div>
@@ -1796,14 +1790,14 @@ const AdminDashboard = ({ user, stats, loading }) => {
                       alignItems: 'center',
                       padding: '0.6rem 0.85rem',
                       backgroundColor: '#F8FAFC',
-                      borderRadius: '8px',
-                      border: '1px solid #F1F5F9'
+                      borderRadius: '6px',
+                      border: '1px solid #E2E8F0'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                         <span style={{
-                          width: '22px', height: '22px', borderRadius: '6px',
+                          width: '22px', height: '22px', borderRadius: '5px',
                           backgroundColor: '#FEE2E2', color: '#DC2626',
-                          fontSize: '11px', fontWeight: 800,
+                          fontSize: '11px', fontWeight: 700,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                         }}>
                           {idx + 1}
@@ -1812,10 +1806,10 @@ const AdminDashboard = ({ user, stats, loading }) => {
                           {item.permit_name}
                         </span>
                       </div>
-                      <span style={{
+                      <span className="tabular-nums" style={{
                         fontSize: '12px',
-                        fontWeight: 800,
-                        color: '#DC2626',
+                        fontWeight: 700,
+                        color: '#991B1B',
                         backgroundColor: '#FEE2E2',
                         padding: '0.2rem 0.55rem',
                         borderRadius: '5px'
@@ -1831,21 +1825,21 @@ const AdminDashboard = ({ user, stats, loading }) => {
             {/* Right: Walk-in Counter Control (Window 1) & Quick Navigation */}
             <div style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: '16px',
+              borderRadius: '10px',
               padding: '1.35rem 1.5rem',
               border: '1px solid #E2E8F0',
-              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)',
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between'
             }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DBEAFE', color: '#1D4ED8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <CalendarCheck size={17} />
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>
+                    <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>
                       Walk-in Roster & Window 1 Control
                     </h3>
                     <div style={{ fontSize: '11.5px', color: '#64748B' }}>
@@ -1855,18 +1849,18 @@ const AdminDashboard = ({ user, stats, loading }) => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <div style={{ backgroundColor: '#F8FAFC', borderRadius: '10px', padding: '0.75rem', textAlign: 'center', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.todays_walkin_count)}</div>
+                  <div style={{ backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', border: '1px solid #E2E8F0' }}>
+                    <div className="tabular-nums" style={{ fontSize: '22px', fontWeight: 800, color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.todays_walkin_count)}</div>
                     <div style={{ fontSize: '11px', color: '#64748B', marginTop: '0.15rem' }}>Scheduled Today</div>
                   </div>
-                  <div style={{ backgroundColor: '#F0FDF4', borderRadius: '10px', padding: '0.75rem', textAlign: 'center', border: '1px solid #DCFCE7' }}>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#15803D' }}>{loading ? '…' : fmt(stats?.todays_attended_count)}</div>
+                  <div style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', border: '1px solid #DCFCE7' }}>
+                    <div className="tabular-nums" style={{ fontSize: '22px', fontWeight: 800, color: '#15803D' }}>{loading ? '…' : fmt(stats?.todays_attended_count)}</div>
                     <div style={{ fontSize: '11px', color: '#15803D', marginTop: '0.15rem' }}>Sighted ✓</div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '1rem', padding: '0.5rem 0.75rem', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-                  <span style={{ fontWeight: 700, color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.week_walkins_scheduled)}</span> walk-in appointments this week (7-day window)
+                <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '1rem', padding: '0.5rem 0.75rem', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
+                  <span className="tabular-nums" style={{ fontWeight: 700, color: '#1E40AF' }}>{loading ? '…' : fmt(stats?.week_walkins_scheduled)}</span> walk-in appointments this week (7-day window)
                 </div>
               </div>
 
@@ -1874,31 +1868,31 @@ const AdminDashboard = ({ user, stats, loading }) => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.55rem' }}>
                 <Link to="/admin/applications" style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  padding: '0.55rem 0.75rem', borderRadius: '8px',
-                  backgroundColor: '#F0FDF4', color: '#15803D',
+                  padding: '0.55rem 0.75rem', borderRadius: '6px',
+                  backgroundColor: '#F0FDF4', color: '#15803D', border: '1px solid #DCFCE7',
                   textDecoration: 'none', fontSize: '12px', fontWeight: 700
                 }}>
                   <ClipboardCheck size={14} /> Form BPLO-01
                 </Link>
                 <Link to="/admin/walkins" style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  padding: '0.55rem 0.75rem', borderRadius: '8px',
-                  backgroundColor: '#EFF6FF', color: '#1E40AF',
+                  padding: '0.55rem 0.75rem', borderRadius: '6px',
+                  backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #DBEAFE',
                   textDecoration: 'none', fontSize: '12px', fontWeight: 700
                 }}>
                   <Calendar size={14} /> Walk-in Roster
                 </Link>
                 <Link to="/requirements" style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  padding: '0.55rem 0.75rem', borderRadius: '8px',
-                  backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #DCFCE7',
+                  padding: '0.55rem 0.75rem', borderRadius: '6px',
+                  backgroundColor: '#F8FAFC', color: '#334155', border: '1px solid #E2E8F0',
                   textDecoration: 'none', fontSize: '12px', fontWeight: 700
                 }}>
                   <Scale size={14} color="#15803D" /> Requirements
                 </Link>
                 <Link to="/admin/analytics" style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  padding: '0.55rem 0.75rem', borderRadius: '8px',
+                  padding: '0.55rem 0.75rem', borderRadius: '6px',
                   backgroundColor: '#F8FAFC', color: '#334155', border: '1px solid #E2E8F0',
                   textDecoration: 'none', fontSize: '12px', fontWeight: 700
                 }}>
@@ -1914,22 +1908,22 @@ const AdminDashboard = ({ user, stats, loading }) => {
           <div style={{
             backgroundColor: '#FFFFFF',
             border: '1px solid #E2E8F0',
-            borderRadius: '16px',
-            padding: '1.25rem 1.5rem',
+            borderRadius: '10px',
+            padding: '1.15rem 1.5rem',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '1rem',
-            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.03)'
+            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Scale size={22} />
+              <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#F0FDF4', color: '#15803D', border: '1px solid #DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Scale size={20} />
               </div>
               <div>
-                <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#0F172A' }}>
-                  Municipal Requirements Masterlist — <span style={{ color: '#15803D' }}>{loading ? '…' : fmt(stats?.configured_requirements)} Clearances Configured</span>
+                <div style={{ fontSize: '14.5px', fontWeight: 700, color: '#0F172A' }}>
+                  Municipal Requirements Masterlist — <span className="tabular-nums" style={{ color: '#15803D' }}>{loading ? '…' : fmt(stats?.configured_requirements)} Clearances Configured</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748B' }}>
                   Statutory prerequisites under RA 11032 (Ease of Doing Business) · Maintain clearance ordinances.
@@ -1942,12 +1936,11 @@ const AdminDashboard = ({ user, stats, loading }) => {
               gap: '0.4rem',
               backgroundColor: '#15803D',
               color: '#FFFFFF',
-              borderRadius: '8px',
-              padding: '0.6rem 1.1rem',
+              borderRadius: '6px',
+              padding: '0.55rem 1.05rem',
               fontSize: '13px',
               fontWeight: 700,
-              textDecoration: 'none',
-              boxShadow: '0 2px 8px rgba(21,128,61,0.25)'
+              textDecoration: 'none'
             }}>
               <Scale size={15} /> Manage Clearances
             </Link>

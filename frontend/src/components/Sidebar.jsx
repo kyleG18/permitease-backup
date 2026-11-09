@@ -18,6 +18,8 @@ import {
   BarChart,
   ClipboardCheck,
   Receipt,
+  Calculator,
+  Shield,
   Rocket,
   X,
   History,
@@ -45,7 +47,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           {
             title: (t.nav?.assistance || 'ASSISTANCE'),
             items: [
-              { name: (t.nav?.taxEstimation || 'Tax Estimation'), path: '/tax-estimation', icon: Receipt, tour: 'tax-estimation' },
+              { name: (t.nav?.taxEstimation || 'Tax Estimation'), path: '/tax-estimation', icon: Calculator, tour: 'tax-estimation' },
               { name: (t.nav?.feeEstimation || 'Fee Estimation'), path: '/fee-estimation', icon: Receipt, tour: 'fee-estimation' },
               { name: (t.nav?.aiHelp || 'AI Help'), path: '/assistant', icon: MessageSquare, tour: 'ai-help' }
             ]
@@ -72,7 +74,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: (t.nav?.assessment || 'ASSESSMENT'),
           items: [
             { name: (t.nav?.aiAssessment || 'AI Permit Assessment'), path: '/assessment', icon: BrainCircuit, tour: 'ai-assessment' },
-            { name: (t.nav?.taxEstimation || 'Tax Estimation'), path: '/tax-estimation', icon: Receipt, tour: 'tax-estimation' },
+            { name: (t.nav?.taxEstimation || 'Tax Estimation'), path: '/tax-estimation', icon: Calculator, tour: 'tax-estimation' },
             { name: (t.nav?.feeEstimation || 'Fee Estimation'), path: '/fee-estimation', icon: Receipt, tour: 'fee-estimation' },
           ]
         },
@@ -134,6 +136,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: 'ADMINISTRATION',
           items: [
             { name: 'User Management', path: '/user-management', icon: Users },
+            { name: 'Role & Access Matrix', path: '/role-management', icon: Shield },
             { name: 'Audit Trail', path: '/audit-logs', icon: History }
           ]
         },

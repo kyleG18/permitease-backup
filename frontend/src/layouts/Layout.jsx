@@ -2,8 +2,8 @@ import React, { useContext } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import ProductOnboardingBanner from '../components/ProductOnboardingBanner';
-import { MessageSquare } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import ChatWidget from '../components/ChatWidget';
+import { useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
@@ -55,17 +55,9 @@ const Layout = ({ children }) => {
         </main>
       </div>
 
-      {/* Floating AI Chat Button — hidden on chat page and form/applications page */}
-      {!isChatPage && !isFormPage && (
-        <Link 
-          to="/assistant" 
-          className="btn btn-primary floating-chat-btn"
-          title="Ask AI Assistant"
-          aria-label="Ask AI Assistant"
-        >
-          <MessageSquare size={22} />
-        </Link>
-      )}
+      {/* Floating AI Chat Widget — opens a chat window on the current page.
+          Hidden on the full chat page and the form/applications page */}
+      {!isChatPage && !isFormPage && <ChatWidget />}
     </div>
   );
 };

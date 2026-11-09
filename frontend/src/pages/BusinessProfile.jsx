@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { BusinessContext } from '../context/BusinessContext';
 import { LanguageContext } from '../context/LanguageContext';
 import { Building2, Plus, Edit, Trash2, X, Users, MapPin, Calendar, AlertTriangle } from 'lucide-react';
 import { BUSINESS_TYPES, getCategoriesForType } from '../data/businessCategories';
@@ -9,6 +10,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const BusinessProfile = () => {
   const { user } = useContext(AuthContext);
+  const { refreshBusinesses } = useContext(BusinessContext);
   const { lang } = useContext(LanguageContext);
   const isTl = lang === 'tl';
   const [businesses, setBusinesses] = useState([]);
@@ -209,6 +211,7 @@ const BusinessProfile = () => {
       }
       setShowModal(false);
       fetchBusinesses();
+      refreshBusinesses?.();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save business');
     }
@@ -219,6 +222,7 @@ const BusinessProfile = () => {
     try {
       await axios.delete(`${API}/businesses/${id}`, config);
       fetchBusinesses();
+      refreshBusinesses?.();
     } catch (err) {
       setError(isTl ? 'Nabigong burahin ang negosyo' : 'Failed to delete business');
     }
@@ -289,17 +293,20 @@ const BusinessProfile = () => {
 
   return (
     <div className="animate-fade-in page-container">
-      <div className="page-heading-row profile-header-row" style={{ marginBottom: '2rem' }}>
+      <div className="municipal-page-header">
         <div>
-          <h1 style={{ color: 'var(--government-navy)', margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800 }}>
+          <div className="municipal-page-kicker">
+            {isTl ? 'Munisipalidad ng Roxas · Rehistro ng Negosyo' : 'Municipality of Roxas · Enterprise Registry'}
+          </div>
+          <h1 className="municipal-page-title">
             {isTl ? 'Mga Profile ng Negosyo' : 'Business Profiles'}
           </h1>
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>
+          <p className="municipal-page-subtitle">
             {isTl ? 'Pamahalaan ang iyong mga nakarehistrong negosyo at establisyimento.' : 'Manage your registered business enterprises and establishments.'}
           </p>
         </div>
         <button className="btn btn-primary" onClick={openAddModal}>
-          <Plus size={18} /> {isTl ? 'Magdagdag ng Negosyo' : 'Add Business'}
+          <Plus size={16} /> {isTl ? 'Magdagdag ng Negosyo' : 'Add Business'}
         </button>
       </div>
 

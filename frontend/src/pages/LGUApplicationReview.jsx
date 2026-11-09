@@ -350,16 +350,16 @@ export default function LGUApplicationReview() {
           <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', marginBottom: '1.5rem', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
 
             {/* Card Header */}
-            <div style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', padding: '0.9rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', padding: '0.9rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ClipboardList size={17} color="#fff" />
-                <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>Permit Requirements Checklist</span>
+                <ClipboardList size={17} color="#15803D" />
+                <span style={{ color: '#0F172A', fontWeight: 700, fontSize: '0.95rem' }}>Permit Requirements Checklist</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
+                <span className="tabular-nums" style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>
                   {readyReqs} Ready · {totalReqs - readyReqs} Needed · {totalReqs} Total
                 </span>
-                <span style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.18)', padding: '0.15rem 0.6rem', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.35)' }}>
+                <span className="tabular-nums" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#166534', background: '#DCFCE7', padding: '0.15rem 0.6rem', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
                   {readScore}%
                 </span>
               </div>

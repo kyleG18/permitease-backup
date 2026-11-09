@@ -61,8 +61,54 @@ const Header = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const searchRef = useRef(null);
   const token = user?.token;
+
+  const quickSearchItems = (() => {
+    const role = user?.role;
+    if (role === 'lgu_admin' || role === 'system_admin') {
+      const items = [
+        { label: 'BPLO Dashboard & Pre-Assessment Queue', category: 'Module', path: '/dashboard', keywords: 'dashboard pre-assessment queue lookup counter' },
+        { label: 'Application Forms (Form BPLO-01)', category: 'Module', path: '/admin/applications', keywords: 'applications form bplo-01 print edit review' },
+        { label: 'Walk-in Schedule & Window 1 Roster', category: 'Module', path: '/admin/walkins', keywords: 'walk-in schedule window 1 roster appointment closure holiday' },
+        { label: 'Municipal Requirements & Ordinances', category: 'Module', path: '/requirements', keywords: 'requirements clearances ordinance fsic sanitary barangay fee' },
+        { label: 'Reports & Compliance Analytics', category: 'Reports', path: '/admin/analytics', keywords: 'reports analytics print executive summary delinquent' },
+        { label: 'Municipal Knowledge Base', category: 'Archive', path: '/knowledge', keywords: 'knowledge base pdf ordinance charter' },
+        { label: 'Account Settings', category: 'Account', path: '/settings', keywords: 'settings password profile' }
+      ];
+      if (role === 'system_admin') {
+        items.push(
+          { label: 'User & Staff Directory', category: 'Admin', path: '/user-management', keywords: 'users staff bplo admin directory register' },
+          { label: 'Role Matrix & RBAC Permissions', category: 'Admin', path: '/role-management', keywords: 'roles permissions rbac access control' },
+          { label: 'System Security Audit Trail', category: 'Admin', path: '/audit-logs', keywords: 'audit logs security trail history ip' }
+        );
+      }
+      return items;
+    }
+    return [
+      { label: isTl ? 'Dashboard ng Negosyo' : 'Preparation Dashboard', category: isTl ? 'Pahina' : 'Module', path: '/dashboard', keywords: 'dashboard overview status readiness' },
+      { label: isTl ? 'Profile ng Aking Negosyo' : 'My Business Profile', category: isTl ? 'Pahina' : 'Module', path: '/profile', keywords: 'business profile address capitalization owner tin dti' },
+      { label: isTl ? 'AI Permit Assessment at Checklist' : 'AI Permit Assessment & Checklist', category: isTl ? 'Assessment' : 'Assessment', path: '/assessment', keywords: 'ai assessment requirements checklist barangay fsic sanitary dti cedula' },
+      { label: isTl ? 'Estimador ng Buwis sa BIR' : 'National BIR Tax Estimator', category: isTl ? 'Buwis' : 'Estimator', path: '/tax-estimation', keywords: 'bir tax estimation income percentage vat 8% flat graduated' },
+      { label: isTl ? 'Estimador ng Bayarin sa Munisipyo' : 'Local Permit & Clearance Fee Estimator', category: isTl ? 'Bayarin' : 'Estimator', path: '/fee-estimation', keywords: 'fee estimation mayors permit sanitary fire clearance lbt' },
+      { label: isTl ? 'Maghanda ng Aplikasyon (Form BPLO-01)' : 'Prepare Application (Form BPLO-01)', category: isTl ? 'Aplikasyon' : 'Preparation', path: '/applications', keywords: 'prepare application form bplo-01 print ebpls walk-in' },
+      { label: isTl ? 'Mag-schedule ng Pagbisita (Window 1)' : 'Schedule Walk-in Visit (Window 1)', category: isTl ? 'Appointment' : 'Preparation', path: '/schedule-walkin', keywords: 'schedule walk-in appointment window 1 queue ticket' },
+      { label: isTl ? 'AI Help at Gabay sa Permit' : 'AI Permit Assistant (Chatbot)', category: isTl ? 'Tulong' : 'Assistance', path: '/assistant', keywords: 'ai assistant help chatbot questions' },
+      { label: isTl ? 'Mga Abiso (Notifications)' : 'Notifications & Advisories', category: isTl ? 'Abiso' : 'Alerts', path: '/notifications', keywords: 'notifications alerts updates' },
+      { label: isTl ? 'Settings ng Account' : 'Account Settings', category: isTl ? 'Account' : 'Account', path: '/settings', keywords: 'settings profile password security' }
+    ];
+  })();
+
+  const filteredSearchItems = searchQuery.trim()
+    ? quickSearchItems.filter(item =>
+        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.keywords.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : quickSearchItems.slice(0, 6);
 
   const fetchCount = () => {
     if (!token) return;
@@ -83,20 +129,23 @@ const Header = ({ toggleSidebar }) => {
     };
   }, [token]);
 
-  // Click outside listener to close notification popover
+  // Click outside listener to close notification popover and search dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
     };
-    if (isDropdownOpen) {
+    if (isDropdownOpen || isSearchOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, isSearchOpen]);
 
   const fetchRecentNotifications = async () => {
     if (!token) return;
@@ -197,22 +246,70 @@ const Header = ({ toggleSidebar }) => {
         </button>
 
         {/* Search Bar */}
-        <div className="header-search" style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
-          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+        <div className="header-search header-search-wrap" ref={searchRef} style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
+          <Search size={15} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)', pointerEvents: 'none' }} />
           <input
             type="text"
-            placeholder={t.header?.searchPlaceholder || 'Search permits, requirements...'}
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsSearchOpen(true);
+            }}
+            onFocus={() => setIsSearchOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsSearchOpen(false);
+              } else if (e.key === 'Enter' && filteredSearchItems.length > 0) {
+                navigate(filteredSearchItems[0].path);
+                setIsSearchOpen(false);
+                setSearchQuery('');
+              }
+            }}
+            placeholder={t.header?.searchPlaceholder || 'Quick jump to permits, estimators, modules...'}
+            aria-label="Quick search navigation"
             className="form-control"
             style={{ 
-              padding: '0.6rem 1rem 0.6rem 2.75rem', 
-              borderRadius: 'var(--radius-full)', 
+              padding: '0.45rem 0.9rem 0.45rem 2.35rem', 
+              borderRadius: 'var(--radius-sm)', 
               backgroundColor: 'var(--background)', 
-              border: '1px solid transparent', 
-              fontSize: '0.875rem'
+              border: '1px solid var(--border-light)', 
+              fontSize: '0.8125rem'
             }}
-            onFocus={(e) => { e.target.style.backgroundColor = 'var(--surface)'; e.target.style.borderColor = 'var(--primary-green)'; }}
-            onBlur={(e) => { e.target.style.backgroundColor = 'var(--background)'; e.target.style.borderColor = 'transparent'; }}
           />
+          {isSearchOpen && (
+            <div className="header-search-dropdown" role="listbox">
+              <div style={{ padding: '0.35rem 0.65rem', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', marginBottom: '0.2rem' }}>
+                {searchQuery.trim()
+                  ? (isTl ? 'Mga Resulta ng Paghahanap' : 'Matching Modules & Tools')
+                  : (isTl ? 'Mabilis na Pagpunta (Quick Jump)' : 'Quick Navigation')}
+              </div>
+              {filteredSearchItems.length === 0 ? (
+                <div style={{ padding: '0.85rem 0.75rem', fontSize: '12.5px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                  {isTl ? 'Walang nahanap na tugma.' : 'No matching modules found.'}
+                </div>
+              ) : (
+                filteredSearchItems.map((item) => (
+                  <button
+                    key={item.path + item.label}
+                    type="button"
+                    className="header-search-item"
+                    onClick={() => {
+                      navigate(item.path);
+                      setIsSearchOpen(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {item.label}
+                    </span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', padding: '0.12rem 0.45rem', borderRadius: '4px', backgroundColor: '#F1F5F9', color: 'var(--text-secondary)', flexShrink: 0 }}>
+                      {item.category}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 

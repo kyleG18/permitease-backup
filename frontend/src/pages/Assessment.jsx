@@ -233,7 +233,7 @@ function FormattedAiResponse({ text }) {
 }
 
 const ANALYSIS_STEPS = [
-  'Reading business profile & declared activities in Roxas City...',
+  'Reading business profile & declared activities in Municipality of Roxas...',
   'Cross-referencing Roxas Municipal Revenue Code & national statutes...',
   'Checking prerequisite clearances (DTI/SEC, BFP, Sanitary, Zoning)...',
   'Finalizing tailored permit checklist & estimated processing fees...'
@@ -253,7 +253,7 @@ const Assessment = () => {
     'Sinusuri ang mga paunang clearance (DTI/SEC, BFP, Sanitary, Zoning)...',
     'Kinukumpleto ang iniangkop na checklist ng permit at mga tinatayang bayarin...'
   ] : [
-    'Reading business profile & declared activities in Roxas City...',
+    'Reading business profile & declared activities in Municipality of Roxas...',
     'Cross-referencing Roxas Municipal Revenue Code & national statutes...',
     'Checking prerequisite clearances (DTI/SEC, BFP, Sanitary, Zoning)...',
     'Finalizing tailored permit checklist & estimated processing fees...'
@@ -302,7 +302,10 @@ const Assessment = () => {
         setAssessments(histRes.data || []);
         setKnowledgeDocs(Array.isArray(kbRes.data) ? kbRes.data : []);
         if (bizList.length > 0) {
-          setSelectedBizId(String(bizList[0].id));
+          const params = new URLSearchParams(window.location.search);
+          const requestedBizId = params.get('businessId') || params.get('business_id');
+          const matched = requestedBizId && bizList.find(b => String(b.id) === String(requestedBizId));
+          setSelectedBizId(String(matched ? matched.id : bizList[0].id));
         }
       } catch (err) {
         setError('Failed to load initial data.');
@@ -555,7 +558,7 @@ Instructions:
             <p className="text-muted" style={{ margin: '0.15rem 0 0', fontSize: '0.875rem' }}>
               {isTl
                 ? 'Gabay ng AI sa pagtukoy ng lahat ng mga permit at statutory requirements para sa iyong negosyo sa Bayan ng Roxas.'
-                : 'AI-guided identification of all municipal permits and statutory requirements for your specific business in Roxas City.'}
+                : 'AI-guided identification of all municipal permits and statutory requirements for your specific business in the Municipality of Roxas.'}
             </p>
           </div>
         </div>
@@ -757,7 +760,7 @@ Instructions:
           {currentResult.ai_assessment.questions?.length > 0 && (
             <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--ai-accent-border)' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--ai-accent-dark)' }}>
-                {isTl ? 'Mga puntong lilinawin sa Roxas City BPLO:' : 'Points to clarify with Roxas City BPLO:'}
+                {isTl ? 'Mga puntong lilinawin sa Roxas Municipal BPLO:' : 'Points to clarify with Roxas Municipal BPLO:'}
               </span>
               <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 {currentResult.ai_assessment.questions.map((q, idx) => (
@@ -782,7 +785,7 @@ Instructions:
             <p style={{ margin: '0.15rem 0 0', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
               {isTl
                 ? `Hakbang-hakbang na rekisito para sa ${selectedBiz?.business_type || 'iyong negosyo'} sa Bayan ng Roxas.`
-                : `Step-by-step regulatory requirements tailored for ${selectedBiz?.business_type || 'your business'} in Roxas City.`}
+                : `Step-by-step regulatory requirements tailored for ${selectedBiz?.business_type || 'your business'} in the Municipality of Roxas.`}
             </p>
           </div>
           

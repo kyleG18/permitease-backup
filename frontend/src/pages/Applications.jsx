@@ -42,7 +42,12 @@ export default function Applications() {
       .then(data => {
         const list = Array.isArray(data) ? data : [];
         setBusinesses(list);
-        if (list.length > 0) setSelectedBizId(String(list[0].id));
+        if (list.length > 0) {
+          const params = new URLSearchParams(window.location.search);
+          const requestedBizId = params.get('businessId') || params.get('business_id');
+          const matched = requestedBizId && list.find(b => String(b.id) === String(requestedBizId));
+          setSelectedBizId(String(matched ? matched.id : list[0].id));
+        }
         setLoadingBiz(false);
       })
       .catch(() => setLoadingBiz(false));

@@ -290,10 +290,10 @@ const Requirements = () => {
       {loading ? (
         <div style={{ padding: '4rem', textAlign: 'center', color: '#64748B' }}>Loading municipal requirements...</div>
       ) : (
-        <div style={{ backgroundColor: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+        <div style={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
-              <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
+              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569' }}>
                 <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Clearance & Legal Basis</th>
                 <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Classification & Rule</th>
                 <th style={{ padding: '0.875rem 1.25rem', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Applicability</th>

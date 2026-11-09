@@ -291,7 +291,7 @@ export default function LGUApplications() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
                   <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Form / Ref #</th>
                   <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Business Profile</th>
                   <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Applicant / Owner</th>

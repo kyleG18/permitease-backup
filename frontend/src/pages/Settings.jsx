@@ -9,7 +9,7 @@ const Settings = () => {
   const { lang, t } = useContext(LanguageContext);
   const ts = t.settings;
   
-  const [profile, setProfile] = useState({ full_name: user?.full_name || '', contact_number: '' }); // Would fetch real contact if stored in context
+  const [profile, setProfile] = useState({ full_name: user?.full_name || '', contact_number: user?.contact_number || '' });
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm_password: '' });
   
   const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
@@ -22,7 +22,10 @@ const Settings = () => {
     try {
       await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/profile`, profile, config);
       setProfileMessage({ type: 'success', text: ts.profileUpdated });
-      // Minor issue: the AuthContext still has the old name in memory until they re-login, but that's okay for now.
+      try {
+        const stored = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...stored, full_name: profile.full_name, contact_number: profile.contact_number }));
+      } catch {}
     } catch (err) {
       setProfileMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update profile' });
     }
@@ -92,6 +95,7 @@ const Settings = () => {
                 className="form-control" 
                 value={profile.contact_number} 
                 onChange={(e) => setProfile({ ...profile, contact_number: e.target.value })}
+                required
                 placeholder=" "
               />
               <label className="form-label">{ts.phone}</label>

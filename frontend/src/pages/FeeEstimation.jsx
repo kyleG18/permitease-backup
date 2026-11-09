@@ -73,7 +73,13 @@ export default function FeeEstimation() {
 
   const activeBiz = useMemo(() => {
     if (!businesses || businesses.length === 0) return null;
-    return businesses.find(b => String(b.id) === String(selectedBizId)) || businesses[0];
+    if (selectedBizId) {
+      return businesses.find(b => String(b.id) === String(selectedBizId)) || businesses[0];
+    }
+    const params = new URLSearchParams(window.location.search);
+    const requestedBizId = params.get('businessId') || params.get('business_id');
+    const matched = requestedBizId && businesses.find(b => String(b.id) === String(requestedBizId));
+    return matched || businesses[0];
   }, [businesses, selectedBizId]);
 
   // Load and pre-fill form fields whenever selected business changes
@@ -1181,14 +1187,15 @@ export default function FeeEstimation() {
             </div>
           </div>
 
-          {/* ── STEP 5: COMPREHENSIVE COMBINED TOTAL HERO BOX ── */}
+          {/* ── STEP 5: COMPREHENSIVE COMBINED TOTAL SUMMARY BOX ── */}
           <div style={{
-            padding: '1.5rem 1.75rem',
-            background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
-            color: '#FFFFFF',
-            borderRadius: '14px',
+            padding: '1.35rem 1.65rem',
+            backgroundColor: '#F0FDF4',
+            border: '1px solid #BBF7D0',
+            borderLeft: '4px solid #15803D',
+            color: '#0F172A',
+            borderRadius: '10px',
             marginBottom: '1.5rem',
-            boxShadow: '0 4px 16px rgba(21, 128, 61, 0.25)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1196,26 +1203,26 @@ export default function FeeEstimation() {
             gap: '1.25rem'
           }}>
             <div style={{ flex: 1, minWidth: '240px' }}>
-              <div style={{ fontSize: '0.8125rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#BBF7D0', marginBottom: '0.35rem' }}>
-                {isTl ? 'KABUUANG TINATAYANG PUHUNAN SA PAGSUNOD' : 'TOTAL ESTIMATED COMPLIANCE & LAUNCH INVESTMENT'}
+              <div style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#166534', marginBottom: '0.3rem' }}>
+                {isTl ? 'KABUUANG TINATAYANG PUHUNAN SA PAGSUNOD' : 'TOTAL ESTIMATED COMPLIANCE & PREPARATION BUDGET'}
               </div>
-              <div style={{ fontSize: '0.85rem', color: '#E2E8F0', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.85rem', color: '#334155', lineHeight: 1.5 }}>
                 {isTl
                   ? `Pinagsamang bayarin para sa lahat ng Prerequisite Requirements (${php(requirementExpenses.total)}) at mga Permit sa Munisipyo (${php(displayTotal)}).`
-                  : `Combined total of all Prerequisite Requirements (${php(requirementExpenses.total)}) plus Municipal Hall Permits (${php(displayTotal)}).`}
+                  : `Combined total of all Prerequisite Requirements (${php(requirementExpenses.total)}) plus Municipal Hall Clearances (${php(displayTotal)}).`}
               </div>
               {requirementExpenses.stillNeeded > 0 && (
-                <div style={{ fontSize: '0.8rem', color: '#FEF08A', fontWeight: 600, marginTop: '0.35rem' }}>
-                  ⏳ {php(grandTotalStillNeeded)} {isTl ? 'ang kailangang ihanda para sa mga natitira pang kailangan.' : 'needed to complete remaining requirements.'}
+                <div style={{ fontSize: '0.8rem', color: '#92400E', fontWeight: 700, marginTop: '0.35rem' }}>
+                  Remaining preparation balance: {php(grandTotalStillNeeded)} {isTl ? 'para sa mga natitirang dokumento.' : 'needed to complete remaining requirements.'}
                 </div>
               )}
             </div>
 
             <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: '900', color: '#FFFFFF', letterSpacing: '-0.03em', lineHeight: 1 }}>
+              <div className="tabular-nums" style={{ fontSize: '2.15rem', fontWeight: 800, color: '#14532D', letterSpacing: '-0.02em', lineHeight: 1 }}>
                 {php(grandTotal)}
               </div>
-              <div style={{ fontSize: '0.78rem', color: '#BBF7D0', marginTop: '0.3rem', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.75rem', color: '#15803D', marginTop: '0.3rem', fontWeight: 600 }}>
                 {isTl ? 'Buong Badyet para sa Negosyo' : 'Comprehensive Business Compliance Budget'}
               </div>
             </div>

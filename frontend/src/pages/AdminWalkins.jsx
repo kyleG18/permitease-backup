@@ -374,7 +374,7 @@ export default function AdminWalkins() {
               <CalendarX size={22} color={colors.text} style={{ flexShrink: 0, marginTop: '1px' }} />
               <div>
                 <div style={{ fontWeight: 800, fontSize: '14px', color: colors.text, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                  🛑 BPLO OFFICE CLOSED — {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  BPLO OFFICE CLOSED — {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
                 <div style={{ fontSize: '13px', color: colors.text, marginTop: '2px', fontWeight: 600 }}>
                   {CLOSURE_TYPE_LABELS[closureInfo.day_type] || closureInfo.day_type}
@@ -414,7 +414,7 @@ export default function AdminWalkins() {
             fontSize: '13px', fontWeight: 700, cursor: 'pointer'
           }}
         >
-          <Calendar size={16} /> 🗓️ Monthly Calendar &amp; Closures
+          <Calendar size={16} /> Monthly Calendar &amp; Closures
         </button>
         {!closureInfo && (
           <button
@@ -470,11 +470,11 @@ export default function AdminWalkins() {
         <div className="card" style={{ padding: '1.1rem 1.25rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', borderLeft: '4px solid #F59E0B' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748B' }}>
-              🌅 Morning Batch
+              Morning Batch
             </span>
             <span style={{ fontSize: '11px', color: '#D97706', fontWeight: 700 }}>8AM – 11AM</span>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#B45309', marginTop: '4px' }}>
+          <div className="tabular-nums" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#B45309', marginTop: '4px' }}>
             {summary.morningBatch || 0} <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>/ 25 slots</span>
           </div>
           <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
@@ -486,11 +486,11 @@ export default function AdminWalkins() {
         <div className="card" style={{ padding: '1.1rem 1.25rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', borderLeft: '4px solid #3B82F6' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748B' }}>
-              🌇 Afternoon Batch
+              Afternoon Batch
             </span>
             <span style={{ fontSize: '11px', color: '#2563EB', fontWeight: 700 }}>1PM – 4PM</span>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1D4ED8', marginTop: '4px' }}>
+          <div className="tabular-nums" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1D4ED8', marginTop: '4px' }}>
             {summary.afternoonBatch || 0} <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>/ 25 slots</span>
           </div>
           <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
@@ -532,8 +532,8 @@ export default function AdminWalkins() {
         <div style={{ display: 'flex', gap: '0.35rem' }}>
           {[
             { id: 'ALL', label: 'All Batches' },
-            { id: 'MORNING', label: '🌅 Morning' },
-            { id: 'AFTERNOON', label: '🌇 Afternoon' }
+            { id: 'MORNING', label: 'Morning' },
+            { id: 'AFTERNOON', label: 'Afternoon' }
           ].map(b => (
             <button
               key={b.id}
@@ -559,9 +559,9 @@ export default function AdminWalkins() {
         <div style={{ display: 'flex', gap: '0.35rem' }}>
           {[
             { id: 'ALL', label: 'All Status' },
-            { id: 'PENDING', label: '⏳ Pending' },
-            { id: 'CONFIRMED', label: '✅ Confirmed' },
-            { id: 'ATTENDED', label: '📍 Attended' }
+            { id: 'PENDING', label: 'Pending' },
+            { id: 'CONFIRMED', label: 'Confirmed' },
+            { id: 'ATTENDED', label: 'Attended' }
           ].map(s => (
             <button
               key={s.id}
@@ -586,7 +586,7 @@ export default function AdminWalkins() {
       </div>
 
       {/* ── ROSTER TABLE ─────────────────────────────────────────────────── */}
-      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)' }}>
         
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
@@ -606,7 +606,7 @@ export default function AdminWalkins() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
                   <th style={{ padding: '0.85rem 1rem', width: '50px', fontWeight: 700 }}>#</th>
                   <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Batch Slot</th>
                   <th style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>Business Name</th>

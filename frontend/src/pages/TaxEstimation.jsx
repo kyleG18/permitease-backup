@@ -103,7 +103,10 @@ export default function TaxEstimation() {
 
   useEffect(() => {
     if (businesses && businesses.length > 0 && !selectedBizId) {
-      setSelectedBizId(String(businesses[0].id));
+      const params = new URLSearchParams(window.location.search);
+      const requestedBizId = params.get('businessId') || params.get('business_id');
+      const matched = requestedBizId && businesses.find((b) => String(b.id) === String(requestedBizId));
+      setSelectedBizId(String(matched ? matched.id : businesses[0].id));
     }
   }, [businesses, selectedBizId]);
 
@@ -478,7 +481,7 @@ export default function TaxEstimation() {
                   transition: 'all 0.15s ease'
                 }}
               >
-                📅 {isTl ? 'Taunan (Annual)' : 'Annual Sales'}
+                {isTl ? 'Taunan (Annual Sales)' : 'Annual Sales'}
               </button>
               <button
                 type="button"
@@ -496,7 +499,7 @@ export default function TaxEstimation() {
                   transition: 'all 0.15s ease'
                 }}
               >
-                📋 {isTl ? 'Quarterly na Benta' : 'Quarterly Sales'}
+                {isTl ? 'Quarterly na Benta' : 'Quarterly Sales'}
               </button>
             </div>
           </div>
@@ -734,7 +737,7 @@ export default function TaxEstimation() {
                     color: viewMode === 'annual' ? '#fff' : 'var(--text-secondary)'
                   }}
                 >
-                  📅 {isTl ? 'Taunan (Annual)' : 'Annual View'}
+                  {isTl ? 'Taunan (Annual)' : 'Annual View'}
                 </button>
                 <button
                   type="button"
@@ -750,7 +753,7 @@ export default function TaxEstimation() {
                     color: viewMode === 'quarterly' ? '#fff' : 'var(--text-secondary)'
                   }}
                 >
-                  📋 {isTl ? 'Quarterly' : 'Quarterly View'}
+                  {isTl ? 'Quarterly' : 'Quarterly View'}
                 </button>
               </div>
             </div>

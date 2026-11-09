@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { BusinessContext } from '../context/BusinessContext';
 
@@ -45,9 +45,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
               Before you can manage permits or applications, let's set up your business profile first.
             </p>
-            <a href="/onboarding" className="btn btn-primary" style={{ display: 'inline-block', padding: '0.75rem 2rem', fontWeight: '600', textDecoration: 'none' }}>
+            <Link to="/onboarding" className="btn btn-primary" style={{ display: 'inline-block', padding: '0.75rem 2rem', fontWeight: '600', textDecoration: 'none' }}>
               Set Up My Business
-            </a>
+            </Link>
           </div>
         </div>
       );

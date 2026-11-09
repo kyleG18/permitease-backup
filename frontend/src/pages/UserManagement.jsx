@@ -292,16 +292,16 @@ const UserManagement = () => {
       </div>
 
       {/* Users Table */}
-      <div className="card" style={{ borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+      <div className="card" style={{ borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)' }}>
         <div className="table-responsive">
           <table className="table" style={{ margin: 0 }}>
             <thead>
-              <tr style={{ background: 'linear-gradient(90deg, #15803D 0%, #166534 100%)', color: '#FFFFFF' }}>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>User Details</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role / Permission</th>
-                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Account Status</th>
-                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#FFFFFF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Registered</th>
+              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569' }}>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>User Details</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role / Permission</th>
+                <th style={{ padding: '0.9rem 1rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Account Status</th>
+                <th style={{ padding: '0.9rem 1.25rem', fontSize: '11px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Registered</th>
               </tr>
             </thead>
             <tbody>
@@ -324,7 +324,7 @@ const UserManagement = () => {
                   const initials = u.full_name
                     ? u.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
                     : 'U';
-                  const isSelf = u.id === user.id;
+                  const isSelf = String(u.id) === String(user?.id || user?._id) || (u.email && user?.email && u.email.toLowerCase() === user.email.toLowerCase());
 
                   return (
                     <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
