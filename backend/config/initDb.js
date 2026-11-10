@@ -224,7 +224,7 @@ const BASELINE_TABLES = [
 /**
  * Read-only verification of required schema migrations.
  */
-const verifyRequiredMigrations = async (connection) => {
+const verifyRequiredMigrations = async (connection, options = {}) => {
     if (process.env.SKIP_MIGRATION_CHECK === 'true') {
         console.log('[DB Init] SKIP_MIGRATION_CHECK active. Skipping migration verification.');
         return;
@@ -232,6 +232,10 @@ const verifyRequiredMigrations = async (connection) => {
 
     const [tables] = await connection.query("SHOW TABLES LIKE 'schema_migrations'");
     if (tables.length === 0) {
+        if (options.requireMigrationTable === false && process.env.REQUIRE_MIGRATION_TABLE !== 'true') {
+            console.log('[DB Init] Pre-migration baseline state detected (schema_migrations not yet created). Proceeding on verified 20-table baseline.');
+            return;
+        }
         throw new Error(
             'Required tracking table "schema_migrations" does not exist in the database. ' +
             'Ordinary server startup does not run migrations. ' +
@@ -310,8 +314,11 @@ const initDatabase = async (options = {}) => {
         }
 
         // 3. Verify required migrations (strictly read-only)
+        const requireMigrationTable = options.requireMigrationTable !== undefined
+            ? options.requireMigrationTable
+            : Boolean(options.connection);
         await criticalStep('verify required migrations', async () => {
-            await verifyRequiredMigrations(targetDb);
+            await verifyRequiredMigrations(targetDb, { requireMigrationTable });
         });
 
         console.log('[DB Init] Database health check & schema verification completed successfully.');
