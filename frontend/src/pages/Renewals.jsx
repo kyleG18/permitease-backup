@@ -129,7 +129,7 @@ const Renewals = () => {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => navigate(`/readiness?businessId=${p.business_id}&type=RENEWAL`)} style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <button onClick={() => navigate(`/assessment?businessId=${p.business_id}&type=RENEWAL`)} style={{ backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
                       {tr.renewNow} <ArrowRight size={16} />
                     </button>
                   )}

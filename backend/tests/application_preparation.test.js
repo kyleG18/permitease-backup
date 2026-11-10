@@ -1,5 +1,7 @@
 const axios = require('axios');
 const assert = require('assert');
+const db = require('../config/db');
+const { assertTestDatabase } = require('./test_db_guard');
 
 const API = 'http://localhost:5000/api';
 
@@ -9,6 +11,7 @@ const lguAdminH = { headers: { Authorization: `Bearer 3` } };
 const systemAdminH = { headers: { Authorization: `Bearer 4` } };
 
 async function getTokens() {
+    await assertTestDatabase(db);
     console.log('[Setup] Acquiring auth tokens...');
     const ts = Date.now();
     const uOwner = { email: `owner_${ts}@test.com`, role: 'business_owner', ref: ownerH };

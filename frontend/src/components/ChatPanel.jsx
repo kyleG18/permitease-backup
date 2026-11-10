@@ -42,9 +42,13 @@ const renderMessageContent = (rawText = '') => {
       );
     }
 
+    // Skip orphan bullet markers with no text (e.g. a lone "•" or "-")
+    if (/^[-*•]$/.test(trimmed)) {
+      return null;
+    }
+
     // Parse inline **bold** or *bold*
-    const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-    const parsedLine = parts.map((part, pIdx) => {
+    const parseInline = (text) => text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part, pIdx) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={pIdx} style={{ color: '#0f172a', fontWeight: '600' }}>{part.slice(2, -2)}</strong>;
       }
@@ -54,16 +58,20 @@ const renderMessageContent = (rawText = '') => {
       return part;
     });
 
-    // Standard list items (bullets or numbers)
-    const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ');
-    if (isBullet) {
+    // Standard list items (bullets). Strip only the bullet marker, keep the item text.
+    const bulletMatch = trimmed.match(/^(?:[-*•])\s+(.*)$/);
+    if (bulletMatch) {
+      const itemText = bulletMatch[1].trim();
+      if (!itemText) return null;
       return (
         <div key={idx} style={{ display: 'flex', gap: '8px', marginLeft: '6px', marginBottom: '4px' }}>
           <span style={{ color: 'var(--primary-green)', fontWeight: 'bold' }}>•</span>
-          <div style={{ flex: 1 }}>{parsedLine.slice(1)}</div>
+          <div style={{ flex: 1 }}>{parseInline(itemText)}</div>
         </div>
       );
     }
+
+    const parsedLine = parseInline(line);
 
     // Empty line / paragraph break
     if (!trimmed) {

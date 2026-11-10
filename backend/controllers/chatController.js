@@ -12,27 +12,42 @@ const buildUserContext = async (userId) => {
         const biz = businesses[0];
         const bizId = biz.id;
 
-        // Compliance checklist
-        const [checklist] = await db.query(`
-            SELECT pr.permit_name, br.status
-            FROM business_requirements br
-            JOIN permit_requirements pr ON br.requirement_id = pr.id
-            WHERE br.business_id = ?
-        `, [bizId]);
+        // Fetch business details in parallel to minimize database roundtrips
+        const [
+            [checklist],
+            [assessments],
+            [taxRules],
+            [permits],
+            [applications]
+        ] = await Promise.all([
+            db.query(`
+                SELECT pr.permit_name, br.status
+                FROM business_requirements br
+                JOIN permit_requirements pr ON br.requirement_id = pr.id
+                WHERE br.business_id = ?
+            `, [bizId]),
+            db.query(
+                'SELECT compliance_score, readiness_score FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
+                [bizId]
+            ),
+            db.query('SELECT * FROM tax_fee_rules WHERE is_active = TRUE'),
+            db.query(
+                `SELECT permit_name, expiration_date, status FROM permits WHERE business_id = ? ORDER BY expiration_date ASC LIMIT 3`,
+                [bizId]
+            ),
+            db.query(
+                `SELECT application_number, status, application_type FROM applications WHERE business_id = ? ORDER BY created_at DESC LIMIT 1`,
+                [bizId]
+            )
+        ]);
 
         const missing = checklist.filter(c => c.status === 'Missing').map(c => c.permit_name);
         const submitted = checklist.filter(c => c.status === 'Submitted' || c.status === 'Approved').map(c => c.permit_name);
 
-        // Latest compliance score
-        const [assessments] = await db.query(
-            'SELECT compliance_score, readiness_score FROM assessments WHERE business_id = ? ORDER BY created_at DESC LIMIT 1',
-            [bizId]
-        );
         const compScore = assessments.length > 0 ? assessments[0].compliance_score : 'Not yet evaluated';
         const readScore = assessments.length > 0 ? assessments[0].readiness_score : 'Not yet evaluated';
 
-        // Tax estimate (Official DB rules)
-        const [taxRules] = await db.query('SELECT * FROM tax_fee_rules WHERE is_active = TRUE');
+        // Tax estimate calculation
         const breakdown = [];
         let total = 0;
         for (const rule of taxRules) {
@@ -50,17 +65,6 @@ const buildUserContext = async (userId) => {
             total += amount;
         }
 
-        // Next expiring permit
-        const [permits] = await db.query(
-            `SELECT permit_name, expiration_date, status FROM permits WHERE business_id = ? ORDER BY expiration_date ASC LIMIT 3`,
-            [bizId]
-        );
-
-        // Recent Applications
-        const [applications] = await db.query(
-            `SELECT application_number, status, application_type FROM applications WHERE business_id = ? ORDER BY created_at DESC LIMIT 1`,
-            [bizId]
-        );
         const appInfo = applications.length > 0 
             ? `Application ${applications[0].application_number} (${applications[0].application_type}) is currently: ${applications[0].status}`
             : 'No active applications.';
@@ -122,30 +126,32 @@ const sendMessage = async (req, res) => {
             return res.status(400).json({ message: 'Question is too long. Maximum 4000 characters.' });
         }
 
-        // 1. Fetch permit requirements for context
-        const [requirements] = await db.query('SELECT permit_name, description FROM permit_requirements');
+        // 1. Fetch requirements, knowledge base, chat history, and live user context in parallel
+        const [
+            [requirements],
+            [knowledgeDocsResult],
+            [history],
+            userContext
+        ] = await Promise.all([
+            db.query('SELECT permit_name, description FROM permit_requirements'),
+            db.query('SELECT title FROM knowledge_base'),
+            db.query(
+                'SELECT question, response FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+                [req.user.id]
+            ),
+            buildUserContext(req.user.id)
+        ]);
 
-        // 2. Fetch knowledge base context
-        const [knowledgeDocsResult] = await db.query('SELECT title FROM knowledge_base');
         const knowledgeDocs = knowledgeDocsResult.map(d => d.title);
+        history.reverse(); // chronological order
 
-        // 3. Read static AI Context File
+        // 2. Read static AI Context File
         let staticContext = '';
         try {
             staticContext = fs.readFileSync(path.join(__dirname, '../services/ai_context.md'), 'utf8');
         } catch (e) {
             console.warn('ai_context.md not found, proceeding without it.');
         }
-
-        // 4. Fetch recent chat history (last 5 exchanges)
-        const [history] = await db.query(
-            'SELECT question, response FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
-            [req.user.id]
-        );
-        history.reverse(); // chronological order
-
-        // 5. Build live user context
-        const userContext = await buildUserContext(req.user.id);
 
         // 6. Format messages array for Groq (ignore any offline/error messages from history)
         const messages = [];

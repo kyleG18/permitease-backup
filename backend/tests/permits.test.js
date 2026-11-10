@@ -2,6 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
+const { assertTestDatabase } = require('./test_db_guard');
 
 const API = 'http://localhost:5000/api';
 
@@ -21,6 +22,7 @@ const assert = (condition, message) => {
 const runTest = async () => {
     try {
         console.log('--- STARTING PERMIT GENERATION TESTS ---');
+        await assertTestDatabase(db);
         
         // 1. Setup Users
         console.log('\\n[TEST SETUP] Creating test users and data...');

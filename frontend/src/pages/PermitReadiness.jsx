@@ -465,7 +465,7 @@ export default function PermitReadiness() {
                           )}
                           {(isHave || isNeed) && (
                             <button
-                              onClick={() => updateReqStatus(req.requirement_id, 'Pending')}
+                              onClick={() => updateReqStatus(req.requirement_id, 'Missing')}
                               aria-label="Reset status"
                               style={{ padding: '0.45rem 0.5rem', backgroundColor: 'transparent', color: '#94A3B8', border: 'none', cursor: 'pointer' }}
                             >

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { BusinessProvider } from './context/BusinessContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -54,6 +54,12 @@ const StandaloneProtectedLayout = ({ children, allowedRoles }) => (
   </ProtectedRoute>
 );
 
+// Forward legacy /readiness query parameters to the unified /assessment page
+const RedirectReadinessToAssessment = () => {
+  const location = useLocation();
+  return <Navigate to={{ pathname: '/assessment', search: location.search }} replace />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -80,7 +86,7 @@ function App() {
           <Route path="/compliance" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Compliance /></ProtectedLayout>} />
           <Route path="/tax-estimation" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><TaxEstimation /></ProtectedLayout>} />
           <Route path="/fee-estimation" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><FeeEstimation /></ProtectedLayout>} />
-          <Route path="/readiness" element={<Navigate to="/assessment" replace />} />
+          <Route path="/readiness" element={<RedirectReadinessToAssessment />} />
           <Route path="/compliance-history" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><ComplianceHistory /></ProtectedLayout>} />
           
           <Route path="/applications" element={<ProtectedLayout allowedRoles={['business_owner', 'system_admin']}><Applications /></ProtectedLayout>} />

@@ -5,6 +5,7 @@
 const axios = require('axios');
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
+const { assertTestDatabase } = require('./test_db_guard');
 
 const API = 'http://localhost:5000/api';
 const SECRET = process.env.JWT_SECRET || 'fallback_secret';
@@ -22,6 +23,7 @@ function formatPHP(n) {
 }
 
 async function run() {
+    await assertTestDatabase(db);
     console.log('\nâ”€â”€â”€ PERMIT TAX & FEE ASSESSMENT â€” ACCEPTANCE TESTS â”€â”€â”€\n');
 
     // â”€â”€â”€ SETUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

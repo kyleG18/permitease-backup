@@ -125,7 +125,7 @@ const getReadiness = async (req, res) => {
                 categories.push({ label: 'Requirements Checklist', status: 'Incomplete', max: 50, score: reqScore, detail: `${reviewedCount} of ${applicableRequirements.length} requirement(s) marked as prepared` });
                 earnedPoints += reqScore;
                 missingDocs.forEach(md => {
-                    actionRequired.push({ type: 'requirement', text: `"${md.permit_name}" — mark as prepared once you have this ready.`, actionText: 'Go to Permit Readiness', link: '/readiness', document_name: md.permit_name, requirement_id: md.id });
+                    actionRequired.push({ type: 'requirement', text: `"${md.permit_name}" — mark as prepared once you have this ready.`, actionText: 'Go to Assessment', link: '/assessment', document_name: md.permit_name, requirement_id: md.id });
                 });
             }
         } else {

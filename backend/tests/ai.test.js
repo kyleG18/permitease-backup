@@ -1,5 +1,6 @@
 const axios = require('axios');
 const db = require('../config/db');
+const { assertTestDatabase } = require('./test_db_guard');
 require('dotenv').config();
 
 const API = 'http://localhost:5000/api';
@@ -14,6 +15,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const setupTests = async () => {
     console.log('\n[TEST SETUP] Creating test users...');
+    await assertTestDatabase(db);
     try {
         // Business Owner
         const bRes = await axios.post(`${API}/auth/register`, {

@@ -196,14 +196,140 @@ const ROXAS_REQUIREMENTS = [
     }
 ];
 
-const initDatabase = async () => {
-    console.log('[DB Init] Running full database schema check & bootstrap...');
+const REQUIRED_MIGRATIONS = ['20261110_001_phase4a2'];
 
+const BASELINE_TABLES = [
+    'application_history',
+    'applications',
+    'assessments',
+    'audit_logs',
+    'bplo_schedule',
+    'business_requirements',
+    'businesses',
+    'chat_history',
+    'documents',
+    'knowledge_base',
+    'notifications',
+    'permit_requirements',
+    'permits',
+    'ph_barangays',
+    'ph_cities_municipalities',
+    'ph_island_groups',
+    'ph_provinces',
+    'ph_regions',
+    'tax_fee_rules',
+    'users'
+];
+
+/**
+ * Read-only verification of required schema migrations.
+ */
+const verifyRequiredMigrations = async (connection) => {
+    if (process.env.SKIP_MIGRATION_CHECK === 'true') {
+        console.log('[DB Init] SKIP_MIGRATION_CHECK active. Skipping migration verification.');
+        return;
+    }
+
+    const [tables] = await connection.query("SHOW TABLES LIKE 'schema_migrations'");
+    if (tables.length === 0) {
+        throw new Error(
+            'Required tracking table "schema_migrations" does not exist in the database. ' +
+            'Ordinary server startup does not run migrations. ' +
+            'Run explicit migration CLI: node backend/migrations/run_migration.js --version=20261110_001_phase4a2'
+        );
+    }
+
+    for (const version of REQUIRED_MIGRATIONS) {
+        const [rows] = await connection.query(
+            'SELECT status, finished_at, error_details FROM schema_migrations WHERE version = ?',
+            [version]
+        );
+        if (rows.length === 0) {
+            throw new Error(
+                `Required migration "${version}" is missing from schema_migrations. ` +
+                `Run explicit migration CLI: node backend/migrations/run_migration.js --version=${version}`
+            );
+        }
+        if (rows[0].status !== 'SUCCESS') {
+            throw new Error(
+                `Required migration "${version}" is not SUCCESS (current status: "${rows[0].status}"). ` +
+                `Details: ${rows[0].error_details || 'None'}. Halting server boot.`
+            );
+        }
+    }
+    console.log(`[DB Init] All required schema migrations verified (${REQUIRED_MIGRATIONS.join(', ')}: SUCCESS).`);
+};
+
+const initDatabase = async (options = {}) => {
+    const targetDb = options.connection || db;
+    console.log('[DB Init] Running database health check & schema verification...');
+
+    const criticalStep = async (name, fn) => {
+        try {
+            await fn();
+        } catch (err) {
+            console.error(`[DB Init FATAL] Critical step "${name}" failed:`, err.message);
+            throw err;
+        }
+    };
+
+    const optionalStep = async (name, fn) => {
+        try {
+            await fn();
+        } catch (err) {
+            console.warn(`[DB Init] Optional step "${name}" notice:`, err.message);
+        }
+    };
+
+    try {
+        // 1. Connection check
+        await criticalStep('database connection', async () => {
+            await targetDb.query('SELECT 1');
+        });
+
+        // 2. Check if baseline tables exist
+        const [tables] = await targetDb.query('SHOW TABLES');
+        const existingTableNames = new Set(tables.map(t => Object.values(t)[0].toLowerCase()));
+        const missingBaselineTables = BASELINE_TABLES.filter(t => !existingTableNames.has(t));
+
+        // If not in bootstrap mode and tables are missing, throw error
+        const isBootstrapAllowed = options.allowBootstrap === true || process.env.ALLOW_SCHEMA_BOOTSTRAP === 'true';
+
+        if (missingBaselineTables.length > 0) {
+            if (!isBootstrapAllowed) {
+                throw new Error(
+                    `Core database tables are missing (${missingBaselineTables.join(', ')}). ` +
+                    `Ordinary startup does not execute DDL. Initialize database with proper migration tools.`
+                );
+            }
+            console.log(`[DB Init Bootstrap] Creating missing baseline tables: ${missingBaselineTables.join(', ')}...`);
+            // Run creation statements only if explicitly authorized for bootstrap
+            await runBootstrapSchema();
+        } else {
+            console.log(`[DB Init] Core baseline schema verified (${BASELINE_TABLES.length} tables present). Zero DDL executed.`);
+        }
+
+        // 3. Verify required migrations (strictly read-only)
+        await criticalStep('verify required migrations', async () => {
+            await verifyRequiredMigrations(targetDb);
+        });
+
+        console.log('[DB Init] Database health check & schema verification completed successfully.');
+    } catch (err) {
+        console.error('[DB Init FATAL] Bootstrap aborted:', err.message);
+        throw err;
+    }
+};
+
+/**
+ * Isolated bootstrap function for initial blank database provisioning (development/tests only).
+ */
+async function runBootstrapSchema() {
     const safeStep = async (name, fn) => {
         try {
             await fn();
         } catch (err) {
-            console.warn(`[DB Init] Step "${name}" notice:`, err.message);
+            console.warn(`[DB Init Bootstrap] Step "${name}" notice:`, err.message);
         }
     };
 
@@ -212,10 +338,10 @@ const initDatabase = async () => {
             const [cols] = await db.query(`SHOW COLUMNS FROM \`${table}\` LIKE '${column}'`);
             if (cols.length === 0) {
                 await db.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
-                console.log(`[DB Migration] Added column ${column} to table ${table}`);
+                console.log(`[DB Bootstrap] Added column ${column} to table ${table}`);
             }
         } catch (err) {
-            console.warn(`[DB Migration] ensureColumn notice for ${table}.${column}:`, err.message);
+            console.warn(`[DB Bootstrap] ensureColumn notice for ${table}.${column}:`, err.message);
         }
     };
 
@@ -226,7 +352,7 @@ const initDatabase = async () => {
                 await db.query(`ALTER TABLE \`${table}\` MODIFY COLUMN \`${column}\` ${definition}`);
             }
         } catch (err) {
-            console.warn(`[DB Migration] modifyColumn notice for ${table}.${column}:`, err.message);
+            console.warn(`[DB Bootstrap] modifyColumn notice for ${table}.${column}:`, err.message);
         }
     };
 
@@ -765,10 +891,15 @@ const initDatabase = async () => {
             await ensureColumn('applications', 'counter_verified_at', "TIMESTAMP NULL");
         });
 
-        console.log('[DB Init] Database health check & bootstrap completed successfully.');
+        console.log('[DB Init Bootstrap] Initial schema tables created successfully.');
     } catch (err) {
-        console.error('[DB Init] Bootstrap notice:', err.message);
+        console.error('[DB Init Bootstrap] Bootstrap notice:', err.message);
+        throw err;
     }
-};
+}
+
+initDatabase.BASELINE_TABLES = BASELINE_TABLES;
+initDatabase.REQUIRED_MIGRATIONS = REQUIRED_MIGRATIONS;
+initDatabase.verifyRequiredMigrations = verifyRequiredMigrations;
 
 module.exports = initDatabase;

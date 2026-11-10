@@ -16,8 +16,8 @@ export const useChatSession = ({ enabled = true } = {}) => {
   const isTl = lang === 'tl';
 
   const defaultGreeting = isTl
-    ? "Kumusta! Ako ang PermitEase AI Assistant 🤖\n\nMatutulungan kita sa:\n• Kulang na permit requirements\n• Tinatayang bayarin para sa iyong negosyo\n• Compliance at application status\n• Mga tanong tungkol sa permit at negosyo sa Tagalog o English\n\nPaano kita matutulungan ngayon?"
-    : "Hello! I'm the PermitEase AI Assistant 🤖\n\nI can help you with:\n• Your missing permit requirements\n• Estimated fees for your business\n• Your compliance and application status\n• General permit and business questions\n\nHow can I help you today?";
+    ? "Hi! Ako ang PermitEase AI Assistant. Paano kita matutulungan ngayon?"
+    : "Hi! I'm PermitEase AI Assistant. How can I help you today?";
 
   const [messages, setMessages] = useState([{ type: 'bot', text: defaultGreeting }]);
   const [input, setInput] = useState('');

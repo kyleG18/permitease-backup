@@ -1,22 +1,115 @@
 const Groq = require('groq-sdk');
+const axios = require('axios');
 require('dotenv').config();
 
-// The user can override this in .env. Fallback to the current production model.
-const getModel = () => process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
+// Default models for primary and fallback providers
+const getGroqModel = () => process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
+const getOpenRouterModel = () => process.env.OPENROUTER_MODEL || 'openrouter/free';
 
 /**
- * Initialize Groq client securely. Uses environment variable or default key.
+ * Initialize Groq client securely. Reads exclusively from GROQ_API_KEY environment variable.
  */
 const getGroqClient = () => {
-    let apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) {
-        const p1 = 'gsk_1JrgxeNpOf87';
-        const p2 = 'UeqXIOsaWGdyb3';
-        const p3 = 'FYycUgVihq7RWAB';
-        const p4 = 'cLQFQxRDdoH';
-        apiKey = [p1, p2, p3, p4].join('');
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim()) {
+        return null;
     }
-    return new Groq({ apiKey });
+    return new Groq({ apiKey: apiKey.trim() });
+};
+
+/**
+ * Check if at least one AI provider (Groq or OpenRouter) is configured.
+ */
+const isAiConfigured = () => {
+    const groqKey = process.env.GROQ_API_KEY;
+    const orKey = process.env.OPENROUTER_API_KEY;
+    return !!((groqKey && groqKey.trim()) || (orKey && orKey.trim()));
+};
+
+/**
+ * Unified multi-provider LLM executor with automatic failover:
+ * Tier 1 (Primary): Groq API (ultra-fast sub-second LPU inference)
+ * Tier 2 (Fallback): OpenRouter API (resilient zero-cost free model router)
+ */
+const callLLM = async (messages, { temperature = 0.2, max_tokens = 4096 } = {}) => {
+    let lastError = null;
+
+    // 1. Try Groq (Primary)
+    const groq = getGroqClient();
+    if (groq) {
+        try {
+            const completion = await groq.chat.completions.create({
+                model: getGroqModel(),
+                messages,
+                temperature,
+                max_tokens
+            });
+            const content = completion.choices[0]?.message?.content || '';
+            if (content.trim()) {
+                return content;
+            }
+        } catch (groqErr) {
+            console.warn('[aiService] Groq API call failed or rate-limited:', groqErr.message);
+            lastError = groqErr;
+        }
+    }
+
+    // 2. Try OpenRouter (Secondary Fallback)
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    if (openrouterKey && typeof openrouterKey === 'string' && openrouterKey.trim()) {
+        try {
+            console.log('[aiService] Failing over to OpenRouter (model:', getOpenRouterModel(), ')...');
+            const response = await axios.post(
+                'https://openrouter.ai/api/v1/chat/completions',
+                {
+                    model: getOpenRouterModel(),
+                    messages,
+                    temperature,
+                    max_tokens
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${openrouterKey.trim()}`,
+                        'HTTP-Referer': 'https://permitease.ph',
+                        'X-Title': 'PermitEase Roxas',
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 25000 // 25s timeout for OpenRouter free endpoints
+                }
+            );
+            const content = response.data?.choices?.[0]?.message?.content || '';
+            if (content.trim()) {
+                console.log('[aiService] OpenRouter fallback succeeded (model:', response.data?.model || getOpenRouterModel(), ')');
+                return content;
+            }
+        } catch (orErr) {
+            const errMsg = orErr.response?.data?.error?.message || orErr.message;
+            console.warn('[aiService] OpenRouter fallback call failed:', errMsg);
+            lastError = orErr;
+        }
+    }
+
+    if (lastError) throw lastError;
+    throw new Error('No AI provider configured (neither GROQ_API_KEY nor OPENROUTER_API_KEY is available).');
+};
+
+/**
+ * Safely extract and parse JSON from an AI response text (handles think tags and markdown fences).
+ */
+const parseCleanJson = (rawText) => {
+    let text = rawText || '{}';
+    if (text.includes('</think>')) {
+        text = text.split('</think>')[1];
+    } else if (text.includes('<think>')) {
+        text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*/gi, '');
+    }
+    let jsonText = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+    const start = jsonText.indexOf('{');
+    const end = jsonText.lastIndexOf('}');
+    if (start !== -1 && end !== -1 && end >= start) {
+        jsonText = jsonText.substring(start, end + 1);
+    }
+    return JSON.parse(jsonText);
 };
 
 /**
@@ -121,9 +214,8 @@ const generateStructuredAssessment = async (business, availablePermits, knowledg
         };
     }
 
-    const groq = getGroqClient();
-    if (!groq) {
-        console.warn('[aiService] GROQ_API_KEY is not configured. Falling back to rule-based assessment.');
+    if (!isAiConfigured()) {
+        console.warn('[aiService] Neither GROQ_API_KEY nor OPENROUTER_API_KEY is configured. Falling back to rule-based assessment.');
         return generateRuleBasedAssessment(businessDescription);
     }
 
@@ -179,28 +271,8 @@ You MUST respond ONLY with valid JSON exactly matching this structure, with no m
 }`;
 
     try {
-        const completion = await groq.chat.completions.create({
-            model: getModel(),
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 4096
-        });
-
-        let rawText = completion.choices[0]?.message?.content || '{}';
-        if (rawText.includes('</think>')) {
-            rawText = rawText.split('</think>')[1];
-        } else if (rawText.includes('<think>')) {
-             throw new Error("AI response truncated. Please try again.");
-        }
-        
-        let jsonText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
-        const start = jsonText.indexOf('{');
-        const end = jsonText.lastIndexOf('}');
-        if (start !== -1 && end !== -1 && end >= start) {
-            jsonText = jsonText.substring(start, end + 1);
-        }
-        
-        const parsedResult = JSON.parse(jsonText);
+        const rawText = await callLLM([{ role: 'user', content: prompt }], { temperature: 0.1, max_tokens: 4096 });
+        const parsedResult = parseCleanJson(rawText);
         
         if (!parsedResult.industry_category || !parsedResult.business_type || typeof parsedResult.confidence !== 'number') {
             throw new Error('AI returned an incomplete JSON structure.');
@@ -218,8 +290,7 @@ You MUST respond ONLY with valid JSON exactly matching this structure, with no m
  * Generate a conversational response for the AI Chatbot.
  */
 const generateChatResponse = async (messages, userContext, staticContext, availablePermits, knowledgeDocs, preferredLanguage = "en", isAdvisory = false) => {
-    const groq = getGroqClient();
-    if (!groq) {
+    if (!isAiConfigured()) {
         return "I'm currently in offline mode — AI is not configured. Please contact the System Administrator!";
     }
 
@@ -285,15 +356,16 @@ ${staticContext}
 ${userContext}
 
 Instructions & Clean Formatting Rules:
-1. Answer the user's question clearly and conversationally. Connect concepts to practical business advice and compliance.
+1. Answer the user's question clearly, concisely, and conversationally. Aim for 2-3 short, focused paragraphs or a tidy bulleted list. Avoid unnecessary fluff.
 2. FORMATTING RULES (CLEAN & READABLE):
-   - DO NOT OVERUSE ASTERISKS (**) OR DASHES (---). Avoid markdown visual clutter!
-   - DO NOT place asterisks around whole sentences or random headers. Use standard capitalization for section headings (e.g. "1. Required Documents" instead of "### 1. **Required Documents**").
+   - NEVER output empty bullet points or lone dots. Every bullet point (•) MUST be followed by the clearance name and a brief note.
+   - DO NOT OVERUSE ASTERISKS (**) OR DASHES (---). Avoid visual clutter!
+   - DO NOT place asterisks around whole sentences or random headers. Use standard capitalization for section headings (e.g. "1. Required Documents").
    - DO NOT put horizontal divider lines (---) between every single paragraph.
-   - Use simple numbers (1., 2., 3.) or standard bullet points (•) for lists. Do not bold every bullet item.
-   - Keep answers clean, natural, and friendly—like a knowledgeable human officer typing in chat, not a raw robotic markdown template.
-3. When answering "How much do I need to pay?", cite the ESTIMATED PERMIT FEES from the real-time data and mention that it is an estimate.
-4. When answering "What requirements am I missing?", cite the MISSING REQUIREMENTS list.
+   - Use clean, standard bullet points (•) or numbers (1., 2., 3.).
+   - Keep answers clean, natural, and friendly—like a helpful municipal officer typing in chat.
+3. When answering "What requirements am I missing?", summarize the unique missing clearances (e.g., Barangay Clearance, Sanitary Permit, FSIC, Mayor's Permit) in a clean, deduplicated bulleted list.
+4. When answering "How much do I need to pay?", state the ESTIMATED TOTAL and 3-4 primary fee components from the real-time data, and remind the user that it is an advisory estimate.
 5. Remind users of the annual January 1 to 20 renewal window when discussing renewals.`;
 
     const fullMessages = [
@@ -302,16 +374,11 @@ Instructions & Clean Formatting Rules:
     ];
 
     try {
-        const completion = await groq.chat.completions.create({
-            model: getModel(),
-            messages: fullMessages,
-            temperature: 0.3,
-            max_tokens: 4096
-        });
-
-        let response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+        let response = await callLLM(fullMessages, { temperature: 0.3, max_tokens: 4096 });
         if (response.includes('</think>')) {
             response = response.split('</think>')[1].trim();
+        } else if (response.includes('<think>')) {
+            response = response.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*/gi, '').trim();
         }
 
         // Remove repetitive greetings if it's an advisory query or a follow-up turn in chat
@@ -355,9 +422,8 @@ const generateFeeEstimate = async (businessData, rulesData) => {
             summary: "PermitEase currently provides detailed permit preparation and estimation features for the Municipality of Roxas, Oriental Mindoro. Your location has been saved, but LGU-specific estimation is not currently configured for this location."
         };
     }
-    const groq = getGroqClient();
-    if (!groq) {
-        throw new Error('AI Assessment is temporarily unavailable. GROQ_API_KEY is not configured on the server.');
+    if (!isAiConfigured()) {
+        throw new Error('AI Assessment is temporarily unavailable. Neither GROQ_API_KEY nor OPENROUTER_API_KEY is configured on the server.');
     }
 
     const prompt = `You are an AI fee estimation assistant for the Municipality of Roxas PermitEase system.
@@ -409,28 +475,8 @@ INSTRUCTIONS:
 }`;
 
     try {
-        const completion = await groq.chat.completions.create({
-            model: getModel(),
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 4096
-        });
-
-        let rawText = completion.choices[0]?.message?.content || '{}';
-        if (rawText.includes('</think>')) {
-            rawText = rawText.split('</think>')[1];
-        } else if (rawText.includes('<think>')) {
-             throw new Error("AI response truncated. Please try again.");
-        }
-
-        let jsonText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
-        const start = jsonText.indexOf('{');
-        const end = jsonText.lastIndexOf('}');
-        if (start !== -1 && end !== -1 && end >= start) {
-            jsonText = jsonText.substring(start, end + 1);
-        }
-
-        return JSON.parse(jsonText);
+        const rawText = await callLLM([{ role: 'user', content: prompt }], { temperature: 0.1, max_tokens: 4096 });
+        return parseCleanJson(rawText);
     } catch (error) {
         console.error('[aiService] generateFeeEstimate error:', error.message);
         throw new Error('AI Fee Estimation service is temporarily unavailable. Please try again later.');

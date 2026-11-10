@@ -88,8 +88,8 @@ const loginUser = async (req, res) => {
 
         const cleanEmail = String(email).trim().toLowerCase();
 
-        // Check for user email case-insensitively and trimmed
-        const [users] = await db.query('SELECT * FROM users WHERE LOWER(TRIM(email)) = ?', [cleanEmail]);
+        // Check for user email using indexed lookup
+        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [cleanEmail]);
         const user = users[0];
 
         if (user && (await bcrypt.compare(password, user.password))) {
@@ -97,8 +97,10 @@ const loginUser = async (req, res) => {
                 return res.status(401).json({ message: 'Account is inactive. Please contact support.' });
             }
 
-            // Log audit
-            await logAudit(user.id, user.full_name, user.role, 'User Login', 'Successful login', req.ip);
+            // Log audit asynchronously so it doesn't block response delivery
+            logAudit(user.id, user.full_name, user.role, 'User Login', 'Successful login', req.ip).catch(err => {
+                console.warn('[AuditLog] Non-blocking audit error:', err.message);
+            });
 
             res.json({
                 _id: user.id,

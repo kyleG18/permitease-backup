@@ -6,9 +6,7 @@ const path = require('path');
 const cron = require('node-cron');
 const { processRenewalReminders } = require('./services/renewalReminderService');
 const initDatabase = require('./config/initDb');
-
-// Run database health check & auto-initialization
-initDatabase();
+const db = require('./config/db');
 
 // Security startup checks
 const DEFAULT_JWT_SECRET = 'my_super_secret_jwt_key_for_bizcheckpermit_development';
@@ -122,29 +120,65 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
-// ─────────────────────────────────────────────
-// Automated Renewal Reminder Daemon
-// Runs daily at 08:00 AM (server local time).
-// Sends 60-day, 30-day, and 7-day expiration notices
-// to business owners with expiring permits.
-// ─────────────────────────────────────────────
-cron.schedule('0 8 * * *', async () => {
-    console.log('[Cron] Daily renewal reminder job triggered at', new Date().toLocaleString());
-    try {
-        const result = await processRenewalReminders();
-        console.log('[Cron] Renewal reminders complete:', result);
-    } catch (err) {
-        console.error('[Cron] Renewal reminder job failed:', err.message);
-    }
-}, {
-    timezone: 'Asia/Manila'  // Philippine Standard Time
-});
-
-const PORT = process.env.PORT || 5000;
-
 let server;
-if (require.main === module) {
-    server = app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT} (0.0.0.0)`));
+
+/**
+ * Fail-closed server bootstrap sequence.
+ * 1. Strictly awaits database health and schema verification.
+ * 2. Halts launch immediately if any required migration is missing or failed.
+ * 3. Registers background daemons ONLY after database verification passes.
+ * 4. Binds Express HTTP listener ONLY after all prerequisites succeed.
+ */
+async function startServer() {
+    try {
+        console.log('[Startup] Permitease backend starting...');
+
+        // 1. Await database initialization and schema verification (strictly read-only)
+        await initDatabase();
+        console.log('[Startup] Database initialization and schema checks verified.');
+
+        // 2. Automated Renewal Reminder Daemon (registered ONLY after DB succeeds)
+        cron.schedule('0 8 * * *', async () => {
+            console.log('[Cron] Daily renewal reminder job triggered at', new Date().toLocaleString());
+            try {
+                const result = await processRenewalReminders();
+                console.log('[Cron] Renewal reminders complete:', result);
+            } catch (err) {
+                console.error('[Cron] Renewal reminder job failed:', err.message);
+            }
+        }, {
+            timezone: 'Asia/Manila'
+        });
+        console.log('[Startup] Renewal reminder daemon registered (08:00 AM PST).');
+
+        // 3. Bind HTTP listener
+        const PORT = process.env.PORT || 5000;
+        server = app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on port ${PORT} (0.0.0.0)`);
+        });
+
+        return server;
+    } catch (fatalErr) {
+        console.error('[FATAL STARTUP ERROR] Application bootstrap failed:', fatalErr.message);
+        console.error('[Startup] Aborting launch to protect database integrity.');
+
+        // Gracefully drain and close database connection pool
+        try {
+            if (db && typeof db.end === 'function') {
+                await db.end();
+                console.log('[Startup] Database connection pool closed cleanly.');
+            }
+        } catch (poolErr) {
+            console.warn('[Startup] Warning during pool closure:', poolErr.message);
+        }
+
+        process.exit(1);
+    }
 }
 
-module.exports = { app, server, getAuthRateLimitMax };
+// Execute startup ONLY when file is run directly (never when imported by tests)
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = { app, server, getAuthRateLimitMax, startServer };

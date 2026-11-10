@@ -7,6 +7,10 @@ router.post('/evaluate/:businessId', protect, evaluateCompliance);
 router.get('/business/:businessId', protect, getCompliance);
 
 router.put('/business/:businessId/requirement/:requirementId', protect, updateRequirementStatus);
+router.put('/requirements/:businessId/:requirementId/reset', protect, (req, res, next) => {
+    req.body = { ...req.body, status: 'Missing' };
+    return updateRequirementStatus(req, res, next);
+});
 router.put('/business/:bizId/requirement/:reqId/bplo-verify', protect, requireRole(['lgu_admin', 'system_admin']), bploVerifyRequirement);
 
 module.exports = router;

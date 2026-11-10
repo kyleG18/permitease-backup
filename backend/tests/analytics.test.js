@@ -22,6 +22,7 @@
 
 const axios = require('axios');
 const db = require('../config/db');
+const { assertTestDatabase } = require('./test_db_guard');
 
 const API = 'http://localhost:5000/api';
 
@@ -40,6 +41,7 @@ let testBizOwnerEmail = '';
 // Setup: obtain tokens
 // -----------------------------------------------------------
 const setup = async () => {
+    await assertTestDatabase(db);
     // 1. Register a fresh business owner for RBAC tests
     testBizOwnerEmail = `analytics_bo_${Date.now()}@test.com`;
     const boRes = await axios.post(`${API}/auth/register`, {

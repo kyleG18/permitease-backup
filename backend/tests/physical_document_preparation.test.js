@@ -54,9 +54,11 @@ const request = (method, path, data = null, token = null) => {
 };
 
 const db = require('../config/db');
+const { assertTestDatabase } = require('./test_db_guard');
 
 async function runTests() {
     console.log('--- STARTING TASK #12 TESTS: PHYSICAL DOCUMENT PREPARATION ---');
+    await assertTestDatabase(db);
     let passed = 0;
     let failed = 0;
     

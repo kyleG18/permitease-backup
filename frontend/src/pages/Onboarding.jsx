@@ -201,7 +201,7 @@ const Onboarding = () => {
       const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/businesses`, payload, config);
       sessionStorage.removeItem('pending_business_name');
       await refreshBusinesses();
-      navigate(`/readiness?businessId=${response.data.id}&type=${formData.business_status === 'Renewal' ? 'RENEWAL' : 'NEW'}`);
+      navigate(`/assessment?businessId=${response.data.id}&type=${formData.business_status === 'Renewal' ? 'RENEWAL' : 'NEW'}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create business profile.');
       setLoading(false);

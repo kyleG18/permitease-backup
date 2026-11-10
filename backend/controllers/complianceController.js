@@ -304,26 +304,10 @@ const updateRequirementStatus = async (req, res) => {
             return res.status(404).json({ message: 'Requirement not found for this business' });
         }
 
-        try {
-            await db.query(
-                'UPDATE business_requirements SET status = ? WHERE business_id = ? AND requirement_id = ?',
-                [status, businessId, requirementId]
-            );
-        } catch (updateErr) {
-            if (updateErr.message && (updateErr.message.includes('enum') || updateErr.message.includes('Data truncated'))) {
-                try {
-                    await db.query(`ALTER TABLE \`business_requirements\` MODIFY COLUMN status ENUM('Missing', 'Submitted', 'Approved', 'Rejected', 'Expired', 'Have', 'Not Required') DEFAULT 'Missing'`);
-                    await db.query(
-                        'UPDATE business_requirements SET status = ? WHERE business_id = ? AND requirement_id = ?',
-                        [status, businessId, requirementId]
-                    );
-                } catch (retryErr) {
-                    throw retryErr;
-                }
-            } else {
-                throw updateErr;
-            }
-        }
+        await db.query(
+            'UPDATE business_requirements SET status = ? WHERE business_id = ? AND requirement_id = ?',
+            [status, businessId, requirementId]
+        );
 
         res.json({ message: 'Status updated successfully', status });
     } catch (error) {
@@ -356,19 +340,6 @@ const bploVerifyRequirement = async (req, res) => {
             [bizId, reqId]
         );
         if (req_row.length === 0) return res.status(404).json({ message: 'Requirement not found for this business' });
-
-        // Ensure BPLO columns exist before updating
-        try {
-            const [bploCols] = await db.query(`SHOW COLUMNS FROM \`business_requirements\` LIKE 'bplo_status'`);
-            if (bploCols.length === 0) {
-                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_status ENUM('AI Suggested', 'BPLO Verified', 'Not Required', 'Needs Review') NOT NULL DEFAULT 'AI Suggested'`);
-                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_notes TEXT NULL`);
-                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_verified_at TIMESTAMP NULL`);
-                await db.query(`ALTER TABLE \`business_requirements\` ADD COLUMN bplo_verified_by INT NULL`);
-            }
-        } catch (colErr) {
-            console.warn('[bploVerifyRequirement] Ensure columns notice:', colErr.message);
-        }
 
         await db.query(
             `UPDATE business_requirements 

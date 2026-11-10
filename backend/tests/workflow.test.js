@@ -1,10 +1,12 @@
 const axios = require('axios');
 const db = require('../config/db');
+const { assertTestDatabase } = require('./test_db_guard');
 
 const API = 'http://localhost:5000/api';
 
 async function runTest() {
     console.log('--- STARTING PERMIT APPLICATION WORKFLOW ACCEPTANCE TEST ---');
+    await assertTestDatabase(db);
     let passed = 0;
     let failed = 0;
 
