@@ -249,6 +249,44 @@ const notifyPermitExpired = async (permit, user, business) => {
     });
 };
 
+const notifyWalkinScheduled = async ({ user, applicationId, businessName, walkinDate, timeSlot, ticketNumber }) => {
+    return createNotification({
+        userId: user.id,
+        type: 'WALKIN_SCHEDULED',
+        title: 'Fast-Track Walk-in Scheduled',
+        message: `Your Roxas City Hall walk-in for ${businessName} is scheduled for ${walkinDate} (${timeSlot || 'Window 1'}). Your Queue Ticket is #${ticketNumber}. Please bring your physical clearance folder.`,
+        eventKey: `WALKIN_SCHEDULED:${applicationId}:${ticketNumber}`,
+        relatedApplicationId: applicationId,
+        emailFn: () => emailService.sendWalkinScheduledEmail(
+            user.email,
+            user.full_name,
+            businessName,
+            walkinDate,
+            timeSlot,
+            ticketNumber
+        )
+    });
+};
+
+const notifyWalkinConfirmed = async ({ user, applicationId, businessName, walkinDate, timeSlot, ticketNumber }) => {
+    return createNotification({
+        userId: user.id,
+        type: 'WALKIN_CONFIRMED',
+        title: 'Walk-in Slot Confirmed by BPLO',
+        message: `Your walk-in appointment on ${walkinDate} (${timeSlot || 'Window 1'}) has been CONFIRMED by BPLO. Queue Ticket: #${ticketNumber}. Please bring your 2 printed copies of Form BPLO-01 and clearances.`,
+        eventKey: `WALKIN_CONFIRMED:${applicationId}:${ticketNumber}`,
+        relatedApplicationId: applicationId,
+        emailFn: () => emailService.sendWalkinConfirmedEmail(
+            user.email,
+            user.full_name,
+            businessName,
+            walkinDate,
+            timeSlot,
+            ticketNumber
+        )
+    });
+};
+
 module.exports = {
     createNotification,
     notifyApplicationSubmitted,
@@ -258,5 +296,7 @@ module.exports = {
     notifyApplicationRejected,
     notifyPermitIssued,
     notifyRenewalReminder,
-    notifyPermitExpired
+    notifyPermitExpired,
+    notifyWalkinScheduled,
+    notifyWalkinConfirmed
 };

@@ -1,6 +1,29 @@
 const db = require('../config/db');
 const permitGenerator = require('../services/permitGenerator');
 const notificationService = require('../services/notificationService');
+const emailService = require('../services/emailService');
+
+const sendWalkinEmailAsync = async ({ userId, businessId, businessName, kind, walkinDate, timeSlot, ticketNumber }) => {
+    try {
+        const [[user]] = await db.query('SELECT email, full_name FROM users WHERE id = ?', [userId]);
+        if (!user?.email) return;
+
+        let resolvedBizName = businessName;
+        if (!resolvedBizName && businessId) {
+            const [[biz]] = await db.query('SELECT business_name FROM businesses WHERE id = ?', [businessId]);
+            resolvedBizName = biz?.business_name;
+        }
+        const bizLabel = resolvedBizName || 'Your Business';
+
+        if (kind === 'confirmed') {
+            await emailService.sendWalkinConfirmedEmail(user.email, user.full_name, bizLabel, walkinDate, timeSlot, ticketNumber);
+        } else {
+            await emailService.sendWalkinScheduledEmail(user.email, user.full_name, bizLabel, walkinDate, timeSlot, ticketNumber);
+        }
+    } catch (err) {
+        console.error('[Walkin Email] Non-blocking email error:', err.message);
+    }
+};
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -934,6 +957,15 @@ const scheduleWalkin = async (req, res) => {
             [app.user_id, notifTitle, notifMsg, app.id]
         );
 
+        sendWalkinEmailAsync({
+            userId: app.user_id,
+            businessId: app.business_id,
+            kind: 'scheduled',
+            walkinDate: walkin_date,
+            timeSlot: walkin_time_slot,
+            ticketNumber: ticketNum
+        });
+
         res.json({
             success: true,
             message: 'Walk-in scheduled successfully!',
@@ -1082,6 +1114,15 @@ const confirmWalkinAppointment = async (req, res) => {
                 app.id
             ]
         );
+
+        sendWalkinEmailAsync({
+            userId: app.user_id,
+            businessId: app.business_id,
+            kind: 'confirmed',
+            walkinDate: dateStr,
+            timeSlot: app.walkin_time_slot || 'Window 1',
+            ticketNumber: app.queue_ticket_number
+        });
 
         res.json({
             success: true,
@@ -1261,6 +1302,15 @@ const scheduleWalkinByBusiness = async (req, res) => {
              VALUES (?, 'WALKIN_SCHEDULED', ?, ?, ?, 'Unread')`,
             [business.user_id, notifTitle, notifMsg, appId]
         );
+
+        sendWalkinEmailAsync({
+            userId: business.user_id,
+            businessName: business.business_name,
+            kind: 'scheduled',
+            walkinDate: walkin_date,
+            timeSlot: walkin_time_slot,
+            ticketNumber: ticketNum
+        });
 
         // 2. Notify BPLO Officers for availability check & confirmation
         try {

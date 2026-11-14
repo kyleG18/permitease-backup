@@ -1,17 +1,25 @@
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 // Frontend URL for email links (configurable via env, defaults to local dev)
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// Configure the email transporter using Mailtrap SMTP
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT) || 2525,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+// Configure SMTP transporter (used when BREVO_API_KEY is not set)
+const createSmtpTransporter = () => {
+    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        return null;
     }
-});
+    const port = parseInt(process.env.EMAIL_PORT, 10) || 587;
+    return nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port,
+        secure: port === 465,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
+};
 
 // ─────────────────────────────────────────────────────────
 // Base template wrapper
@@ -84,21 +92,56 @@ const closing = () => `<p style="font-size:14px;color:#64748B;margin-top:24px;bo
 // ─────────────────────────────────────────────────────────
 const sendEmail = async (to, subject, htmlContent) => {
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn('[EmailService] Credentials not configured. Skipping email to:', to);
+        if (!to) {
+            console.warn('[EmailService] No recipient email provided. Skipping.');
             return false;
         }
+
+        const senderEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'permitease@roxascity.gov.ph';
+        const senderName = process.env.EMAIL_FROM_NAME || 'PermitEase — BPLO Roxas';
+
+        // 1. Prefer Brevo HTTP REST API (works over HTTPS Port 443; Render Free Tier blocks SMTP ports)
+        if (process.env.BREVO_API_KEY) {
+            const response = await axios.post(
+                'https://api.brevo.com/v3/smtp/email',
+                {
+                    sender: { name: senderName, email: senderEmail },
+                    to: [{ email: to }],
+                    subject,
+                    htmlContent
+                },
+                {
+                    headers: {
+                        'api-key': process.env.BREVO_API_KEY,
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json'
+                    },
+                    timeout: 10000
+                }
+            );
+            console.log('[EmailService] Sent via Brevo API:', response.data?.messageId || 'OK', '→', to);
+            return true;
+        }
+
+        // 2. Fallback to Nodemailer SMTP (for local development or non-SMTP-blocked hosts)
+        const transporter = createSmtpTransporter();
+        if (!transporter) {
+            console.warn('[EmailService] Neither BREVO_API_KEY nor SMTP credentials configured. Skipping email to:', to);
+            return false;
+        }
+
         const mailOptions = {
-            from: `"PermitEase — BPLO Roxas" <${process.env.EMAIL_USER}>`,
+            from: `"${senderName}" <${senderEmail}>`,
             to,
             subject,
             html: htmlContent
         };
         const info = await transporter.sendMail(mailOptions);
-        console.log('[EmailService] Sent:', info.response, '→', to);
+        console.log('[EmailService] Sent via SMTP:', info.response, '→', to);
         return true;
     } catch (error) {
-        console.error('[EmailService] Failed to send to', to, ':', error.message);
+        const detail = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+        console.error('[EmailService] Failed to send to', to, ':', detail);
         return false;
     }
 };
@@ -347,6 +390,48 @@ const sendAssessmentCompleteEmail = async (userEmail, userName, businessName) =>
     );
 };
 
+const sendWalkinScheduledEmail = async (userEmail, userName, businessName, walkinDate, timeSlot, ticketNumber) => {
+    const html = baseTemplate(`
+        ${greeting(userName)}
+        <p style="font-size:15px;color:#334155;line-height:1.6;">
+          Your fast-track Roxas City Hall walk-in appointment for <strong>${businessName}</strong> has been scheduled.
+        </p>
+        ${infoBlock([
+            ['Business Name', businessName],
+            ['Scheduled Date', walkinDate],
+            ['Time Slot', timeSlot || 'Window 1'],
+            ['Queue Ticket', `#${ticketNumber}`]
+        ])}
+        <p style="font-size:13px;color:#64748B;line-height:1.5;">
+          Please bring your physical clearance folder (2 printed copies of Form BPLO-01 and supporting clearances) on your scheduled date.
+        </p>
+        ${ctaButton(`${FRONTEND_URL}/my-applications`, 'View Walk-in Ticket')}
+        ${closing()}
+    `);
+    return sendEmail(userEmail, `Walk-in Scheduled — #${ticketNumber} (${businessName})`, html);
+};
+
+const sendWalkinConfirmedEmail = async (userEmail, userName, businessName, walkinDate, timeSlot, ticketNumber) => {
+    const html = baseTemplate(`
+        ${greeting(userName)}
+        <p style="font-size:15px;color:#334155;line-height:1.6;">
+          Great news! Your Roxas City Hall walk-in appointment for <strong>${businessName}</strong> has been <strong style="color:#059669;">CONFIRMED</strong> by the BPLO.
+        </p>
+        ${infoBlock([
+            ['Business Name', businessName],
+            ['Confirmed Date', walkinDate],
+            ['Time Slot', timeSlot || 'Window 1'],
+            ['Queue Ticket', `#${ticketNumber}`]
+        ])}
+        <p style="font-size:13px;color:#64748B;line-height:1.5;">
+          Please arrive 15 minutes early and bring 2 printed copies of Form BPLO-01 along with your physical clearances.
+        </p>
+        ${ctaButton(`${FRONTEND_URL}/my-applications`, 'View Confirmed Appointment')}
+        ${closing()}
+    `);
+    return sendEmail(userEmail, `Walk-in Confirmed by BPLO — #${ticketNumber} (${businessName})`, html);
+};
+
 module.exports = {
     sendEmail,
     sendPermitStatusEmail,
@@ -359,5 +444,7 @@ module.exports = {
     sendPermitIssuedEmail,
     sendRenewalReminderEmail,
     sendPermitExpiredEmail,
-    sendStatutoryNoticeEmail
+    sendStatutoryNoticeEmail,
+    sendWalkinScheduledEmail,
+    sendWalkinConfirmedEmail
 };
