@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, X, Maximize2, RotateCcw, Bot } from 'lucide-react';
+import { X, Maximize2, RotateCcw } from 'lucide-react';
 import ChatPanel from './ChatPanel';
 import { useChatSession } from '../hooks/useChatSession';
 
@@ -61,7 +61,9 @@ const ChatWidget = () => {
         >
           <div className="chat-widget__header">
             <div className="chat-widget__identity">
-              <div className="chat-widget__avatar"><Bot size={18} /></div>
+              <div className="chat-widget__avatar">
+                <img src="/images/ai-avatar.jpg" alt="PermitEase AI Assistant" className="ai-avatar-img" />
+              </div>
               <div style={{ minWidth: 0 }}>
                 <div className="chat-widget__title">PermitEase AI Assistant</div>
                 <div className="chat-widget__status">
@@ -116,7 +118,7 @@ const ChatWidget = () => {
         aria-label={open ? 'Close AI Assistant' : 'Ask AI Assistant'}
         aria-expanded={open}
       >
-        {open ? <X size={22} /> : <MessageSquare size={22} />}
+        {open ? <X size={22} /> : <img src="/images/ai-avatar.jpg" alt="PermitEase AI Assistant" className="ai-avatar-img" />}
       </button>
     </>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, User, Bot, AlertTriangle } from 'lucide-react';
+import { Send, User, AlertTriangle } from 'lucide-react';
 
 const SUGGESTED_EN = [
   "What documents do I need for my permit?",
@@ -216,7 +216,7 @@ const ChatPanel = ({ chat, compact = false, autoFocus = false }) => {
             className={`chatbot-message-row ${msg.type === 'user' ? 'chatbot-message-user' : 'chatbot-message-bot'}`}
           >
             <div className={`chatbot-avatar ${msg.type === 'user' ? 'chatbot-avatar-user' : 'chatbot-avatar-bot'}`}>
-              {msg.type === 'bot' ? <Bot size={18} /> : <User size={18} />}
+              {msg.type === 'bot' ? <img src="/images/ai-avatar.jpg" alt="PermitEase AI Assistant" className="ai-avatar-img" /> : <User size={18} />}
             </div>
             <div className={`chatbot-bubble ${msg.type === 'user' ? 'chatbot-bubble-user' : 'chatbot-bubble-bot'}`}>
               {msg.type === 'user' ? msg.text : renderMessageContent(msg.text)}
@@ -227,7 +227,7 @@ const ChatPanel = ({ chat, compact = false, autoFocus = false }) => {
         {loading && (
           <div className="chatbot-message-row chatbot-message-bot">
             <div className="chatbot-avatar chatbot-avatar-bot">
-              <Bot size={18} />
+              <img src="/images/ai-avatar.jpg" alt="PermitEase AI Assistant" className="ai-avatar-img" />
             </div>
             <div className="chatbot-bubble chatbot-bubble-bot chatbot-typing-bubble">
               <span className="chatbot-typing-dot" />
