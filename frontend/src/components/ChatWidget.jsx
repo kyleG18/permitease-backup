@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Maximize2, RotateCcw } from 'lucide-react';
+import { MessageSquare, X, Maximize2, RotateCcw } from 'lucide-react';
 import ChatPanel from './ChatPanel';
 import { useChatSession } from '../hooks/useChatSession';
 
@@ -118,7 +118,7 @@ const ChatWidget = () => {
         aria-label={open ? 'Close AI Assistant' : 'Ask AI Assistant'}
         aria-expanded={open}
       >
-        {open ? <X size={22} /> : <img src="/images/ai-avatar.jpg" alt="PermitEase AI Assistant" className="ai-avatar-img" />}
+        {open ? <X size={22} /> : <MessageSquare size={22} />}
       </button>
     </>
   );
