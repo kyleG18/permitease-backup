@@ -35,12 +35,18 @@ const baseTemplate = (bodyContent) => `
         
         <!-- Header -->
         <tr>
-          <td style="background:#059669;padding:28px 32px;text-align:center;">
-            <div style="display:inline-flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;background:rgba(255,255,255,0.25);border-radius:8px;display:inline-block;line-height:36px;text-align:center;font-weight:700;font-size:18px;color:white;">R</div>
-              <span style="color:white;font-size:20px;font-weight:700;letter-spacing:-0.3px;">PermitEase</span>
-            </div>
-            <div style="color:rgba(255,255,255,0.8);font-size:13px;margin-top:4px;">Municipality of Roxas &mdash; Business Permit and Licensing Office</div>
+          <td style="background:#059669;padding:26px 32px;text-align:center;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;text-align:center;">
+              <tr>
+                <td style="vertical-align:middle;padding-right:14px;">
+                  <img src="https://raw.githubusercontent.com/kyleG18/permitease-backup/main/frontend/public/images/roxas-seal.png" alt="Municipality of Roxas Seal" width="48" height="48" style="width:48px;height:48px;display:block;border-radius:50%;object-fit:contain;background:white;padding:2px;box-shadow:0 2px 6px rgba(0,0,0,0.2);" />
+                </td>
+                <td style="vertical-align:middle;text-align:left;">
+                  <div style="color:white;font-size:22px;font-weight:800;letter-spacing:-0.3px;line-height:1.2;">PermitEase</div>
+                  <div style="color:rgba(255,255,255,0.9);font-size:12.5px;font-weight:500;letter-spacing:0.01em;margin-top:2px;">Municipality of Roxas &mdash; Business Permit and Licensing Office</div>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
