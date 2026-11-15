@@ -116,8 +116,20 @@ app.get('/', (req, res) => {
     res.json({ message: 'Welcome to PermitEase API' });
 });
 
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+    let dbOk = false;
+    try {
+        await db.query('SELECT 1');
+        dbOk = true;
+    } catch (err) {
+        console.warn('[Health] DB keep-alive ping failed:', err.message);
+    }
+    res.status(200).json({
+        status: 'ok',
+        db: dbOk ? 'connected' : 'degraded',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
 });
 
 let server;
