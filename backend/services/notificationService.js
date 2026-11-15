@@ -287,6 +287,17 @@ const notifyWalkinConfirmed = async ({ user, applicationId, businessName, walkin
     });
 };
 
+const notifyUserRegistered = async (user) => {
+    return createNotification({
+        userId: user.id,
+        type: 'SYSTEM',
+        title: 'Welcome to PermitEase!',
+        message: 'Your account is active. Complete your business profile, estimate your permit fees, or schedule your fast-track City Hall walk-in.',
+        eventKey: `WELCOME_USER:${user.id}`,
+        emailFn: () => emailService.sendWelcomeEmail(user.email, user.full_name)
+    });
+};
+
 module.exports = {
     createNotification,
     notifyApplicationSubmitted,
@@ -298,5 +309,6 @@ module.exports = {
     notifyRenewalReminder,
     notifyPermitExpired,
     notifyWalkinScheduled,
-    notifyWalkinConfirmed
+    notifyWalkinConfirmed,
+    notifyUserRegistered
 };

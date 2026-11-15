@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { logAudit } = require('../services/auditService');
+const notificationService = require('../services/notificationService');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -58,6 +59,13 @@ const registerUser = async (req, res) => {
             const userId = result.insertId;
             const userFullName = full_name;
             await logAudit(userId, userFullName, 'business_owner', 'User Registration', 'New business owner account created', req.ip);
+
+            // Trigger welcome in-app and email notification non-blockingly
+            notificationService.notifyUserRegistered({
+                id: userId,
+                email,
+                full_name: userFullName
+            }).catch(notifErr => console.error('[Auth] Welcome notification error:', notifErr.message));
 
             return res.status(201).json({
                 _id: userId,

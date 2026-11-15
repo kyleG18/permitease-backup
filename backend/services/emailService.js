@@ -438,6 +438,35 @@ const sendWalkinConfirmedEmail = async (userEmail, userName, businessName, walki
     return sendEmail(userEmail, `Walk-in Confirmed by BPLO — #${ticketNumber} (${businessName})`, html);
 };
 
+const sendWelcomeEmail = async (userEmail, userName) => {
+    const html = baseTemplate(`
+        ${greeting(userName)}
+        <p style="font-size:15px;color:#334155;line-height:1.6;">
+          Congratulations and welcome to <strong>PermitEase</strong> — the official Business Permit and Licensing platform for the <strong>Municipality of Roxas, Oriental Mindoro</strong>!
+        </p>
+        <p style="font-size:14px;color:#475569;line-height:1.6;">
+          Your account has been successfully created. You can now access 24/7 online permit services, calculate estimated municipal fees, and schedule fast-track City Hall walk-in visits.
+        </p>
+        ${infoBlock([
+            ['Account Name', userName || 'Business Owner'],
+            ['Registered Email', userEmail],
+            ['Account Role', 'Business Owner / MSME Applicant'],
+            ['Jurisdiction', 'Municipality of Roxas, Oriental Mindoro']
+        ])}
+        <div style="background:#F0FDF4;border-left:4px solid #16A34A;border-radius:6px;padding:14px 18px;margin:20px 0;">
+          <div style="font-size:12.5px;font-weight:700;color:#15803D;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Next Steps for Your Business:</div>
+          <ul style="margin:0;padding-left:18px;font-size:13.5px;color:#166534;line-height:1.6;">
+            <li><strong>Complete Business Profile:</strong> Register your business information and enterprise scale.</li>
+            <li><strong>Requirement & Fee Estimation:</strong> Check required local clearances and estimate your local taxes beforehand.</li>
+            <li><strong>Schedule Fast-Track Walk-in:</strong> Avoid waiting in line by securing your digital queue ticket for Roxas City Hall Window 1.</li>
+          </ul>
+        </div>
+        ${ctaButton(`${FRONTEND_URL}/dashboard`, 'Access PermitEase Dashboard')}
+        ${closing()}
+    `);
+    return sendEmail(userEmail, 'Welcome to PermitEase — Municipality of Roxas BPLO', html);
+};
+
 module.exports = {
     sendEmail,
     sendPermitStatusEmail,
@@ -452,5 +481,6 @@ module.exports = {
     sendPermitExpiredEmail,
     sendStatutoryNoticeEmail,
     sendWalkinScheduledEmail,
-    sendWalkinConfirmedEmail
+    sendWalkinConfirmedEmail,
+    sendWelcomeEmail
 };
