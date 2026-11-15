@@ -282,7 +282,7 @@ export default function AdminWalkins() {
     <div className="page-container admin-walkins-page" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem', fontFamily: 'Inter, sans-serif' }}>
       
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <header style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+      <header className="admin-walkins-header" style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -303,7 +303,7 @@ export default function AdminWalkins() {
         </div>
 
         {/* Date Selector Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#FFFFFF', padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div className="admin-walkins-date-nav" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#FFFFFF', padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
           <button
             onClick={() => handleDateShift(-1)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '4px', color: '#64748B' }}
@@ -404,7 +404,7 @@ export default function AdminWalkins() {
       })()}
 
       {/* ── CALENDAR & DECLARE CLOSE BUTTONS ──────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '0.65rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+      <div className="admin-walkins-btn-group" style={{ display: 'flex', gap: '0.65rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <button
           onClick={() => setShowCalendarModal(true)}
           style={{
@@ -451,7 +451,7 @@ export default function AdminWalkins() {
       )}
 
       {/* ── METRICS & AVAILABILITY OVERVIEW ──────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
+      <div className="admin-walkins-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
         
         {/* Total Scheduled */}
         <div className="card" style={{ padding: '1.1rem 1.25rem', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', borderLeft: '4px solid #15803D', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
@@ -514,10 +514,10 @@ export default function AdminWalkins() {
       </div>
 
       {/* ── FILTER & SEARCH BAR ──────────────────────────────────────────── */}
-      <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div className="card admin-walkins-toolbar" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
         
         {/* Search */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '240px', backgroundColor: '#F8FAFC', padding: '0.45rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
+        <div className="admin-walkins-search" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '240px', backgroundColor: '#F8FAFC', padding: '0.45rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
           <Search size={16} color="#64748B" />
           <input
             type="text"
@@ -529,7 +529,7 @@ export default function AdminWalkins() {
         </div>
 
         {/* Batch Filter Buttons */}
-        <div style={{ display: 'flex', gap: '0.35rem' }}>
+        <div className="admin-walkins-filter-group" style={{ display: 'flex', gap: '0.35rem' }}>
           {[
             { id: 'ALL', label: 'All Batches' },
             { id: 'MORNING', label: 'Morning' },
@@ -586,7 +586,7 @@ export default function AdminWalkins() {
       </div>
 
       {/* ── ROSTER TABLE ─────────────────────────────────────────────────── */}
-      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)' }}>
+      <div className="card table-scroll-wrap" style={{ backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', overflowX: 'auto', boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)' }}>
         
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>

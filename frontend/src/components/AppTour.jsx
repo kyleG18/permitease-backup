@@ -219,6 +219,41 @@ export default function AppTour() {
   }
 
   const { w: vw, h: vh } = viewSize;
+  const isMobile = vw < 768;
+
+  const dialogStyle = isMobile ? {
+    position: 'fixed',
+    bottom: '16px',
+    left: '12px',
+    right: '12px',
+    width: 'auto',
+    maxWidth: '420px',
+    margin: '0 auto',
+    maxHeight: 'calc(100dvh - 32px)',
+    display: 'flex',
+    flexDirection: 'column',
+    pointerEvents: 'all',
+    zIndex: 9999,
+    borderRadius: '16px',
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    boxShadow: '0 20px 50px -10px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.1)',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+  } : {
+    position: 'absolute',
+    top: tooltipPos.top,
+    left: tooltipPos.left,
+    width: Math.min(TOOLTIP_W, Math.max(280, viewSize.w - 24)),
+    maxWidth: 'calc(100vw - 24px)',
+    pointerEvents: 'all',
+    zIndex: 9999,
+    borderRadius: '16px',
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    boxShadow: '0 20px 50px -10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    transition: `top ${TRANSITION}, left ${TRANSITION}`,
+  };
 
   return createPortal(
     <div
@@ -305,30 +340,17 @@ export default function AppTour() {
         role="dialog"
         aria-modal="true"
         aria-label={`Onboarding Step ${currentStep.stepNumber} of ${totalSteps}: ${currentStep.title}`}
-        style={{
-          position: 'absolute',
-          top: tooltipPos.top,
-          left: tooltipPos.left,
-          width: Math.min(TOOLTIP_W, Math.max(280, viewSize.w - 24)),
-          maxWidth: 'calc(100vw - 24px)',
-          pointerEvents: 'all',
-          zIndex: 9999,
-          borderRadius: '16px',
-          overflow: 'hidden',
-          backgroundColor: '#FFFFFF',
-          boxShadow: '0 20px 50px -10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-          transition: `top ${TRANSITION}, left ${TRANSITION}`,
-        }}
+        style={dialogStyle}
       >
         {/* ── Header (Municipal Green Theme) ── */}
         <div style={{
           background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
-          padding: '1rem 1.15rem 0.9rem',
+          padding: isMobile ? '0.85rem 1rem 0.75rem' : '1rem 1.15rem 0.9rem',
           position: 'relative',
+          flexShrink: 0,
         }}>
           {/* Step badge row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '50%',
@@ -355,16 +377,16 @@ export default function AppTour() {
             </button>
           </div>
 
-          <h3 style={{ margin: '0 0 2px', fontSize: '16.5px', fontWeight: '800', color: '#FFFFFF', lineHeight: 1.25 }}>
+          <h3 style={{ margin: '0 0 2px', fontSize: isMobile ? '15px' : '16.5px', fontWeight: '800', color: '#FFFFFF', lineHeight: 1.25 }}>
             {currentStep.title}
           </h3>
-          <div style={{ fontSize: '12px', color: 'rgba(220,252,231,0.9)', fontWeight: '500' }}>
+          <div style={{ fontSize: isMobile ? '11.5px' : '12px', color: 'rgba(220,252,231,0.9)', fontWeight: '500' }}>
             {currentStep.subtitle}
           </div>
         </div>
 
         {/* ── Progress bar ── */}
-        <div style={{ height: '4px', backgroundColor: '#14532D', position: 'relative' }}>
+        <div style={{ height: '4px', backgroundColor: '#14532D', position: 'relative', flexShrink: 0 }}>
           <div style={{
             height: '100%',
             width: `${progress}%`,
@@ -375,28 +397,34 @@ export default function AppTour() {
         </div>
 
         {/* ── Contents Body (Crisp Clean White) ── */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '1.1rem 1.15rem 0.9rem' }}>
-          <p style={{ margin: '0 0 1.1rem', fontSize: '13.5px', color: '#334155', lineHeight: 1.6, fontWeight: 400 }}>
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          padding: isMobile ? '0.85rem 1rem 0.85rem' : '1.1rem 1.15rem 0.9rem',
+          overflowY: 'auto',
+          flex: '1 1 auto',
+          WebkitOverflowScrolling: 'touch'
+        }}>
+          <p style={{ margin: isMobile ? '0 0 0.75rem' : '0 0 1.1rem', fontSize: isMobile ? '13px' : '13.5px', color: '#334155', lineHeight: 1.55, fontWeight: 400 }}>
             {currentStep.description}
           </p>
 
           {/* Mobile hint — no sidebar on small screens */}
-          {viewSize.w < 768 && (
+          {isMobile && (
             <div style={{
               backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0',
-              borderRadius: '8px', padding: '0.6rem 0.75rem',
-              marginBottom: '1rem', fontSize: '12px', color: '#166534',
-              display: 'flex', alignItems: 'flex-start', gap: '0.4rem', lineHeight: 1.5
+              borderRadius: '8px', padding: '0.45rem 0.65rem',
+              marginBottom: '0.75rem', fontSize: '11.5px', color: '#166534',
+              display: 'flex', alignItems: 'flex-start', gap: '0.4rem', lineHeight: 1.45
             }}>
               <span style={{ flexShrink: 0, marginTop: '1px' }}>📱</span>
               <span>
-                On mobile, tap the <strong>☰ menu</strong> (top-right) to open the navigation and find this feature.
+                Tap the <strong>☰ menu</strong> (top) to navigate to this section.
               </span>
             </div>
           )}
 
           {/* Step dots */}
-          <div style={{ display: 'flex', gap: '5px', marginBottom: '1.1rem' }} aria-hidden="true">
+          <div style={{ display: 'flex', gap: '5px', marginBottom: isMobile ? '0.85rem' : '1.1rem' }} aria-hidden="true">
             {steps.map((s, i) => {
               const visited = onboardingState?.visitedSteps?.includes(s.id);
               const isCur = s.id === currentStep.id;
@@ -414,7 +442,7 @@ export default function AppTour() {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexShrink: 0, paddingTop: '0.2rem' }}>
             <button
               onClick={() => { dismiss(); setTourOpen(false); }}
               style={{
@@ -437,8 +465,8 @@ export default function AppTour() {
                     display: 'flex', alignItems: 'center', gap: '3px',
                     backgroundColor: '#F8FAFC',
                     color: '#475569', border: '1px solid #E2E8F0',
-                    borderRadius: '8px', padding: '0.45rem 0.75rem',
-                    fontSize: '12.5px', fontWeight: '600', cursor: 'pointer',
+                    borderRadius: '8px', padding: isMobile ? '0.45rem 0.65rem' : '0.45rem 0.75rem',
+                    fontSize: '12px', fontWeight: '600', cursor: 'pointer',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F1F5F9'; e.currentTarget.style.color = '#0F172A'; }}
                   onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.color = '#475569'; }}
@@ -454,8 +482,8 @@ export default function AppTour() {
                   background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
                   color: '#FFFFFF',
                   border: 'none', borderRadius: '8px',
-                  padding: '0.45rem 0.95rem',
-                  fontSize: '12.5px', fontWeight: '700', cursor: 'pointer',
+                  padding: isMobile ? '0.45rem 0.85rem' : '0.45rem 0.95rem',
+                  fontSize: '12px', fontWeight: '700', cursor: 'pointer',
                   boxShadow: '0 4px 14px rgba(21, 128, 61, 0.35)',
                   transition: 'transform 0.1s, box-shadow 0.1s',
                 }}
@@ -464,7 +492,7 @@ export default function AppTour() {
               >
                 {isLast
                   ? <><CheckCircle size={13} /> Finish</>
-                  : <>{currentStep.nextLabel.replace(' →', '')} <ChevronRight size={13} /></>
+                  : <>{currentStep.nextLabel ? currentStep.nextLabel.replace(' →', '') : 'Next'} <ChevronRight size={13} /></>
                 }
               </button>
             </div>

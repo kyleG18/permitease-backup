@@ -302,7 +302,7 @@ export default function LGUApplicationReview() {
           <ClipboardList size={15} /> Print Requirements Checklist
         </button>
 
-        <div style={{ height: '32px', width: '1px', backgroundColor: '#E2E8F0', margin: '0 0.25rem' }} />
+        <div className="lgu-review-actions-divider" style={{ height: '32px', width: '1px', backgroundColor: '#E2E8F0', margin: '0 0.25rem' }} />
 
         {/* ── REVIEW WORKFLOW ACTIONS ── */}
         {canStartReview && (

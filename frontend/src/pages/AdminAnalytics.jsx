@@ -340,7 +340,7 @@ export default function AdminAnalytics() {
                     </div>
 
                     {/* Charts Row 2: Industry Distribution + Bottlenecks */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div className="analytics-charts-row analytics-charts-row-2" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '1rem', marginBottom: '1.5rem' }}>
                         {/* Business Distribution */}
                         <div className="card" style={{ padding: '1.25rem' }}>
                             <h5 style={{ margin: '0 0 1rem', color: 'var(--government-navy)', fontSize: '14px', fontWeight: '700' }}>

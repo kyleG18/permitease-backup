@@ -3163,6 +3163,16 @@ tbody td {
     padding: 1rem 0.75rem !important;
     max-width: 100% !important;
   }
+  .lgu-apps-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  .lgu-apps-header a {
+    width: 100% !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
   .lgu-apps-toolbar {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -3172,10 +3182,13 @@ tbody td {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 0.35rem !important;
+    width: 100% !important;
   }
   .lgu-apps-filter-chips button {
     font-size: 0.75rem !important;
     padding: 0.35rem 0.75rem !important;
+    flex: 1 1 auto !important;
+    text-align: center !important;
   }
   .lgu-apps-search {
     margin-left: 0 !important;
@@ -3184,6 +3197,65 @@ tbody td {
   .lgu-apps-search input {
     width: 100% !important;
     box-sizing: border-box !important;
+  }
+
+  /* ── Admin Walk-ins (/admin/walkins) ── */
+  .admin-walkins-page {
+    padding: 1rem 0.75rem !important;
+    max-width: 100% !important;
+  }
+  .admin-walkins-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+  }
+  .admin-walkins-date-nav {
+    width: 100% !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+  }
+  .admin-walkins-date-nav input[type="date"] {
+    flex: 1 !important;
+    min-width: 0 !important;
+    text-align: center !important;
+  }
+  .admin-walkins-btn-group {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .admin-walkins-btn-group button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .admin-walkins-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+  .admin-walkins-stat-grid .card {
+    padding: 0.85rem 0.75rem !important;
+  }
+  .admin-walkins-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+  }
+  .admin-walkins-search {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .admin-walkins-search input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .admin-walkins-filter-group {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+  .admin-walkins-filter-group button {
+    flex: 1 1 auto !important;
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.5rem !important;
+    text-align: center !important;
   }
 
   /* ── LGU Application Review (/admin/applications/:id) ── */
@@ -3210,6 +3282,9 @@ tbody td {
   .lgu-review-actions {
     flex-wrap: wrap !important;
     gap: 0.5rem !important;
+  }
+  .lgu-review-actions-divider {
+    display: none !important;
   }
   .lgu-review-actions button,
   .lgu-review-actions a {
@@ -3244,7 +3319,9 @@ tbody td {
     min-width: 0 !important;
     padding: 1rem 0.875rem !important;
   }
-  .analytics-charts-row {
+  .analytics-charts-row,
+  .analytics-charts-row-2 {
+    grid-template-columns: 1fr !important;
     flex-direction: column !important;
     gap: 1rem !important;
   }
@@ -3397,6 +3474,9 @@ tbody td {
 
 /* Narrower phones: 390px and below */
 @media (max-width: 390px) {
+  .admin-walkins-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
   .admin-permits-stat-grid {
     grid-template-columns: 1fr !important;
   }

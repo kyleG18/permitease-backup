@@ -169,10 +169,10 @@ export default function LGUApplications() {
   });
 
   return (
-    <div className="page-container lgu-applications-page" style={{ maxWidth: '1240px', margin: '0 auto', paddingBottom: '4rem', fontFamily: 'Inter, sans-serif' }}>
+    <div className="page-container lgu-applications-page lgu-apps-container" style={{ maxWidth: '1240px', margin: '0 auto', paddingBottom: '4rem', fontFamily: 'Inter, sans-serif' }}>
       
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <header style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+      <header className="lgu-apps-header" style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -231,10 +231,10 @@ export default function LGUApplications() {
       )}
 
       {/* ── TOOLBAR: SEARCH & STATUS FILTER ──────────────────────────────── */}
-      <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div className="card lgu-apps-toolbar" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', backgroundColor: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
         
         {/* Search */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '260px', backgroundColor: '#F8FAFC', padding: '0.45rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
+        <div className="lgu-apps-search" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '240px', backgroundColor: '#F8FAFC', padding: '0.45rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
           <Search size={16} color="#64748B" />
           <input
             type="text"
@@ -246,7 +246,7 @@ export default function LGUApplications() {
         </div>
 
         {/* Status Filter Chips */}
-        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+        <div className="lgu-apps-filter-chips" style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
           {FILTERS.map(f => (
             <button
               key={f}
@@ -271,7 +271,7 @@ export default function LGUApplications() {
       </div>
 
       {/* ── APPLICATIONS TABLE ───────────────────────────────────────────── */}
-      <div className="card" style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+      <div className="card table-scroll-wrap" style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E2E8F0', overflowX: 'auto', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
         
         {loading ? (
           <div style={{ padding: '3.5rem', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
