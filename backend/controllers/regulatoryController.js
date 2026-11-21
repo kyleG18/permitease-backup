@@ -87,7 +87,7 @@ const createRegulatoryUpdate = async (req, res) => {
     }
 };
 
-// @desc    Approve a pending regulatory update (marks APPROVED so AI chat/assessment uses it)
+// @desc    Approve a pending regulatory update & optionally incorporate into knowledge_base
 // @route   PUT /api/regulatory/updates/:id/approve
 // @access  Private (lgu_admin, system_admin)
 const approveRegulatoryUpdate = async (req, res) => {
@@ -95,11 +95,58 @@ const approveRegulatoryUpdate = async (req, res) => {
         const [rows] = await db.query('SELECT * FROM regulatory_updates WHERE id = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ message: 'Regulatory update not found.' });
 
+        const existing = rows[0];
+        const title = (req.body?.title || existing.title || '').trim();
+        const summary = req.body?.summary !== undefined ? req.body.summary : existing.summary;
+        const aiImpactNotes = req.body?.ai_impact_notes !== undefined ? req.body.ai_impact_notes : existing.ai_impact_notes;
+        const incorporateIntoKb = req.body?.incorporate_into_kb !== false;
+
         await db.query(
-            `UPDATE regulatory_updates SET status = 'APPROVED', reviewed_by = ?, reviewed_at = NOW() WHERE id = ?`,
-            [req.user.id, req.params.id]
+            `UPDATE regulatory_updates
+             SET status = 'APPROVED', title = ?, summary = ?, ai_impact_notes = ?, reviewed_by = ?, reviewed_at = NOW()
+             WHERE id = ?`,
+            [title, summary, aiImpactNotes, req.user.id, req.params.id]
         );
-        res.json({ message: 'Regulatory update approved and added to active AI context.' });
+
+        let incorporatedInKb = false;
+        if (incorporateIntoKb) {
+            const docKey = `REG_UPDATE_${existing.id}`;
+            const kbContent = [summary, aiImpactNotes ? `BPLO Guidance: ${aiImpactNotes}` : ''].filter(Boolean).join('\n\n');
+            await db.query(
+                `INSERT INTO knowledge_base
+                 (title, document_path, document_key, category, legal_basis, issuing_authority, source_url, content, status, verification_status, verified_by, last_verified_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED', 'VERIFIED', ?, NOW())
+                 ON DUPLICATE KEY UPDATE
+                    title = VALUES(title),
+                    content = VALUES(content),
+                    source_url = VALUES(source_url),
+                    status = 'PUBLISHED',
+                    verification_status = 'VERIFIED',
+                    verified_by = VALUES(verified_by),
+                    last_verified_at = NOW()`,
+                [
+                    title.slice(0, 255),
+                    existing.source_url || `/admin/regulatory`,
+                    docKey,
+                    existing.source_category || 'LOCAL_ORDINANCE',
+                    existing.detected_version || existing.source_name,
+                    existing.source_name,
+                    existing.source_url || null,
+                    kbContent,
+                    req.user.id
+                ]
+            ).catch((kbErr) => {
+                console.warn('[RegulatoryController] knowledge_base sync notice:', kbErr.message);
+            });
+            incorporatedInKb = true;
+        }
+
+        res.json({
+            message: incorporatedInKb
+                ? 'Law/regulation approved and incorporated into PermitEase Knowledge Base & AI context.'
+                : 'Regulatory update approved and added to active AI context.',
+            incorporated_in_kb: incorporatedInKb
+        });
     } catch (error) {
         console.error('[RegulatoryController] approveRegulatoryUpdate error:', error);
         res.status(500).json({ message: 'Failed to approve regulatory update.' });

@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import {
@@ -12,7 +13,8 @@ import {
   Search,
   ExternalLink,
   AlertCircle,
-  Trash2
+  Trash2,
+  Eye
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -22,6 +24,8 @@ const CATEGORIES = ['Food & Beverage', 'Retail', 'Services', 'Manufacturing', 'A
 const AdminRegulatoryUpdates = () => {
   const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('updates');
+  const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const [detailDraft, setDetailDraft] = useState({ title: '', summary: '', ai_impact_notes: '', incorporate_into_kb: true });
 
   // Regulatory Updates state
   const [updates, setUpdates] = useState([]);
@@ -105,10 +109,21 @@ const AdminRegulatoryUpdates = () => {
     }
   };
 
-  const handleApproveUpdate = async (id) => {
+  const openUpdateDetails = (u) => {
+    setSelectedUpdate(u);
+    setDetailDraft({
+      title: u.title || '',
+      summary: u.summary || '',
+      ai_impact_notes: u.ai_impact_notes || '',
+      incorporate_into_kb: true
+    });
+  };
+
+  const handleApproveUpdate = async (id, payload = { incorporate_into_kb: true }) => {
     try {
-      await axios.put(`${API}/regulatory/updates/${id}/approve`, {}, authHeaders);
-      setNotice({ type: 'success', text: 'Update approved — AI Assistant & Assessments now include this rule.' });
+      const { data } = await axios.put(`${API}/regulatory/updates/${id}/approve`, payload, authHeaders);
+      setNotice({ type: 'success', text: data?.message || 'Update approved and incorporated into PermitEase.' });
+      setSelectedUpdate(null);
       fetchAll();
     } catch (err) {
       setNotice({ type: 'error', text: 'Failed to approve update.' });
@@ -406,18 +421,24 @@ const AdminRegulatoryUpdates = () => {
                       </div>
                     </div>
 
-                    {u.status === 'PENDING_REVIEW' && (
-                      <div style={{ display: 'flex', gap: '0.4rem' }}>
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => handleApproveUpdate(u.id)}>
-                          <CheckCircle2 size={14} style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }} />
-                          Approve for AI
-                        </button>
-                        <button type="button" className="btn btn-outline btn-sm" onClick={() => handleDismissUpdate(u.id)}>
-                          <XCircle size={14} style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }} />
-                          Dismiss
-                        </button>
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => openUpdateDetails(u)}>
+                        <Eye size={14} style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }} />
+                        View Details
+                      </button>
+                      {u.status === 'PENDING_REVIEW' && (
+                        <>
+                          <button type="button" className="btn btn-primary btn-sm" onClick={() => handleApproveUpdate(u.id)}>
+                            <CheckCircle2 size={14} style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }} />
+                            Approve &amp; Incorporate
+                          </button>
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => handleDismissUpdate(u.id)}>
+                            <XCircle size={14} style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }} />
+                            Dismiss
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {u.summary && <p style={{ margin: '0.6rem 0 0.35rem', fontSize: '0.88rem' }}>{u.summary}</p>}
@@ -612,6 +633,122 @@ const AdminRegulatoryUpdates = () => {
                 <button type="submit" className="btn btn-primary">Import CSV</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: VIEW & INCORPORATE REGULATORY UPDATE DETAILS */}
+      {selectedUpdate && (
+        <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="card" style={{ maxWidth: '640px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
+                  <span style={{ background: '#ECFDF5', color: '#065F46', fontSize: '0.75rem', padding: '0.15rem 0.55rem', borderRadius: '999px', fontWeight: 600 }}>
+                    {selectedUpdate.source_category}
+                  </span>
+                  <span style={{
+                    background: selectedUpdate.status === 'APPROVED' ? '#DCFCE7' : selectedUpdate.status === 'PENDING_REVIEW' ? '#FEF3C7' : '#F3F4F6',
+                    color: selectedUpdate.status === 'APPROVED' ? '#166534' : selectedUpdate.status === 'PENDING_REVIEW' ? '#92400E' : '#4B5563',
+                    fontSize: '0.75rem', padding: '0.15rem 0.55rem', borderRadius: '999px', fontWeight: 600
+                  }}>
+                    {selectedUpdate.status}
+                  </span>
+                </div>
+                <h3 style={{ margin: 0 }}>Regulatory / Law Update Details</h3>
+              </div>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => setSelectedUpdate(null)}>Close</button>
+            </div>
+
+            <div style={{ fontSize: '0.84rem', background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gap: '0.3rem' }}>
+              <div><strong>Agency / Source:</strong> {selectedUpdate.source_name}</div>
+              <div><strong>Detected Version / Date:</strong> {selectedUpdate.detected_version || 'N/A'}</div>
+              <div><strong>Captured At:</strong> {selectedUpdate.created_at ? new Date(selectedUpdate.created_at).toLocaleString() : 'N/A'}</div>
+              {selectedUpdate.reviewer_name && (
+                <div><strong>Reviewed By:</strong> {selectedUpdate.reviewer_name} ({selectedUpdate.reviewed_at ? new Date(selectedUpdate.reviewed_at).toLocaleString() : ''})</div>
+              )}
+              {selectedUpdate.source_url && (
+                <div>
+                  <strong>Official Link:</strong>{' '}
+                  <a href={selectedUpdate.source_url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-green)' }}>
+                    {selectedUpdate.source_url} <ExternalLink size={12} style={{ verticalAlign: 'middle' }} />
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Law / Circular Title</label>
+                <input
+                  className="form-input"
+                  value={detailDraft.title}
+                  disabled={selectedUpdate.status !== 'PENDING_REVIEW'}
+                  onChange={e => setDetailDraft({ ...detailDraft, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Summary of New Rule / Law</label>
+                <textarea
+                  className="form-input"
+                  rows={4}
+                  value={detailDraft.summary}
+                  disabled={selectedUpdate.status !== 'PENDING_REVIEW'}
+                  onChange={e => setDetailDraft({ ...detailDraft, summary: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>BPLO &amp; PermitEase Impact Notes</label>
+                <textarea
+                  className="form-input"
+                  rows={3}
+                  value={detailDraft.ai_impact_notes}
+                  disabled={selectedUpdate.status !== 'PENDING_REVIEW'}
+                  onChange={e => setDetailDraft({ ...detailDraft, ai_impact_notes: e.target.value })}
+                />
+              </div>
+
+              {selectedUpdate.status === 'PENDING_REVIEW' && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.86rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={detailDraft.incorporate_into_kb}
+                    onChange={e => setDetailDraft({ ...detailDraft, incorporate_into_kb: e.target.checked })}
+                  />
+                  Incorporate directly into PermitEase Knowledge Base &amp; AI Assistant guidance
+                </label>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+              <Link to="/requirements" className="btn btn-outline btn-sm">
+                Open Requirements Masterlist
+              </Link>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {selectedUpdate.status === 'PENDING_REVIEW' && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => {
+                        handleDismissUpdate(selectedUpdate.id);
+                        setSelectedUpdate(null);
+                      }}
+                    >
+                      Dismiss
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => handleApproveUpdate(selectedUpdate.id, detailDraft)}
+                    >
+                      <CheckCircle2 size={15} style={{ marginRight: '0.3rem', verticalAlign: 'text-bottom' }} />
+                      Approve &amp; Incorporate
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
