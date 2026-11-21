@@ -34,6 +34,7 @@ import ScheduleWalkin from './pages/ScheduleWalkin';
 import AdminWalkins from './pages/AdminWalkins';
 import LGUApplications from './pages/LGUApplications';
 import LGUApplicationReview from './pages/LGUApplicationReview';
+import AdminRegulatoryUpdates from './pages/AdminRegulatoryUpdates';
 import VerifyPermit from './pages/VerifyPermit';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './layouts/Layout';
@@ -109,6 +110,7 @@ function App() {
           <Route path="/admin/walkin-schedule" element={<Navigate to="/admin/walkins" replace />} />
           <Route path="/admin/applications/:id" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><LGUApplicationReview /></ProtectedLayout>} />
           <Route path="/admin/analytics" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><AdminAnalytics /></ProtectedLayout>} />
+          <Route path="/admin/regulatory" element={<ProtectedLayout allowedRoles={['lgu_admin', 'system_admin']}><AdminRegulatoryUpdates /></ProtectedLayout>} />
 
           {/* System Admin Only */}
           <Route path="/user-management" element={<ProtectedLayout allowedRoles={['system_admin']}><UserManagement /></ProtectedLayout>} />

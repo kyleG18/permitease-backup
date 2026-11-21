@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const cron = require('node-cron');
 const { processRenewalReminders } = require('./services/renewalReminderService');
+const { checkAllRegulatorySources } = require('./services/regulatoryMonitorService');
 const initDatabase = require('./config/initDb');
 const db = require('./config/db');
 
@@ -110,6 +111,7 @@ app.use('/api/readiness', require('./routes/readinessRoutes'));
 app.use('/api/renewals', require('./routes/renewalRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/schedule', require('./routes/holidayRoutes'));
+app.use('/api/regulatory', require('./routes/regulatoryRoutes'));
 
 // Basic route for testing & uptime keep-alive ping
 app.get('/', (req, res) => {
@@ -162,6 +164,20 @@ async function startServer() {
             timezone: 'Asia/Manila'
         });
         console.log('[Startup] Renewal reminder daemon registered (08:00 AM PST).');
+
+        // 2b. Weekly Regulatory & PSA PSIC Monitor Daemon (Mondays at 09:00 AM Asia/Manila)
+        cron.schedule('0 9 * * 1', async () => {
+            console.log('[Cron] Weekly regulatory & PSIC check triggered at', new Date().toLocaleString());
+            try {
+                const report = await checkAllRegulatorySources({ triggeredBy: 'weekly-cron' });
+                console.log('[Cron] Regulatory check complete. New updates detected:', report.new_updates_detected);
+            } catch (err) {
+                console.error('[Cron] Regulatory check job failed:', err.message);
+            }
+        }, {
+            timezone: 'Asia/Manila'
+        });
+        console.log('[Startup] Weekly regulatory & PSIC monitor daemon registered (Mon 09:00 AM PHT).');
 
         // 3. Bind HTTP listener
         const PORT = process.env.PORT || 5000;

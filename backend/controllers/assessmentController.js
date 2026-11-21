@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { generateStructuredAssessment } = require('../services/aiService');
+const { getActivePsicCodes, matchPsicCodeDeterministically } = require('../services/regulatoryMonitorService');
 
 // @desc    Create an assessment / get permit recommendations based on description
 // @route   POST /api/assessments
@@ -61,18 +62,34 @@ const createAssessment = async (req, res) => {
         // 1b. Fetch active Knowledge Base ordinances & guidelines for contextual grounding
         let knowledgeDocs = [];
         try {
-            const [kbRows] = await db.query('SELECT id, title, document_path FROM knowledge_base ORDER BY uploaded_at DESC');
+            const [kbRows] = await db.query('SELECT id, title, legal_basis, content, document_path FROM knowledge_base ORDER BY uploaded_at DESC');
             knowledgeDocs = kbRows || [];
         } catch (e) {
             console.warn('[AssessmentController] Could not fetch knowledge_base docs:', e.message);
         }
 
-        // 2. Call AI Service to classify and assess, enriched with Knowledge Base context
+        // 1c. Fetch active PSA PSIC codes
+        const activePsicCodes = await getActivePsicCodes();
+
+        // 2. Call AI Service to classify and assess, enriched with Knowledge Base & PSIC context
         let aiResult;
         try {
-            aiResult = await generateStructuredAssessment(bizObject || descriptionToUse, allRequirements, knowledgeDocs);
+            aiResult = await generateStructuredAssessment(bizObject || descriptionToUse, allRequirements, knowledgeDocs, activePsicCodes);
         } catch (aiError) {
             return res.status(503).json({ message: aiError.message });
+        }
+
+        // Ensure PSIC code is validated against active PSIC table or matched deterministically
+        let matchedPsic = activePsicCodes.find(p => p.code === String(aiResult.psic_code || '').trim()) || null;
+        if (!matchedPsic) {
+            matchedPsic = matchPsicCodeDeterministically(bizObject || descriptionToUse, activePsicCodes);
+        }
+        if (matchedPsic) {
+            aiResult.psic_code = matchedPsic.code;
+            aiResult.psic_title = matchedPsic.title;
+            if (resolvedBusinessId) {
+                await db.query('UPDATE businesses SET psic_code = ? WHERE id = ?', [matchedPsic.code, resolvedBusinessId]).catch(() => {});
+            }
         }
 
         // 3. Cross-reference AI classification and authoritative profile with actual database rules

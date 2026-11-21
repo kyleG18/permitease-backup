@@ -116,6 +116,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           items: [
             { name: 'Reports & Analytics', path: '/admin/analytics', icon: BarChart },
             { name: 'Knowledge Base', path: '/knowledge', icon: Library },
+            { name: 'Regulatory & PSIC Monitor', path: '/admin/regulatory', icon: Shield }
           ]
         }
       ];
@@ -144,7 +145,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           title: 'REPORTS & INSIGHTS',
           items: [
             { name: 'Reports & Analytics', path: '/admin/analytics', icon: BarChart },
-            { name: 'Knowledge Base', path: '/knowledge', icon: Library }
+            { name: 'Knowledge Base', path: '/knowledge', icon: Library },
+            { name: 'Regulatory & PSIC Monitor', path: '/admin/regulatory', icon: Shield }
           ]
         }
       ];

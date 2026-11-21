@@ -182,7 +182,7 @@ const generateRuleBasedAssessment = (biz) => {
 /**
  * Generate a structured JSON assessment from a natural language business description.
  */
-const generateStructuredAssessment = async (business, availablePermits, knowledgeDocs = []) => {
+const generateStructuredAssessment = async (business, availablePermits, knowledgeDocs = [], activePsicCodes = []) => {
     let businessDescription = {};
     if (typeof business === 'string') {
         try {
@@ -220,13 +220,17 @@ const generateStructuredAssessment = async (business, availablePermits, knowledg
     }
 
     const kbSection = (knowledgeDocs && knowledgeDocs.length > 0)
-        ? `\nOfficial Knowledge Base & Municipal Ordinances (Municipality of Roxas):\n${knowledgeDocs.map((d, i) => `${i + 1}. "${d.title}"`).join('\n')}\n*Note: Cite and reference applicable Knowledge Base ordinances or guidelines in your reasoning where appropriate.*\n`
+        ? `\nOfficial Knowledge Base & Municipal Ordinances (Municipality of Roxas):\n${knowledgeDocs.map((d, i) => `${i + 1}. "${d.title}"${d.legal_basis ? ` [${d.legal_basis}]` : ''}${d.content ? `: ${String(d.content).slice(0, 220)}` : ''}`).join('\n')}\n*Note: Cite and reference applicable Knowledge Base ordinances or guidelines in your reasoning where appropriate.*\n`
         : '\nOfficial Knowledge Base: Standard Roxas Citizen\'s Charter, Municipal Revenue Code, and Local Government Code (RA 7160).\n';
+
+    const psicSection = (activePsicCodes && activePsicCodes.length > 0)
+        ? `\nApproved PSA PSIC Reference Codes (pick the closest matching code if applicable):\n${activePsicCodes.slice(0, 40).map(p => `- ${p.code}: ${p.title} [${p.industry_category}]`).join('\n')}\n`
+        : '';
 
     const prompt = `You are an AI assistant for the Municipality of Roxas PermitEase system.
 Your task is to analyze the user's business profile and activities to return a STRICT JSON object containing your best assessment.
 DO NOT provide official permit requirements. Only provide an advisory classification.
-${kbSection}
+${kbSection}${psicSection}
 Available Industry Categories configured in PermitEase:
 - Food & Beverage
 - Retail
@@ -246,7 +250,8 @@ Instructions:
 2. If "business_description" is missing or too short, return a lower confidence score and add "missing_information" (e.g. "Please describe the specific products or services you offer").
 3. Assign the closest "industry_category".
 4. Determine the specific "business_type".
-5. Based on the business activities, suggest a list of potentially applicable advisory permits.
+5. If an Approved PSA PSIC Reference Code matches their activities, include "psic_code" and "psic_title" (otherwise null).
+6. Based on the business activities, suggest a list of potentially applicable advisory permits.
 
 Take into account the full business context, including:
 - Ownership Type: ${businessDescription.ownership_type}
@@ -259,6 +264,8 @@ You MUST respond ONLY with valid JSON exactly matching this structure, with no m
 {
   "industry_category": "Your closest guess from the available industry categories",
   "business_type": "Your short description of the business type (e.g. 'Restaurant', 'Retail Store')",
+  "psic_code": "Matching 5-digit PSA PSIC code from the reference list, or null",
+  "psic_title": "Matching PSA PSIC title, or null",
   "confidence": 0.95,
   "recommended_permits": [
     {
@@ -483,8 +490,56 @@ INSTRUCTIONS:
     }
 };
 
+/**
+ * Summarize a fetched Philippine regulatory / PSA PSIC webpage snippet for BPLO review.
+ * Falls back cleanly if AI keys are not configured or rate-limited.
+ */
+const summarizeRegulatoryChange = async ({ sourceName, sourceCategory, sourceUrl, snippet, detectedVersion }) => {
+    const fallback = {
+        title: `${sourceName} update (${detectedVersion})`,
+        summary: `A content update was detected on ${sourceUrl} (${detectedVersion}).`,
+        impact_notes: `Review ${sourceCategory} rules, PSIC classifications, or municipal requirements to see if PermitEase needs an update.`
+    };
+
+    if (!isAiConfigured() || !snippet || !snippet.trim()) {
+        return fallback;
+    }
+
+    const prompt = `You are a Philippine Business Permit & Licensing (BPLO) regulatory analyst for the Municipality of Roxas, Oriental Mindoro.
+We fetched the latest public webpage text from an official agency source:
+- Source: ${sourceName} (${sourceCategory})
+- URL: ${sourceUrl}
+- Detected Version/Year: ${detectedVersion}
+
+Excerpt:
+"""
+${snippet.slice(0, 2200)}
+"""
+
+Respond ONLY with valid JSON (no markdown fences):
+{
+  "title": "Short headline of the latest bulletin/classification update (max 120 chars)",
+  "summary": "2-sentence summary of what appears on this agency page relevant to Philippine business permits, PSIC codes, taxes, fire/sanitation, or ARTA compliance.",
+  "impact_notes": "1-2 actionable sentences for BPLO Roxas on whether PermitEase requirements, PSIC codes, or fee rules should be reviewed."
+}`;
+
+    try {
+        const rawText = await callLLM([{ role: 'user', content: prompt }], { temperature: 0.1, max_tokens: 600 });
+        const parsed = parseCleanJson(rawText);
+        return {
+            title: parsed.title || fallback.title,
+            summary: parsed.summary || fallback.summary,
+            impact_notes: parsed.impact_notes || fallback.impact_notes
+        };
+    } catch (err) {
+        console.warn('[aiService] summarizeRegulatoryChange fallback:', err.message);
+        return fallback;
+    }
+};
+
 module.exports = {
     generateStructuredAssessment,
     generateChatResponse,
-    generateFeeEstimate
+    generateFeeEstimate,
+    summarizeRegulatoryChange
 };

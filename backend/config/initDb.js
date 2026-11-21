@@ -703,6 +703,48 @@ async function runBootstrapSchema() {
             await db.query(`INSERT IGNORE INTO ph_cities_municipalities (id, name, type, province_id, region_id) VALUES ('175212000', 'Roxas', 'Municipality', '175200000', '170000000')`);
         });
 
+        // 12b. PSIC Codes table (Philippine Standard Industrial Classification)
+        await safeStep('psic_codes table', async () => {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS psic_codes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    code VARCHAR(20) NOT NULL UNIQUE,
+                    title VARCHAR(255) NOT NULL,
+                    section VARCHAR(120) DEFAULT NULL,
+                    division VARCHAR(180) DEFAULT NULL,
+                    industry_category VARCHAR(100) NOT NULL,
+                    mapped_requirement_keywords TEXT DEFAULT NULL,
+                    source_version VARCHAR(50) DEFAULT 'PSA PSIC 2019',
+                    status ENUM('ACTIVE', 'PENDING_APPROVAL', 'REJECTED') NOT NULL DEFAULT 'ACTIVE',
+                    approved_by INT DEFAULT NULL,
+                    approved_at TIMESTAMP NULL DEFAULT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            `);
+        });
+
+        // 12c. Regulatory Updates table (AI-assisted monitoring of PSA PSIC, ARTA, BIR, DILG, BFP, LGU rules)
+        await safeStep('regulatory_updates table', async () => {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS regulatory_updates (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    source_name VARCHAR(150) NOT NULL,
+                    source_category ENUM('PSIC', 'ARTA_DILG', 'BIR', 'BFP_DOH', 'LOCAL_ORDINANCE') NOT NULL DEFAULT 'LOCAL_ORDINANCE',
+                    source_url VARCHAR(500) DEFAULT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    summary TEXT DEFAULT NULL,
+                    ai_impact_notes TEXT DEFAULT NULL,
+                    detected_version VARCHAR(100) DEFAULT NULL,
+                    content_hash VARCHAR(64) DEFAULT NULL,
+                    status ENUM('PENDING_REVIEW', 'APPROVED', 'DISMISSED') NOT NULL DEFAULT 'PENDING_REVIEW',
+                    reviewed_by INT DEFAULT NULL,
+                    reviewed_at TIMESTAMP NULL DEFAULT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+        });
+
         // 13. Ensure default admin user
         await safeStep('default admin user', async () => {
             const adminEmail = 'admin@bizcheckpermit.gov.ph';
@@ -876,6 +918,7 @@ async function runBootstrapSchema() {
             await ensureColumn('businesses', 'floor_area', "DECIMAL(10,2) DEFAULT 0.00");
             await ensureColumn('businesses', 'business_status', "VARCHAR(100) DEFAULT 'New Application'");
             await ensureColumn('businesses', 'city_municipality_id', "VARCHAR(20) DEFAULT '175212000'");
+            await ensureColumn('businesses', 'psic_code', "VARCHAR(20) NULL");
 
             // permits: preparation and verification code links
             await ensureColumn('permits', 'application_id', "INT UNIQUE DEFAULT NULL");
@@ -896,6 +939,45 @@ async function runBootstrapSchema() {
             await ensureColumn('applications', 'walkin_status', "ENUM('PENDING', 'SCHEDULED', 'CONFIRMED', 'ATTENDED', 'CANCELLED') DEFAULT 'PENDING'");
             await ensureColumn('applications', 'counter_verified_by', "INT NULL");
             await ensureColumn('applications', 'counter_verified_at', "TIMESTAMP NULL");
+        });
+
+        // 18. Seed baseline PSA PSIC codes if empty
+        await safeStep('seed psic codes', async () => {
+            const [existingPsic] = await db.query('SELECT COUNT(*) as count FROM psic_codes');
+            if (existingPsic[0].count === 0) {
+                const baselinePsic = [
+                    ['47111', 'Retail sale in nonspecialized stores with food, beverages or tobacco predominating (Sari-Sari Store / Mini-Mart)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'sari-sari,grocery,store,mini-mart,convenience,retail'],
+                    ['47112', 'Retail sale in supermarkets / grocery stores', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'supermarket,grocery,retail,merchandise'],
+                    ['47190', 'Other retail sale in nonspecialized stores (General Merchandise / Department Store)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'general merchandise,ukay,dry goods,department,retail'],
+                    ['47411', 'Retail sale of computers, peripheral units, software and telecommunications equipment (Cellphone / Electronics Shop)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'electronics,cellphone,mobile,computer,gadgets,tech'],
+                    ['47520', 'Retail sale of hardware, paints and glass in specialized stores', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'hardware,construction,paint,lumber'],
+                    ['47721', 'Retail sale of pharmaceutical and medical goods (Pharmacy / Drugstore)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'pharmacy,drugstore,medicine,medical'],
+                    ['47711', 'Retail sale of clothing, footwear and leather articles', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'clothing,apparel,boutique,shoes,ukay-ukay'],
+                    ['56101', 'Restaurants and mobile food service activities (Full-Service Restaurant / Eatery / Carinderia)', 'I - Accommodation and Food Service', '56 - Food and beverage service', 'Food & Beverage', 'restaurant,eatery,carinderia,carenderia,dining,bbq'],
+                    ['56102', 'Fast-food restaurants and take-out food stands (Snack Bar / Food Stall)', 'I - Accommodation and Food Service', '56 - Food and beverage service', 'Food & Beverage', 'fast food,snack,food stall,take-out,kiosk'],
+                    ['56301', 'Cafes, coffee shops, milk tea shops and refreshment parlors', 'I - Accommodation and Food Service', '56 - Food and beverage service', 'Food & Beverage', 'cafe,coffee,milk tea,beverage,juice,refreshment'],
+                    ['10711', 'Manufacture of bakery products (Bakery / Bakeshop / Pandesal)', 'C - Manufacturing', '10 - Manufacture of food products', 'Food & Beverage', 'bakery,bakeshop,bread,pastry,cake,pandesal'],
+                    ['55101', 'Hotels, resorts, inns and lodging houses', 'I - Accommodation and Food Service', '55 - Accommodation', 'Services', 'hotel,resort,inn,lodge,hostel,accommodation,beach'],
+                    ['96021', 'Hairdressing and other beauty treatment (Salon / Barbershop)', 'S - Other Service Activities', '96 - Other personal service', 'Services', 'salon,barber,beauty,parlor,spa,hair'],
+                    ['96011', 'Washing and dry-cleaning of textile and fur products (Laundry Shop)', 'S - Other Service Activities', '96 - Other personal service', 'Services', 'laundry,wash,dry-clean'],
+                    ['45201', 'Maintenance and repair of motor vehicles and motorcycles (Auto / Vulcanizing Shop)', 'G - Wholesale and Retail Trade', '45 - Motor vehicles repair', 'Services', 'repair,auto,motorcycle,vulcanizing,carwash'],
+                    ['62010', 'Computer programming, consultancy and IT services', 'J - Information and Communication', '62 - Computer programming', 'Services', 'software,it,programming,web,tech,digital'],
+                    ['82190', 'Photocopying, printing, document preparation and specialized office support (Computer / Printing Shop)', 'N - Administrative and Support', '82 - Office administrative', 'Services', 'printing,photocopy,computer shop,internet cafe'],
+                    ['10790', 'Manufacture of other food products / small-scale food processing', 'C - Manufacturing', '10 - Manufacture of food products', 'Manufacturing', 'processing,manufacturing,packaged food,chips'],
+                    ['14101', 'Manufacture of wearing apparel / tailoring and dressmaking', 'C - Manufacturing', '14 - Manufacture of wearing apparel', 'Manufacturing', 'tailoring,dressmaking,garments,sewing'],
+                    ['01410', 'Raising of livestock and poultry', 'A - Agriculture, Forestry and Fishing', '01 - Crop and animal production', 'Agriculture', 'poultry,livestock,pig,hog,chicken,farm'],
+                    ['03210', 'Aquaculture and fishery production (Fishpond / Marine)', 'A - Agriculture, Forestry and Fishing', '03 - Fishing and aquaculture', 'Agriculture', 'fish,aquaculture,fishpond,bangus,tilapia,crab'],
+                    ['47739', 'Other retail sale of new goods in specialized stores (Water Refilling Station / LPG / Misc)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'water refilling,lpg,gas,station,refilling']
+                ];
+                for (const [code, title, section, division, cat, kw] of baselinePsic) {
+                    await db.query(
+                        `INSERT IGNORE INTO psic_codes (code, title, section, division, industry_category, mapped_requirement_keywords, source_version, status)
+                         VALUES (?, ?, ?, ?, ?, ?, 'PSA PSIC 2019', 'ACTIVE')`,
+                        [code, title, section, division, cat, kw]
+                    );
+                }
+                console.log(`[DB Init] Seeded ${baselinePsic.length} baseline PSA PSIC codes.`);
+            }
         });
 
         console.log('[DB Init Bootstrap] Initial schema tables created successfully.');

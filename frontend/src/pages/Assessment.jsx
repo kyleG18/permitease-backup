@@ -749,6 +749,17 @@ Instructions:
               </span>
               <strong className="assessment-ai-meta-item__value">{currentResult.ai_assessment.business_type}</strong>
             </div>
+            {currentResult.ai_assessment.psic_code && (
+              <div className="assessment-ai-meta-item">
+                <span className="assessment-ai-meta-item__label">
+                  {isTl ? 'PSA PSIC Code' : 'PSA PSIC Code'}
+                </span>
+                <strong className="assessment-ai-meta-item__value">
+                  {currentResult.ai_assessment.psic_code}
+                  {currentResult.ai_assessment.psic_title ? ` — ${currentResult.ai_assessment.psic_title}` : ''}
+                </strong>
+              </div>
+            )}
           </div>
 
           {currentResult.ai_assessment.summary && (

@@ -126,15 +126,19 @@ const sendMessage = async (req, res) => {
             return res.status(400).json({ message: 'Question is too long. Maximum 4000 characters.' });
         }
 
-        // 1. Fetch requirements, knowledge base, chat history, and live user context in parallel
+        // 1. Fetch requirements, knowledge base, approved regulatory updates, chat history, and live user context in parallel
         const [
             [requirements],
             [knowledgeDocsResult],
+            [approvedRegUpdates],
+            [psicSample],
             [history],
             userContext
         ] = await Promise.all([
             db.query('SELECT permit_name, description FROM permit_requirements'),
-            db.query('SELECT title FROM knowledge_base'),
+            db.query('SELECT title, category, legal_basis, content FROM knowledge_base ORDER BY uploaded_at DESC LIMIT 20'),
+            db.query("SELECT source_name, title, summary, detected_version FROM regulatory_updates WHERE status = 'APPROVED' ORDER BY reviewed_at DESC LIMIT 10").catch(() => [[]]),
+            db.query("SELECT code, title, industry_category FROM psic_codes WHERE status = 'ACTIVE' ORDER BY code ASC LIMIT 30").catch(() => [[]]),
             db.query(
                 'SELECT question, response FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
                 [req.user.id]
@@ -142,15 +146,26 @@ const sendMessage = async (req, res) => {
             buildUserContext(req.user.id)
         ]);
 
-        const knowledgeDocs = knowledgeDocsResult.map(d => d.title);
+        const knowledgeDocs = knowledgeDocsResult.map(d =>
+            `${d.title}${d.legal_basis ? ` [${d.legal_basis}]` : ''}${d.content ? `: ${String(d.content).slice(0, 180)}` : ''}`
+        );
         history.reverse(); // chronological order
 
-        // 2. Read static AI Context File
+        // 2. Read static AI Context File + append live approved regulatory updates & PSIC codes
         let staticContext = '';
         try {
             staticContext = fs.readFileSync(path.join(__dirname, '../services/ai_context.md'), 'utf8');
         } catch (e) {
             console.warn('ai_context.md not found, proceeding without it.');
+        }
+
+        if (Array.isArray(approvedRegUpdates) && approvedRegUpdates.length > 0) {
+            staticContext += `\n\nAPPROVED REGULATORY UPDATES (BPLO-VERIFIED):\n` +
+                approvedRegUpdates.map(u => `- [${u.source_name} | ${u.detected_version || 'Latest'}] ${u.title}: ${u.summary || ''}`).join('\n');
+        }
+        if (Array.isArray(psicSample) && psicSample.length > 0) {
+            staticContext += `\n\nACTIVE PSA PSIC CODES IN PERMIT-EASE:\n` +
+                psicSample.map(p => `- ${p.code}: ${p.title} (${p.industry_category})`).join('\n');
         }
 
         // 6. Format messages array for Groq (ignore any offline/error messages from history)
