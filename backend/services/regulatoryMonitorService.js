@@ -6,6 +6,12 @@ const { summarizeRegulatoryChange } = require('./aiService');
 
 const REGULATORY_SOURCES = [
     {
+        key: 'ROXAS_CHARTER',
+        source_name: "Municipality of Roxas — Citizen's Charter",
+        source_category: 'LOCAL_ORDINANCE',
+        source_url: 'https://www.roxasormin.com/citizens-charter'
+    },
+    {
         key: 'PSA_PSIC',
         source_name: 'PSA — Philippine Standard Industrial Classification (PSIC)',
         source_category: 'PSIC',
@@ -34,6 +40,18 @@ const REGULATORY_SOURCES = [
         source_name: 'BFP — Bureau of Fire Protection (RA 9514)',
         source_category: 'BFP_DOH',
         source_url: 'https://bfp.gov.ph'
+    },
+    {
+        key: 'DOH',
+        source_name: 'DOH — Code on Sanitation (PD 856) Advisories',
+        source_category: 'BFP_DOH',
+        source_url: 'https://doh.gov.ph'
+    },
+    {
+        key: 'DTI',
+        source_name: 'DTI — Business Name & MSME Guidelines',
+        source_category: 'ARTA_DILG',
+        source_url: 'https://www.dti.gov.ph'
     }
 ];
 
