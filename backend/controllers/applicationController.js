@@ -1019,7 +1019,7 @@ const getWalkinRoster = async (req, res) => {
             afternoonBatch: rows.filter(r => (r.walkin_time_slot || '').toLowerCase().includes('afternoon') || (r.walkin_time_slot || '').includes('1:00')).length,
             attendedCount: rows.filter(r => r.walkin_status === 'ATTENDED').length,
             pendingCount: rows.filter(r => r.walkin_status === 'SCHEDULED' || r.walkin_status === 'PENDING').length,
-            isClosed: !!closureEntry,
+            isClosed: Boolean(closureEntry && ['holiday', 'special_nonworking', 'bplo_closed'].includes(closureEntry.day_type)),
             dayType: closureEntry?.day_type || null,
             closureLabel: closureEntry?.label || null
         };
@@ -1231,17 +1231,29 @@ const scheduleWalkinByBusiness = async (req, res) => {
         }
         const business = bizRows[0];
 
-        // ── Check if date is declared closed in bplo_schedule ──
+        // ── Check if date is declared closed or half-day in bplo_schedule ──
         const [schedRows] = await db.query(
             `SELECT day_type, label FROM bplo_schedule WHERE schedule_date = ? AND is_active = 1 LIMIT 1`,
             [walkin_date]
         );
         if (schedRows.length > 0) {
             const s = schedRows[0];
-            const typeLabel = { bplo_closed: 'BPLO Office Closed', holiday: 'Official Public Holiday', special_nonworking: 'Special Non-Working Day' }[s.day_type] || s.day_type;
-            return res.status(400).json({
-                message: `Cannot schedule appointment on ${walkin_date}: ${typeLabel}${s.label ? ` — "${s.label}"` : ''}. Please choose a different date.`
-            });
+            if (['bplo_closed', 'holiday', 'special_nonworking'].includes(s.day_type)) {
+                const typeLabel = { bplo_closed: 'BPLO Office Closed', holiday: 'Official Public Holiday', special_nonworking: 'Special Non-Working Day' }[s.day_type] || s.day_type;
+                return res.status(400).json({
+                    message: `Cannot schedule appointment on ${walkin_date}: ${typeLabel}${s.label ? ` — "${s.label}"` : ''}. Please choose a different date.`
+                });
+            }
+            if (s.day_type === 'workday_morning' && !String(walkin_time_slot || '').includes('Morning')) {
+                return res.status(400).json({
+                    message: `${walkin_date} is a BPLO Half-Day (Morning Only: 8:00 AM - 11:00 AM). Please select the Morning Batch.`
+                });
+            }
+            if (s.day_type === 'workday_afternoon' && !String(walkin_time_slot || '').includes('Afternoon')) {
+                return res.status(400).json({
+                    message: `${walkin_date} is a BPLO Half-Day (Afternoon Only: 1:00 PM - 4:00 PM). Please select the Afternoon Batch.`
+                });
+            }
         }
 
         // Find existing application or create a new draft

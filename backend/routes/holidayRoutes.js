@@ -58,7 +58,7 @@ router.post('/', protect, requireRole(['lgu_admin', 'system_admin']), async (req
   if (!schedule_date || !day_type) {
     return res.status(400).json({ message: 'schedule_date and day_type are required.' });
   }
-  const validTypes = ['holiday', 'special_nonworking', 'bplo_closed'];
+  const validTypes = ['holiday', 'special_nonworking', 'bplo_closed', 'workday_full', 'workday_morning', 'workday_afternoon'];
   if (!validTypes.includes(day_type)) {
     return res.status(400).json({ message: `day_type must be one of: ${validTypes.join(', ')}` });
   }

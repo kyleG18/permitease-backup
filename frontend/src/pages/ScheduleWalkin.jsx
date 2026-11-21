@@ -277,16 +277,20 @@ export default function ScheduleWalkin() {
     const dow = cellDate.getDay(); // 0=Sun 6=Sat
 
     if (cellDate <= todayMidnight) return 'wc-past';
-    if (dow === 0 || dow === 6)    return 'wc-weekend';
 
     const entry = holidayMap[dateStr];
+    if (entry?.type === 'workday_full') return 'wc-workday';
+    if (entry?.type === 'workday_morning' || entry?.type === 'workday_afternoon') return 'wc-halfday';
+
+    if (dow === 0 || dow === 6)    return 'wc-weekend';
+
     if (entry?.type === 'holiday')            return 'wc-holiday';
     if (entry?.type === 'special_nonworking') return 'wc-special';
     if (entry?.type === 'bplo_closed')        return 'wc-closed';
     return 'wc-available';
   };
 
-  const isSelectable = (cls) => cls === 'wc-available';
+  const isSelectable = (cls) => cls === 'wc-available' || cls === 'wc-workday' || cls === 'wc-halfday';
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
@@ -367,6 +371,8 @@ export default function ScheduleWalkin() {
             // Style per class
             const styleMap = {
               'wc-available': { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0', cursor: 'pointer' },
+              'wc-workday':   { bg: '#DCFCE7', color: '#166534', border: '#16A34A', cursor: 'pointer' },
+              'wc-halfday':   { bg: '#DBEAFE', color: '#1E40AF', border: '#60A5FA', cursor: 'pointer' },
               'wc-holiday':   { bg: '#FEF9C3', color: '#92400E', border: '#FDE68A', cursor: 'not-allowed' },
               'wc-special':   { bg: '#FEF3C7', color: '#B45309', border: '#FDE68A', cursor: 'not-allowed' },
               'wc-closed':    { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA', cursor: 'not-allowed' },
@@ -379,7 +385,12 @@ export default function ScheduleWalkin() {
               <div
                 key={idx}
                 title={tooltip}
-                onClick={() => { if (sel) setWalkinDate(dateStr); }}
+                onClick={() => {
+                  if (!sel) return;
+                  setWalkinDate(dateStr);
+                  if (entry?.type === 'workday_morning') setWalkinSlot('Morning (8:00 AM - 11:00 AM)');
+                  if (entry?.type === 'workday_afternoon') setWalkinSlot('Afternoon (1:00 PM - 4:00 PM)');
+                }}
                 style={{
                   height: '36px', borderRadius: '7px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -765,55 +776,68 @@ export default function ScheduleWalkin() {
                 {isTl ? 'Pumili ng Batch Window *' : 'Select Batch Window *'}
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
-                {[
-                  {
-                    slot: 'Morning (8:00 AM - 11:00 AM)',
-                    emoji: '🌅',
-                    title: isTl ? 'Batch sa Umaga' : 'Morning Batch',
-                    time: '8:00 AM – 11:00 AM',
-                    sub: isTl ? 'Pinakamainam para sa parehong-araw na pagtasa sa Treasury' : 'Best for same-day Treasury assessment'
-                  },
-                  {
-                    slot: 'Afternoon (1:00 PM - 4:00 PM)',
-                    emoji: '🌇',
-                    title: isTl ? 'Batch sa Hapon' : 'Afternoon Batch',
-                    time: '1:00 PM – 4:00 PM',
-                    sub: isTl ? 'Mainam para sa pagberipika ng dokumento at paglagda' : 'Ideal for document verification & sign-off'
-                  }
-                ].map(item => (
-                  <label
-                    key={item.slot}
-                    style={{
-                      display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
-                      padding: '0.9rem 1rem', borderRadius: '10px', cursor: 'pointer',
-                      border: walkinSlot === item.slot
-                        ? '2px solid var(--primary-green, #15803D)'
-                        : '1px solid #E2E8F0',
-                      backgroundColor: walkinSlot === item.slot ? '#F0FDF4' : '#FAFAFA',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="walkinSlot"
-                      value={item.slot}
-                      checked={walkinSlot === item.slot}
-                      onChange={e => setWalkinSlot(e.target.value)}
-                      style={{ marginTop: '3px', accentColor: '#15803D', flexShrink: 0 }}
-                    />
-                    <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>
-                        {item.emoji} {item.title}
+                {(() => {
+                  const selType = walkinDate ? holidayMap[walkinDate]?.type : null;
+                  return [
+                    {
+                      slot: 'Morning (8:00 AM - 11:00 AM)',
+                      emoji: '🌅',
+                      title: isTl ? 'Batch sa Umaga' : 'Morning Batch',
+                      time: '8:00 AM – 11:00 AM',
+                      sub: isTl ? 'Pinakamainam para sa parehong-araw na pagtasa sa Treasury' : 'Best for same-day Treasury assessment',
+                      disabled: selType === 'workday_afternoon'
+                    },
+                    {
+                      slot: 'Afternoon (1:00 PM - 4:00 PM)',
+                      emoji: '🌇',
+                      title: isTl ? 'Batch sa Hapon' : 'Afternoon Batch',
+                      time: '1:00 PM – 4:00 PM',
+                      sub: isTl ? 'Mainam para sa pagberipika ng dokumento at paglagda' : 'Ideal for document verification & sign-off',
+                      disabled: selType === 'workday_morning'
+                    }
+                  ].map(item => (
+                    <label
+                      key={item.slot}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+                        padding: '0.9rem 1rem', borderRadius: '10px',
+                        cursor: item.disabled ? 'not-allowed' : 'pointer',
+                        opacity: item.disabled ? 0.5 : 1,
+                        border: walkinSlot === item.slot && !item.disabled
+                          ? '2px solid var(--primary-green, #15803D)'
+                          : '1px solid #E2E8F0',
+                        backgroundColor: walkinSlot === item.slot && !item.disabled ? '#F0FDF4' : '#FAFAFA',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="walkinSlot"
+                        value={item.slot}
+                        disabled={item.disabled}
+                        checked={walkinSlot === item.slot}
+                        onChange={e => setWalkinSlot(e.target.value)}
+                        style={{ marginTop: '3px', accentColor: '#15803D', flexShrink: 0 }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>
+                          {item.emoji} {item.title}
+                          {item.disabled && (
+                            <span style={{ marginLeft: '6px', fontSize: '11px', color: '#DC2626', fontWeight: 600 }}>
+                              ({isTl ? 'Sarado — Half-Day' : 'Closed — Half-Day'})
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '12.5px', color: 'var(--primary-green, #15803D)', fontWeight: 700, marginTop: '2px' }}>
+                          {item.time}
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '3px', lineHeight: 1.4 }}>
+                          {item.sub}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '12.5px', color: 'var(--primary-green, #15803D)', fontWeight: 700, marginTop: '2px' }}>
-                        {item.time}
-                      </div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '3px', lineHeight: 1.4 }}>
-                        {item.sub}
-                      </div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  ));
+                })()}
               </div>
             </div>
 

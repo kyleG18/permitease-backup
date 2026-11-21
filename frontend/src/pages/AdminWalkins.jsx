@@ -141,10 +141,16 @@ export default function AdminWalkins() {
   const CLOSURE_TYPE_LABELS = {
     bplo_closed: 'BPLO Office Closed',
     holiday: 'Official Public Holiday',
-    special_nonworking: 'Special Non-Working Day'
+    special_nonworking: 'Special Non-Working Day',
+    workday_full: 'Special Open / Working Day (Full Day)',
+    workday_morning: 'Half-Day Open (Morning Only: 8AM–11AM)',
+    workday_afternoon: 'Half-Day Open (Afternoon Only: 1PM–4PM)'
   };
 
   const CLOSURE_PRESETS = [
+    'Holiday Overtime — High Application Volume',
+    'Half-Day Operations (Morning Only)',
+    'Half-Day Operations (Afternoon Only)',
     'Roxas Town Fiesta',
     'Municipal Non-Working Holiday',
     'System Maintenance & Staff Workshop',
@@ -153,6 +159,8 @@ export default function AdminWalkins() {
   ];
 
   const closureTypeColor = (type) => {
+    if (type === 'workday_full') return { bg: '#DCFCE7', border: '#16A34A', text: '#166534' };
+    if (type === 'workday_morning' || type === 'workday_afternoon') return { bg: '#DBEAFE', border: '#2563EB', text: '#1E40AF' };
     if (type === 'holiday') return { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' };
     if (type === 'special_nonworking') return { bg: '#FFF7ED', border: '#F97316', text: '#7C2D12' };
     return { bg: '#FEE2E2', border: '#EF4444', text: '#991B1B' };
@@ -958,6 +966,9 @@ export default function AdminWalkins() {
                     cursor: 'pointer'
                   }}
                 >
+                  <option value="workday_full">✅ Special Open / Working Day (Full Day — Overrides Holiday/Weekend)</option>
+                  <option value="workday_morning">🌤️ Half-Day Open (Morning Only: 8:00 AM – 11:00 AM)</option>
+                  <option value="workday_afternoon">🌇 Half-Day Open (Afternoon Only: 1:00 PM – 4:00 PM)</option>
                   <option value="bplo_closed">🔴 BPLO Office Closed / Municipal Administrative Non-Working</option>
                   <option value="holiday">🟡 Official Public Holiday</option>
                   <option value="special_nonworking">🟠 Special Non-Working Day</option>
@@ -1100,7 +1111,8 @@ export default function AdminWalkins() {
             {/* Legend */}
             <div style={{ padding: '0.65rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: '1rem', flexWrap: 'wrap', flexShrink: 0 }}>
               {[
-                { bg: '#DCFCE7', border: '#86EFAC', text: '#166534', label: 'Open / Working Day' },
+                { bg: '#DCFCE7', border: '#86EFAC', text: '#166534', label: 'Open / Special Workday' },
+                { bg: '#DBEAFE', border: '#93C5FD', text: '#1E40AF', label: 'Half-Day Open' },
                 { bg: '#FEE2E2', border: '#FCA5A5', text: '#991B1B', label: 'BPLO Closed' },
                 { bg: '#FEF3C7', border: '#FDE68A', text: '#92400E', label: 'Public Holiday' },
                 { bg: '#FFF7ED', border: '#FED7AA', text: '#7C2D12', label: 'Special Non-Working' },
@@ -1139,7 +1151,9 @@ export default function AdminWalkins() {
                       const isWeekend = [0, 6].includes(new Date(dateStr).getDay());
 
                       let cellBg = '#FFFFFF', cellBorder = '#E2E8F0', cellTextColor = '#0F172A';
-                      if (entry?.day_type === 'bplo_closed') { cellBg = '#FEE2E2'; cellBorder = '#FCA5A5'; cellTextColor = '#991B1B'; }
+                      if (entry?.day_type === 'workday_full') { cellBg = '#DCFCE7'; cellBorder = '#86EFAC'; cellTextColor = '#166534'; }
+                      else if (entry?.day_type === 'workday_morning' || entry?.day_type === 'workday_afternoon') { cellBg = '#DBEAFE'; cellBorder = '#93C5FD'; cellTextColor = '#1E40AF'; }
+                      else if (entry?.day_type === 'bplo_closed') { cellBg = '#FEE2E2'; cellBorder = '#FCA5A5'; cellTextColor = '#991B1B'; }
                       else if (entry?.day_type === 'holiday') { cellBg = '#FEF3C7'; cellBorder = '#FDE68A'; cellTextColor = '#92400E'; }
                       else if (entry?.day_type === 'special_nonworking') { cellBg = '#FFF7ED'; cellBorder = '#FED7AA'; cellTextColor = '#7C2D12'; }
                       else if (isWeekend) { cellBg = '#F8FAFC'; cellTextColor = '#94A3B8'; }
@@ -1181,7 +1195,17 @@ export default function AdminWalkins() {
                               maxWidth: '100%', overflow: 'hidden',
                               textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                             }}>
-                              {entry.day_type === 'bplo_closed' ? '🔴 CLOSED' : entry.day_type === 'holiday' ? '🟡 HOLIDAY' : '🟠 NONWORK'}
+                              {entry.day_type === 'workday_full'
+                                ? '✅ OPEN'
+                                : entry.day_type === 'workday_morning'
+                                ? '🌤️ AM HALF'
+                                : entry.day_type === 'workday_afternoon'
+                                ? '🌇 PM HALF'
+                                : entry.day_type === 'bplo_closed'
+                                ? '🔴 CLOSED'
+                                : entry.day_type === 'holiday'
+                                ? '🟡 HOLIDAY'
+                                : '🟠 NONWORK'}
                             </span>
                           )}
                           {entry?.label && (

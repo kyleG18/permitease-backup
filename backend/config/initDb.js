@@ -939,6 +939,9 @@ async function runBootstrapSchema() {
             await ensureColumn('applications', 'walkin_status', "ENUM('PENDING', 'SCHEDULED', 'CONFIRMED', 'ATTENDED', 'CANCELLED') DEFAULT 'PENDING'");
             await ensureColumn('applications', 'counter_verified_by', "INT NULL");
             await ensureColumn('applications', 'counter_verified_at', "TIMESTAMP NULL");
+
+            // bplo_schedule: support special working day & half-day overrides
+            await modifyColumn('bplo_schedule', 'day_type', "ENUM('holiday', 'special_nonworking', 'bplo_closed', 'workday_full', 'workday_morning', 'workday_afternoon') NOT NULL");
         });
 
         // 18. Seed baseline PSA PSIC codes if empty
