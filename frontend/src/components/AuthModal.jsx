@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import TermsPrivacyModal from './TermsPrivacyModal';
 import {
   Mail,
   Lock,
@@ -19,6 +20,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register'
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,7 +38,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
     email: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: true
+    agreeTerms: false
   });
 
   const { login, register } = useContext(AuthContext);
@@ -172,7 +174,8 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         email: registerData.email,
         contact_number: registerData.contact_number,
         password: registerData.password,
-        confirmPassword: registerData.confirmPassword
+        confirmPassword: registerData.confirmPassword,
+        accepted_terms: registerData.agreeTerms
       });
 
       if (result.success) {
@@ -715,15 +718,25 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             </div>
 
             {/* Terms checkbox */}
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1.25rem', fontSize: '12px', color: '#64748B', cursor: 'pointer', lineHeight: 1.4 }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1.25rem', fontSize: '12.5px', color: '#374151', cursor: 'pointer', lineHeight: 1.45 }}>
               <input
                 type="checkbox"
                 name="agreeTerms"
                 checked={registerData.agreeTerms}
                 onChange={handleRegisterChange}
-                style={{ marginTop: '2px', accentColor: '#15803D' }}
+                required
+                style={{ marginTop: '2px', accentColor: '#14532D' }}
               />
-              <span>I agree to the Roxas Municipal Data Privacy and Terms of Service.</span>
+              <span>
+                I have read and agree to the{' '}
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }}
+                  style={{ background: 'none', border: 'none', padding: 0, color: '#14532D', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}
+                >
+                  Terms of Use &amp; Data Privacy Notice (RA 10173)
+                </button>.
+              </span>
             </label>
 
             <button
@@ -776,6 +789,12 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
           </form>
         )}
       </div>
+
+      <TermsPrivacyModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => setRegisterData((prev) => ({ ...prev, agreeTerms: true }))}
+      />
     </div>
   );
 }

@@ -9,10 +9,14 @@ const notificationService = require('../services/notificationService');
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { full_name, email, contact_number, password, confirmPassword } = req.body;
+        const { full_name, email, contact_number, password, confirmPassword, accepted_terms } = req.body;
 
         if (!full_name || !email || !password || !confirmPassword) {
             return res.status(400).json({ message: 'Please add all required fields' });
+        }
+
+        if (accepted_terms === false) {
+            return res.status(400).json({ message: 'You must agree to the Terms of Use and Data Privacy Notice to register.' });
         }
 
         if (password !== confirmPassword) {
@@ -49,10 +53,11 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // New user: insert
+        // New user: insert (with RA 10173 consent timestamp)
+        const termsAcceptedAt = accepted_terms ? new Date() : null;
         const [result] = await db.query(
-            'INSERT INTO users (full_name, email, contact_number, password, role) VALUES (?, ?, ?, ?, ?)',
-            [full_name, email, contact_number, hashedPassword, 'business_owner']
+            'INSERT INTO users (full_name, email, contact_number, password, role, terms_accepted_at) VALUES (?, ?, ?, ?, ?, ?)',
+            [full_name, email, contact_number, hashedPassword, 'business_owner', termsAcceptedAt]
         );
 
         if (result.insertId) {

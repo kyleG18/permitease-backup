@@ -2,12 +2,14 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { User, Lock, Save } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck } from 'lucide-react';
+import TermsPrivacyModal from '../components/TermsPrivacyModal';
 
 const Settings = () => {
   const { user, login } = useContext(AuthContext); // Need login to update context possibly, but we can just force re-login for major changes
   const { lang, t } = useContext(LanguageContext);
   const ts = t.settings;
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const [profile, setProfile] = useState({ full_name: user?.full_name || '', contact_number: user?.contact_number || '' });
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm_password: '' });
@@ -158,12 +160,36 @@ const Settings = () => {
               <label className="form-label">{ts.confirmPassword}</label>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#15803D', borderColor: '#15803D', boxShadow: '0 2px 8px rgba(21,128,61,0.25)', fontWeight: 700 }}>
+            <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#14532D', borderColor: '#14532D', fontWeight: 700 }}>
               <Save size={18} style={{ marginRight: '8px' }} /> {ts.updatePassword}
             </button>
           </form>
         </div>
       </div>
+
+      {/* Legal & Data Privacy Notice Card */}
+      <div className="card" style={{ padding: '1.35rem 1.5rem', marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#E7F0EA', color: '#14532D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ShieldCheck size={22} />
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.02rem' }}>
+              {lang === 'tl' ? 'Mga Tuntunin ng Paggamit at Data Privacy (RA 10173)' : 'Terms of Use & Data Privacy Notice (RA 10173)'}
+            </h3>
+            <p className="text-muted" style={{ margin: '0.2rem 0 0', fontSize: '0.88rem' }}>
+              {lang === 'tl'
+                ? 'Basahin ang patakaran sa pagkapribado ng datos at advisory disclaimer ng PermitEase Roxas.'
+                : 'Review PermitEase Roxas advisory disclaimers, data protection practices, and your rights under RA 10173.'}
+            </p>
+          </div>
+        </div>
+        <button type="button" className="btn btn-outline" onClick={() => setShowTermsModal(true)}>
+          {lang === 'tl' ? 'Tingnan ang Kasunduan' : 'View Terms & Privacy'}
+        </button>
+      </div>
+
+      <TermsPrivacyModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
     </div>
   );
 };

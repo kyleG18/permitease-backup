@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import TermsPrivacyModal from './TermsPrivacyModal';
 import {
   ShieldCheck,
   FileText,
@@ -21,6 +22,7 @@ const AsymmetricalAuth = ({ defaultMode = 'login' }) => {
   const [mode, setMode] = useState(defaultMode); // 'login' | 'register'
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,7 +40,7 @@ const AsymmetricalAuth = ({ defaultMode = 'login' }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: true
+    agreeTerms: false
   });
 
   const { login, register } = useContext(AuthContext);
@@ -161,7 +163,8 @@ const AsymmetricalAuth = ({ defaultMode = 'login' }) => {
         email: registerData.email,
         contact_number: registerData.contact_number,
         password: registerData.password,
-        confirmPassword: registerData.confirmPassword
+        confirmPassword: registerData.confirmPassword,
+        accepted_terms: registerData.agreeTerms
       });
 
       if (result.success) {
@@ -1071,7 +1074,15 @@ const AsymmetricalAuth = ({ defaultMode = 'login' }) => {
                       required
                     />
                     <span>
-                      I agree to the Terms of Service and Privacy Policy of the Municipality of Roxas, Oriental Mindoro.
+                      I have read and agree to the{' '}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }}
+                        style={{ background: 'none', border: 'none', padding: 0, color: '#14532D', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}
+                      >
+                        Terms of Use &amp; Data Privacy Notice (RA 10173)
+                      </button>{' '}
+                      of the Municipality of Roxas, Oriental Mindoro.
                     </span>
                   </label>
 
@@ -1101,6 +1112,12 @@ const AsymmetricalAuth = ({ defaultMode = 'login' }) => {
           </div>
         </div>
       </div>
+
+      <TermsPrivacyModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => setRegisterData((prev) => ({ ...prev, agreeTerms: true }))}
+      />
     </div>
   );
 };

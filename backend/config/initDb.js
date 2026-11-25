@@ -907,6 +907,9 @@ async function runBootstrapSchema() {
             await ensureColumn('permit_requirements', 'ordinance_reference', "VARCHAR(255) NULL");
             await ensureColumn('permit_requirements', 'estimated_fee', "DECIMAL(10,2) DEFAULT 0.00");
 
+            // users: Terms of Use & Data Privacy consent timestamp
+            await ensureColumn('users', 'terms_accepted_at', "TIMESTAMP NULL DEFAULT NULL");
+
             // businesses: extended registration & operation fields
             await ensureColumn('businesses', 'email', "VARCHAR(255) NULL");
             await ensureColumn('businesses', 'premises_type', "VARCHAR(100) NULL");
