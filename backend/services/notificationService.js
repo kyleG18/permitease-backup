@@ -298,6 +298,61 @@ const notifyUserRegistered = async (user) => {
     });
 };
 
+const notifyRegistrationExpiry = async (biz, user, daysRemaining) => {
+    const expiryStr = typeof biz.registration_expiry_date === 'string'
+        ? biz.registration_expiry_date.split('T')[0]
+        : new Date(biz.registration_expiry_date).toISOString().split('T')[0];
+    const regLabel = biz.registration_type || 'Business Registration';
+    const isExpired = daysRemaining <= 0;
+    const thresholdKey = isExpired ? 'EXPIRED' : `${daysRemaining}D`;
+
+    return createNotification({
+        userId: user.id,
+        type: isExpired ? 'REGISTRATION_EXPIRED' : 'REGISTRATION_EXPIRING',
+        title: isExpired ? `${regLabel} Expired` : `${regLabel} Expiring in ${daysRemaining} Days`,
+        message: isExpired
+            ? `Your ${regLabel} for ${biz.business_name} expired on ${expiryStr}. Renew it with the issuing agency (e.g. DTI/SEC/CDA) before your BPLO Mayor's Permit renewal.`
+            : `Your ${regLabel} for ${biz.business_name} expires on ${expiryStr} (${daysRemaining} days left). This is separate from your annual January BPLO permit renewal.`,
+        eventKey: `REG_${thresholdKey}:${biz.id}:${expiryStr}`,
+        emailFn: () => emailService.sendRegistrationExpiryEmail({
+            userEmail: user.email,
+            userName: user.full_name,
+            businessName: biz.business_name,
+            registrationType: regLabel,
+            registrationNumber: biz.registration_number,
+            expirationDate: biz.registration_expiry_date,
+            daysRemaining
+        })
+    });
+};
+
+const notifyDocumentExpiry = async (doc, user, daysRemaining) => {
+    const expiryStr = typeof doc.expiration_date === 'string'
+        ? doc.expiration_date.split('T')[0]
+        : new Date(doc.expiration_date).toISOString().split('T')[0];
+    const isExpired = daysRemaining <= 0;
+    const thresholdKey = isExpired ? 'EXPIRED' : `${daysRemaining}D`;
+
+    return createNotification({
+        userId: user.id,
+        type: isExpired ? 'DOCUMENT_EXPIRED' : 'DOCUMENT_EXPIRING',
+        title: isExpired ? `Document Expired: ${doc.document_name}` : `Document Expiring in ${daysRemaining} Days`,
+        message: isExpired
+            ? `Your uploaded document "${doc.document_name}" for ${doc.business_name} expired on ${expiryStr}. Please upload an updated copy.`
+            : `Your uploaded document "${doc.document_name}" for ${doc.business_name} expires on ${expiryStr} (${daysRemaining} days left).`,
+        eventKey: `DOC_${thresholdKey}:${doc.id}:${expiryStr}`,
+        emailFn: () => emailService.sendRegistrationExpiryEmail({
+            userEmail: user.email,
+            userName: user.full_name,
+            businessName: doc.business_name,
+            registrationType: doc.document_name,
+            registrationNumber: null,
+            expirationDate: doc.expiration_date,
+            daysRemaining
+        })
+    });
+};
+
 module.exports = {
     createNotification,
     notifyApplicationSubmitted,
@@ -310,5 +365,7 @@ module.exports = {
     notifyPermitExpired,
     notifyWalkinScheduled,
     notifyWalkinConfirmed,
-    notifyUserRegistered
+    notifyUserRegistered,
+    notifyRegistrationExpiry,
+    notifyDocumentExpiry
 };

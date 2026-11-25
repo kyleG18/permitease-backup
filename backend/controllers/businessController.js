@@ -57,7 +57,8 @@ const createBusiness = async (req, res) => {
             employees, business_status, date_established, 
             capitalization, gross_sales, floor_area,
             owner_name, contact_number, email, barangay, business_description,
-            ownership_type, primary_products, island_group_id, region_id, province_id, city_municipality_id, barangay_id, premises_type, business_characteristics
+            ownership_type, primary_products, island_group_id, region_id, province_id, city_municipality_id, barangay_id, premises_type, business_characteristics,
+            registration_type, registration_number, registration_expiry_date
         } = req.body;
 
         if (!business_name || !business_type || !industry_category || !address) {
@@ -70,8 +71,8 @@ const createBusiness = async (req, res) => {
         }
 
         const [result] = await db.query(
-            'INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, employees, business_status, date_established, capitalization, gross_sales, floor_area, owner_name, contact_number, email, barangay, business_description, ownership_type, primary_products, island_group_id, region_id, province_id, city_municipality_id, barangay_id, premises_type, business_characteristics) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [req.user.id, business_name, business_type, industry_category, address, employees || 0, business_status || 'New Application', date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, owner_name || null, contact_number || null, email || null, barangay || null, business_description || null, ownership_type || null, primary_products || null, island_group_id || null, region_id || null, province_id || null, city_municipality_id || null, barangay_id || null, premises_type || null, charStr]
+            'INSERT INTO businesses (user_id, business_name, business_type, industry_category, address, employees, business_status, date_established, capitalization, gross_sales, floor_area, owner_name, contact_number, email, barangay, business_description, ownership_type, primary_products, island_group_id, region_id, province_id, city_municipality_id, barangay_id, premises_type, business_characteristics, registration_type, registration_number, registration_expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [req.user.id, business_name, business_type, industry_category, address, employees || 0, business_status || 'New Application', date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, owner_name || null, contact_number || null, email || null, barangay || null, business_description || null, ownership_type || null, primary_products || null, island_group_id || null, region_id || null, province_id || null, city_municipality_id || null, barangay_id || null, premises_type || null, charStr, registration_type || null, registration_number || null, registration_expiry_date || null]
         );
 
         res.status(201).json({ id: result.insertId, message: 'Business created successfully' });
@@ -92,7 +93,8 @@ const updateBusiness = async (req, res) => {
             employees, business_status, date_established, 
             capitalization, gross_sales, floor_area,
             owner_name, contact_number, email, barangay, business_description,
-            ownership_type, primary_products, island_group_id, region_id, province_id, city_municipality_id, barangay_id, premises_type, business_characteristics
+            ownership_type, primary_products, island_group_id, region_id, province_id, city_municipality_id, barangay_id, premises_type, business_characteristics,
+            registration_type, registration_number, registration_expiry_date
         } = req.body;
 
         const [existing] = await db.query('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
@@ -106,8 +108,8 @@ const updateBusiness = async (req, res) => {
         }
 
         await db.query(
-            'UPDATE businesses SET business_name = ?, business_type = ?, industry_category = ?, address = ?, employees = ?, business_status = ?, date_established = ?, capitalization = ?, gross_sales = ?, floor_area = ?, owner_name = ?, contact_number = ?, email = ?, barangay = ?, business_description = ?, ownership_type = ?, primary_products = ?, island_group_id = ?, region_id = ?, province_id = ?, city_municipality_id = ?, barangay_id = ?, premises_type = ?, business_characteristics = ? WHERE id = ?',
-            [business_name, business_type, industry_category, address, employees || 0, business_status || 'New Application', date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, owner_name || null, contact_number || null, email || null, barangay || null, business_description || null, ownership_type || null, primary_products || null, island_group_id || null, region_id || null, province_id || null, city_municipality_id || null, barangay_id || null, premises_type || null, charStr, req.params.id]
+            'UPDATE businesses SET business_name = ?, business_type = ?, industry_category = ?, address = ?, employees = ?, business_status = ?, date_established = ?, capitalization = ?, gross_sales = ?, floor_area = ?, owner_name = ?, contact_number = ?, email = ?, barangay = ?, business_description = ?, ownership_type = ?, primary_products = ?, island_group_id = ?, region_id = ?, province_id = ?, city_municipality_id = ?, barangay_id = ?, premises_type = ?, business_characteristics = ?, registration_type = ?, registration_number = ?, registration_expiry_date = ? WHERE id = ?',
+            [business_name, business_type, industry_category, address, employees || 0, business_status || 'New Application', date_established || null, capitalization || 0, gross_sales || 0, floor_area || 0, owner_name || null, contact_number || null, email || null, barangay || null, business_description || null, ownership_type || null, primary_products || null, island_group_id || null, region_id || null, province_id || null, city_municipality_id || null, barangay_id || null, premises_type || null, charStr, registration_type || null, registration_number || null, registration_expiry_date || null, req.params.id]
         );
 
         res.json({ message: 'Business updated successfully' });

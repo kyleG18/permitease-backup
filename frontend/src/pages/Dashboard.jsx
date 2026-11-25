@@ -469,6 +469,46 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
         </div>
       </div>
 
+      {/* ── BUSINESS REGISTRATION EXPIRY ALERT (DTI / SEC / CDA — separate from annual Jan permit renewal) ── */}
+      {selectedBiz?.registration_expiry_date && (() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const exp = new Date(selectedBiz.registration_expiry_date);
+        exp.setHours(0, 0, 0, 0);
+        const daysLeft = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+        if (daysLeft > 90) return null;
+        const isExpired = daysLeft <= 0;
+        const regLabel = selectedBiz.registration_type || 'Business Registration';
+        return (
+          <div style={{
+            backgroundColor: isExpired ? '#FEF2F2' : '#FFFBEB',
+            border: `1px solid ${isExpired ? '#FECACA' : '#FDE68A'}`,
+            borderLeft: `4px solid ${isExpired ? '#DC2626' : '#D97706'}`,
+            borderRadius: '10px',
+            padding: '0.9rem 1.25rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75rem'
+          }}>
+            <div style={{ fontSize: '13px', color: isExpired ? '#991B1B' : '#92400E', lineHeight: 1.5 }}>
+              <strong>
+                {isExpired
+                  ? (isTl ? `⚠️ Paso na ang ${regLabel}!` : `⚠️ ${regLabel} Expired!`)
+                  : (isTl ? `⏰ Malapit nang mapaso ang ${regLabel} (${daysLeft} araw na lang)` : `⏰ ${regLabel} Expiring in ${daysLeft} Day(s)`)}
+              </strong>{' '}
+              — {isTl
+                ? `Petsa ng pagkapaso: ${exp.toLocaleDateString('fil-PH')}. Iba ito sa taunang Mayor's Permit renewal tuwing Enero; i-renew muna ito bago mag-apply sa BPLO.`
+                : `Expires ${exp.toLocaleDateString('en-PH')}. This is separate from your annual January BPLO permit renewal — renew with the issuing agency before applying.`}
+            </div>
+            <Link to="/profile" style={{ fontSize: '12.5px', fontWeight: 700, color: isExpired ? '#B91C1C' : '#B45309', textDecoration: 'underline' }}>
+              {isTl ? 'I-update sa Profile' : 'Update in Profile'}
+            </Link>
+          </div>
+        );
+      })()}
+
       {/* ── 3. SMART "NEXT BEST ACTION" ACTION CARD ───────────────────────── */}
       {nextAction && (
         <div style={{

@@ -97,6 +97,60 @@ const processRenewalReminders = async () => {
             }
         }
 
+        // 2. Evaluate Business Registration Expirations (DTI 5-year BN, SEC, CDA, etc.)
+        const REG_THRESHOLDS = [90, 60, 30, 7];
+        const [regBusinesses] = await db.query(`
+            SELECT b.id, b.business_name, b.user_id, b.registration_type, b.registration_number, b.registration_expiry_date,
+                   COALESCE(b.email, u.email) AS email, u.full_name
+            FROM businesses b
+            JOIN users u ON b.user_id = u.id
+            WHERE b.registration_expiry_date IS NOT NULL
+        `);
+
+        console.log(`[RenewalReminderService] Evaluating ${regBusinesses.length} business registration(s)...`);
+        for (const biz of regBusinesses) {
+            const daysRemaining = getDaysRemaining(biz.registration_expiry_date);
+            const user = { id: biz.user_id, email: biz.email, full_name: biz.full_name };
+
+            if (REG_THRESHOLDS.includes(daysRemaining) || daysRemaining <= 0) {
+                try {
+                    const result = await notificationService.notifyRegistrationExpiry(biz, user, daysRemaining);
+                    if (result.created) processed++;
+                    else skipped++;
+                } catch (e) {
+                    errors++;
+                    console.error(`[RenewalReminderService] ❌ Reg expiry error for biz ${biz.id}:`, e.message);
+                }
+            }
+        }
+
+        // 3. Evaluate Supporting Document Expirations (e.g. Lease Contract, DTI cert, Clearances)
+        const [expiringDocs] = await db.query(`
+            SELECT d.id, d.document_name, d.expiration_date, b.business_name, b.user_id,
+                   COALESCE(b.email, u.email) AS email, u.full_name
+            FROM documents d
+            JOIN businesses b ON d.business_id = b.id
+            JOIN users u ON b.user_id = u.id
+            WHERE d.expiration_date IS NOT NULL
+        `);
+
+        console.log(`[RenewalReminderService] Evaluating ${expiringDocs.length} document expiration(s)...`);
+        for (const doc of expiringDocs) {
+            const daysRemaining = getDaysRemaining(doc.expiration_date);
+            const user = { id: doc.user_id, email: doc.email, full_name: doc.full_name };
+
+            if (REMINDER_THRESHOLDS.includes(daysRemaining) || daysRemaining <= 0) {
+                try {
+                    const result = await notificationService.notifyDocumentExpiry(doc, user, daysRemaining);
+                    if (result.created) processed++;
+                    else skipped++;
+                } catch (e) {
+                    errors++;
+                    console.error(`[RenewalReminderService] ❌ Doc expiry error for doc ${doc.id}:`, e.message);
+                }
+            }
+        }
+
     } catch (err) {
         console.error('[RenewalReminderService] Fatal error:', err.message);
         errors++;

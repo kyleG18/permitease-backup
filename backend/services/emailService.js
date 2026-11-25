@@ -467,6 +467,42 @@ const sendWelcomeEmail = async (userEmail, userName) => {
     return sendEmail(userEmail, 'Welcome to PermitEase — Municipality of Roxas BPLO', html);
 };
 
+// ─────────────────────────────────────────────────────────
+// 11. Business Registration / Document Expiry Reminder (DTI / SEC / CDA / Lease)
+// ─────────────────────────────────────────────────────────
+const sendRegistrationExpiryEmail = async ({ userEmail, userName, businessName, registrationType, registrationNumber, expirationDate, daysRemaining }) => {
+    const isExpired = daysRemaining <= 0;
+    const urgencyColor = isExpired || daysRemaining <= 7 ? '#DC2626' : daysRemaining <= 30 ? '#D97706' : '#2563EB';
+    const urgencyLabel = isExpired ? 'EXPIRED' : daysRemaining <= 7 ? 'URGENT' : daysRemaining <= 30 ? 'ACTION NEEDED' : 'ADVANCE REMINDER';
+    const regLabel = registrationType || 'Business Registration';
+
+    const html = baseTemplate(`
+        ${greeting(userName)}
+        <p style="font-size:15px;color:#334155;">
+          ${isExpired
+            ? `Your <strong>${regLabel}</strong> for <strong>${businessName}</strong> has <strong>expired</strong>.`
+            : `This is an advance reminder that your <strong>${regLabel}</strong> for <strong>${businessName}</strong> will expire in <strong>${daysRemaining} day(s)</strong>.`}
+        </p>
+        <p style="font-size:13.5px;color:#475569;">
+          Note: Underlying business registrations (such as DTI Business Name 5-year registration, SEC/CDA, or Lease Contracts) have their own renewal schedule separate from the annual January BPLO Mayor's Permit renewal, and must be active before BPLO permit processing.
+        </p>
+        ${infoBox([
+            ['Business Name', businessName],
+            ['Registration / Document', regLabel],
+            ...(registrationNumber ? [['Reference Number', registrationNumber]] : []),
+            ['Expiration Date', formatDate(expirationDate)],
+            ['Status', `<strong style="color:${urgencyColor};">${urgencyLabel}</strong>`]
+        ])}
+        ${ctaButton(`${FRONTEND_URL}/profile`, 'Update Registration Details')}
+        ${closing()}
+    `);
+
+    const subject = isExpired
+        ? `[EXPIRED] ${regLabel} Renewal Needed — ${businessName}`
+        : `[${urgencyLabel}] ${regLabel} Expiring in ${daysRemaining} Day(s) — ${businessName}`;
+    return sendEmail(userEmail, subject, html);
+};
+
 module.exports = {
     sendEmail,
     sendPermitStatusEmail,
@@ -482,5 +518,6 @@ module.exports = {
     sendStatutoryNoticeEmail,
     sendWalkinScheduledEmail,
     sendWalkinConfirmedEmail,
-    sendWelcomeEmail
+    sendWelcomeEmail,
+    sendRegistrationExpiryEmail
 };

@@ -919,6 +919,9 @@ async function runBootstrapSchema() {
             await ensureColumn('businesses', 'business_status', "VARCHAR(100) DEFAULT 'New Application'");
             await ensureColumn('businesses', 'city_municipality_id', "VARCHAR(20) DEFAULT '175212000'");
             await ensureColumn('businesses', 'psic_code', "VARCHAR(20) NULL");
+            await ensureColumn('businesses', 'registration_type', "VARCHAR(50) NULL");
+            await ensureColumn('businesses', 'registration_number', "VARCHAR(100) NULL");
+            await ensureColumn('businesses', 'registration_expiry_date', "DATE NULL");
 
             // permits: preparation and verification code links
             await ensureColumn('permits', 'application_id', "INT UNIQUE DEFAULT NULL");

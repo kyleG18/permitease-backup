@@ -38,6 +38,9 @@ const BusinessProfile = () => {
     address: '',
     premises_type: '',
     date_established: '',
+    registration_type: 'DTI',
+    registration_number: '',
+    registration_expiry_date: '',
     
     capitalization: '',
     gross_sales: '',
@@ -117,6 +120,7 @@ const BusinessProfile = () => {
       owner_name: '', contact_number: '', 
       island_group_id: '', region_id: '', province_id: '', city_municipality_id: '', barangay_id: '', address: '', premises_type: '',
       employees: '', business_status: 'New Application', date_established: '', 
+      registration_type: 'DTI', registration_number: '', registration_expiry_date: '',
       capitalization: '', gross_sales: '', floor_area: '', business_characteristics: {}
     });
     setLocations(prev => ({ ...prev, regions: [], provinces: [], cities: [], barangays: [] }));
@@ -139,6 +143,9 @@ const BusinessProfile = () => {
       address: biz.address || '', premises_type: biz.premises_type || '',
       employees: biz.employees || '', business_status: biz.business_status || 'New Application',
       date_established: biz.date_established ? biz.date_established.split('T')[0] : '',
+      registration_type: biz.registration_type || 'DTI',
+      registration_number: biz.registration_number || '',
+      registration_expiry_date: biz.registration_expiry_date ? biz.registration_expiry_date.split('T')[0] : '',
       capitalization: biz.capitalization || '', gross_sales: biz.gross_sales || '', floor_area: biz.floor_area || '',
       business_characteristics: chars
     });
@@ -537,6 +544,32 @@ const BusinessProfile = () => {
                     {isTl ? 'Petsa ng Pagtatatag' : 'Date Established'}
                   </label>
                   <input type="date" className="form-control" name="date_established" value={formData.date_established} onChange={handleChange} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Uri ng Rehistro (DTI / SEC / CDA)' : 'Registration Type (DTI / SEC / CDA)'}
+                  </label>
+                  <select className="form-control" name="registration_type" value={formData.registration_type} onChange={handleChange}>
+                    <option value="DTI">DTI Business Name (5-Yr)</option>
+                    <option value="SEC">SEC Registration</option>
+                    <option value="CDA">CDA Cooperative Registration</option>
+                    <option value="Other">Other Registration</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Numero ng Rehistro' : 'Registration / BN Number'}
+                  </label>
+                  <input type="text" className="form-control" name="registration_number" placeholder="e.g. BN-1234567" value={formData.registration_number} onChange={handleChange} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '0.25rem', color: 'var(--text-dark)' }}>
+                    {isTl ? 'Petsa ng Pagkapaso ng Rehistro' : 'Registration Expiry Date'}
+                  </label>
+                  <input type="date" className="form-control" name="registration_expiry_date" value={formData.registration_expiry_date} onChange={handleChange} />
                 </div>
               </div>
 
