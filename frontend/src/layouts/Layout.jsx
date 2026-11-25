@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
   const roleClass = user?.role ? user.role.replace('_', '-') : 'business-owner';
 
   return (
-    <div className="app-layout">
+    <div className="app-layout app-layout--civic">
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div 
@@ -50,7 +50,7 @@ const Layout = ({ children }) => {
         {/* Product Onboarding Banner — renders between header and page content */}
         {user?.role === 'business_owner' && <ProductOnboardingBanner />}
 
-        <main className="page-content animate-fade-in">
+        <main className={`page-content animate-fade-in${isChatPage ? ' page-content--chat' : ''}`}>
           {children}
         </main>
       </div>

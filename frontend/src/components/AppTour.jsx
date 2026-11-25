@@ -1,17 +1,69 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useProductOnboarding, ONBOARDING_STEPS } from '../context/ProductOnboardingContext';
-import { X, ChevronLeft, ChevronRight, Compass, CheckCircle } from 'lucide-react';
+import { useProductOnboarding } from '../context/ProductOnboardingContext';
+import { useTranslation } from '../context/LanguageContext';
+import { X, ChevronLeft, ChevronRight, CheckCircle, Menu } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────
    Constants
 ───────────────────────────────────────────────── */
-const TOOLTIP_W = 310;
-const PAD = 20;           // gap between spotlight edge and tooltip
-const SPOTLIGHT_PAD = 8;  // extra padding around the target rect
-const BORDER_R = 10;      // spotlight corner radius
-const TRANSITION = '0.35s cubic-bezier(0.4,0,0.2,1)';
+const TOOLTIP_W = 370;
+const PAD = 20;
+const SPOTLIGHT_PAD = 8;
+const BORDER_R = 10;
+const TRANSITION = '0.3s cubic-bezier(0.4,0,0.2,1)';
+
+const STEP_TL = {
+  dashboard: {
+    title: 'Dashboard',
+    subtitle: 'Pangkalahatang-ideya ng iyong negosyo',
+    description: 'Ito ang iyong pangunahing pahina. Makikita mo rito ang status ng iyong permit, mga deadline, at progreso ng iyong paghahanda.',
+    nextLabel: 'Susunod: Aking Negosyo'
+  },
+  'my-business': {
+    title: 'Aking Negosyo',
+    subtitle: 'Profile at detalye ng negosyo',
+    description: 'Siguraduhing kumpleto ang detalye ng iyong negosyo at petsa ng pagkapaso ng DTI/SEC. Dito ibinabatay ng PermitEase ang iyong mga requirements.',
+    nextLabel: 'Susunod: AI Assessment'
+  },
+  'ai-assessment': {
+    title: 'AI Permit Assessment',
+    subtitle: 'Alamin ang kailangang permit',
+    description: 'Gamitin ang AI assessment upang agad malaman ang mga permit, clearance, at PSA PSIC code na akma sa iyong negosyo, at i-print ang iyong checklist.',
+    nextLabel: 'Susunod: Buwis (BIR)'
+  },
+  'tax-estimation': {
+    title: 'Estimador ng Buwis (BIR)',
+    subtitle: 'Tinatayang buwis sa BIR',
+    description: 'Makita ang tinatayang buwis sa BIR (8% flat, VAT, o Corporate) bago ka magtungo sa Municipal Treasurer\'s Office.',
+    nextLabel: 'Susunod: Bayarin sa Permit'
+  },
+  'fee-estimation': {
+    title: 'Estimador ng Bayarin',
+    subtitle: 'Tinatayang bayarin sa munisipyo',
+    description: 'Tingnan ang tinatayang bayarin para sa Mayor\'s Permit, Sanitary Permit, Zoning, FSIC, at iba pa upang makapaghanda ng budget.',
+    nextLabel: 'Susunod: Aplikasyon'
+  },
+  'prepare-application': {
+    title: 'Maghanda ng Aplikasyon',
+    subtitle: 'Subaybayan ang iyong aplikasyon',
+    description: 'Isumite at subaybayan ang iyong pre-assessment dito. Maaari mong i-download ang pre-filled na Roxas Form BPLO-01.',
+    nextLabel: 'Susunod: Walk-in Schedule'
+  },
+  'schedule-walkin': {
+    title: 'Schedule ng Walk-in',
+    subtitle: 'Mag-book ng slot sa Window 1',
+    description: 'Pumili ng petsa ng punta sa Roxas BPLO (Umaga o Hapon) at kunin ang iyong Queue Ticket upang hindi na pumila nang matagal.',
+    nextLabel: 'Susunod: AI Assistant'
+  },
+  'ai-help': {
+    title: 'AI Permit Assistant',
+    subtitle: 'Magtanong kahit kailan',
+    description: 'May tanong tungkol sa requirements, bayarin, o proseso ng BPLO? Handang sumagot ang AI Assistant sa Tagalog o English.',
+    nextLabel: 'Tapusin'
+  }
+};
 
 /* ─────────────────────────────────────────────────
    Helpers
@@ -19,6 +71,7 @@ const TRANSITION = '0.35s cubic-bezier(0.4,0,0.2,1)';
 function getRect(el) {
   if (!el) return null;
   const r = el.getBoundingClientRect();
+  if (r.width === 0 && r.height === 0) return null;
   return {
     x: r.left - SPOTLIGHT_PAD,
     y: r.top - SPOTLIGHT_PAD,
@@ -27,48 +80,37 @@ function getRect(el) {
   };
 }
 
-function getTooltipStyle(spot, viewW, viewH) {
-  const cardW = Math.min(TOOLTIP_W, Math.max(280, viewW - 24));
-
-  // Mobile layout (< 640px)
-  if (viewW < 640) {
-    const cardH = 260;
-    let top = viewH - cardH - 16;
-    if (spot) {
-      if (spot.y + spot.h + cardH + 16 < viewH) {
-        top = spot.y + spot.h + 12;
-      } else if (spot.y - cardH - 12 > 0) {
-        top = spot.y - cardH - 12;
-      }
-    }
-    const left = Math.max(12, Math.round((viewW - cardW) / 2));
-    return { top: Math.max(12, top), left };
-  }
+function getTooltipStyle(spot, viewW, viewH, cardH = 310) {
+  const cardW = Math.min(TOOLTIP_W, Math.max(300, viewW - 24));
+  const safeH = Math.min(cardH, viewH - 32);
 
   if (!spot) {
-    return { top: viewH / 2 - 140, left: viewW / 2 - cardW / 2 };
+    return {
+      top: Math.max(PAD, Math.round((viewH - safeH) / 2)),
+      left: Math.max(12, Math.round((viewW - cardW) / 2)),
+    };
   }
 
   const spRight = spot.x + spot.w;
   const spBottom = spot.y + spot.h;
   const spCenterY = spot.y + spot.h / 2;
 
-  // Prefer right of spotlight
+  // Prefer right of spotlight (ideal for left civic sidebar on desktop)
   if (spRight + PAD + cardW < viewW) {
     return {
       left: spRight + PAD,
-      top: Math.max(PAD, Math.min(spCenterY - 100, viewH - 240)),
+      top: Math.max(PAD, Math.min(spCenterY - safeH / 2, viewH - safeH - PAD)),
     };
   }
   // Try left
   if (spot.x - PAD - cardW > 0) {
     return {
       left: spot.x - PAD - cardW,
-      top: Math.max(PAD, Math.min(spCenterY - 100, viewH - 240)),
+      top: Math.max(PAD, Math.min(spCenterY - safeH / 2, viewH - safeH - PAD)),
     };
   }
   // Below
-  if (spBottom + PAD + 220 < viewH) {
+  if (spBottom + PAD + safeH < viewH) {
     return {
       top: spBottom + PAD,
       left: Math.max(PAD, Math.min(spot.x, viewW - cardW - PAD)),
@@ -76,7 +118,7 @@ function getTooltipStyle(spot, viewW, viewH) {
   }
   // Above
   return {
-    top: Math.max(PAD, spot.y - PAD - 220),
+    top: Math.max(PAD, spot.y - PAD - safeH),
     left: Math.max(PAD, Math.min(spot.x, viewW - cardW - PAD)),
   };
 }
@@ -87,6 +129,8 @@ function getTooltipStyle(spot, viewW, viewH) {
 export default function AppTour() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { lang } = useTranslation();
+  const isTl = lang === 'tl';
 
   const {
     onboardingState,
@@ -101,13 +145,13 @@ export default function AppTour() {
     ONBOARDING_STEPS: steps,
   } = useProductOnboarding();
 
-  const [spot, setSpot] = useState(null);         // { x, y, w, h }
-  const [tooltipPos, setTooltipPos] = useState({ top: 80, left: 260 });
+  const [spot, setSpot] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ top: 96, left: 280 });
   const [tourOpen, setTourOpen] = useState(false);
   const [viewSize, setViewSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const rafRef = useRef(null);
+  const cardRef = useRef(null);
 
-  // Open tour when onboarding becomes visible for first time
   useEffect(() => {
     if (isVisible && !onboardingState?.completed) {
       setTourOpen(true);
@@ -116,7 +160,6 @@ export default function AppTour() {
     }
   }, [isVisible, onboardingState?.completed]);
 
-  // Navigate to current step's page when step changes
   useEffect(() => {
     if (!tourOpen || !currentStep) return;
     if (location.pathname !== currentStep.path) {
@@ -124,7 +167,6 @@ export default function AppTour() {
     }
   }, [tourOpen, currentStep?.id]); // eslint-disable-line
 
-  // Mark step visited when route matches
   useEffect(() => {
     if (!tourOpen || !currentStep) return;
     if (location.pathname === currentStep.path) {
@@ -132,41 +174,47 @@ export default function AppTour() {
     }
   }, [location.pathname, tourOpen, currentStep?.id]); // eslint-disable-line
 
-  // Measure target element
   const measure = useCallback((retry = 0) => {
     if (!tourOpen || !currentStep) return;
-    const el = document.querySelector(`[data-tour="${currentStep.id}"]`);
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     setViewSize({ w: vw, h: vh });
 
-    // On mobile (< 768px) the sidebar is hidden — skip spotlight, show centered tooltip
+    // On mobile (< 768px): highlight the top-left menu button on Step 1 so users learn where nav lives,
+    // and keep other steps unobstructed above the bottom sheet.
     if (vw < 768) {
-      setSpot(null);
-      setTooltipPos(getTooltipStyle(null, vw, vh));
+      if (currentStep.stepNumber === 1) {
+        const menuEl = document.querySelector('.menu-btn');
+        setSpot(getRect(menuEl));
+      } else {
+        setSpot(null);
+      }
       return;
     }
 
+    const el = document.querySelector(`[data-tour="${currentStep.id}"]`);
     if (!el && retry < 5) {
       setTimeout(() => measure(retry + 1), 200);
       return;
     }
 
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
     const rect = getRect(el);
+    const measuredH = cardRef.current?.offsetHeight || 310;
     setSpot(rect);
-    setTooltipPos(getTooltipStyle(rect, vw, vh));
-  }, [tourOpen, currentStep?.id]); // eslint-disable-line
+    setTooltipPos(getTooltipStyle(rect, vw, vh, measuredH));
+  }, [tourOpen, currentStep?.id, currentStep?.stepNumber]); // eslint-disable-line
 
   useEffect(() => {
     if (!tourOpen) return;
-    // delay to let route render
-    const t = setTimeout(() => {
-      measure();
-    }, 380);
+    const t = setTimeout(() => measure(), 320);
 
     const onResize = () => {
       cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(measure);
+      rafRef.current = requestAnimationFrame(() => measure());
     };
     window.addEventListener('resize', onResize);
     return () => {
@@ -174,9 +222,8 @@ export default function AppTour() {
       window.removeEventListener('resize', onResize);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [tourOpen, currentStep?.id, location.pathname, measure]); // eslint-disable-line
+  }, [tourOpen, currentStep?.id, location.pathname, measure]);
 
-  // Keyboard
   useEffect(() => {
     if (!tourOpen) return;
     const handler = (e) => {
@@ -192,8 +239,13 @@ export default function AppTour() {
 
   const currentIdx = steps.findIndex(s => s.id === currentStep.id);
   const isLast = currentIdx >= steps.length - 1;
-  const visitedCount = onboardingState?.visitedSteps?.length || 0;
-  const progress = (visitedCount / totalSteps) * 100;
+  const progress = ((currentIdx + 1) / totalSteps) * 100;
+
+  const tlOverride = isTl ? STEP_TL[currentStep.id] : null;
+  const displayTitle = tlOverride?.title || currentStep.title;
+  const displaySubtitle = tlOverride?.subtitle || currentStep.subtitle;
+  const displayDesc = tlOverride?.description || currentStep.description;
+  const displayNext = tlOverride?.nextLabel || (currentStep.nextLabel ? currentStep.nextLabel.replace(' →', '') : 'Next');
 
   function handleNext() {
     if (isLast) {
@@ -223,13 +275,13 @@ export default function AppTour() {
 
   const dialogStyle = isMobile ? {
     position: 'fixed',
-    bottom: '16px',
-    left: '12px',
-    right: '12px',
+    bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+    left: '10px',
+    right: '10px',
     width: 'auto',
-    maxWidth: '420px',
+    maxWidth: '460px',
     margin: '0 auto',
-    maxHeight: 'calc(100dvh - 32px)',
+    maxHeight: 'calc(100dvh - 88px)',
     display: 'flex',
     flexDirection: 'column',
     pointerEvents: 'all',
@@ -237,21 +289,23 @@ export default function AppTour() {
     borderRadius: '16px',
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    boxShadow: '0 20px 50px -10px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.1)',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    border: '1.5px solid #C9D6CE',
+    boxShadow: '0 20px 50px -10px rgba(12, 43, 24, 0.35)',
+    fontFamily: "'Plus Jakarta Sans', 'Inter', 'Segoe UI', Arial, sans-serif",
   } : {
     position: 'absolute',
     top: tooltipPos.top,
     left: tooltipPos.left,
-    width: Math.min(TOOLTIP_W, Math.max(280, viewSize.w - 24)),
+    width: Math.min(TOOLTIP_W, Math.max(300, viewSize.w - 24)),
     maxWidth: 'calc(100vw - 24px)',
     pointerEvents: 'all',
     zIndex: 9999,
-    borderRadius: '16px',
+    borderRadius: '14px',
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    boxShadow: '0 20px 50px -10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    border: '1.5px solid #C9D6CE',
+    boxShadow: '0 20px 50px -10px rgba(12, 43, 24, 0.32)',
+    fontFamily: "'Plus Jakarta Sans', 'Inter', 'Segoe UI', Arial, sans-serif",
     transition: `top ${TRANSITION}, left ${TRANSITION}`,
   };
 
@@ -260,7 +314,7 @@ export default function AppTour() {
       style={{ position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none' }}
       aria-hidden="false"
     >
-      {/* ── SVG Overlay with spotlight cutout ── */}
+      {/* ── SVG Overlay with spotlight cutout (lighter on mobile so user sees the page) ── */}
       <svg
         width={vw}
         height={vh}
@@ -275,9 +329,7 @@ export default function AppTour() {
       >
         <defs>
           <mask id="pe-spotlight-mask">
-            {/* White = show the dark overlay */}
             <rect x="0" y="0" width={vw} height={vh} fill="white" />
-            {/* Black = cut out (spotlight) */}
             {spot && (
               <rect
                 x={spot.x}
@@ -293,18 +345,16 @@ export default function AppTour() {
           </mask>
         </defs>
 
-        {/* Dark backdrop with hole */}
         <rect
           x="0" y="0"
           width={vw} height={vh}
-          fill="rgba(10, 18, 30, 0.82)"
+          fill={isMobile ? 'rgba(15, 23, 42, 0.45)' : 'rgba(12, 32, 20, 0.72)'}
           mask="url(#pe-spotlight-mask)"
         />
 
-        {/* Green glow border around spotlight */}
+        {/* Civic Gold spotlight ring (high contrast on deep forest sidebar) */}
         {spot && (
           <>
-            {/* Outer glow */}
             <rect
               x={spot.x - 3}
               y={spot.y - 3}
@@ -313,11 +363,10 @@ export default function AppTour() {
               rx={BORDER_R + 2}
               ry={BORDER_R + 2}
               fill="none"
-              stroke="rgba(34, 197, 94, 0.35)"
-              strokeWidth="8"
-              style={{ filter: 'blur(4px)', transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}` }}
+              stroke="rgba(245, 158, 11, 0.42)"
+              strokeWidth="7"
+              style={{ filter: 'blur(3px)', transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}` }}
             />
-            {/* Sharp green border */}
             <rect
               x={spot.x}
               y={spot.y}
@@ -326,173 +375,168 @@ export default function AppTour() {
               rx={BORDER_R}
               ry={BORDER_R}
               fill="none"
-              stroke="#22C55E"
+              stroke="#F59E0B"
               strokeWidth="2.5"
-              strokeDasharray="6 3"
               style={{ transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}` }}
             />
           </>
         )}
       </svg>
 
-      {/* ── Tooltip card ── */}
+      {/* ── Tooltip / Mobile Bottom Sheet Card ── */}
       <div
+        ref={cardRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`Onboarding Step ${currentStep.stepNumber} of ${totalSteps}: ${currentStep.title}`}
+        aria-label={`${isTl ? 'Hakbang' : 'Step'} ${currentStep.stepNumber} / ${totalSteps}: ${displayTitle}`}
         style={dialogStyle}
       >
-        {/* ── Header (Municipal Green Theme) ── */}
+        {/* ── Header (Civic Forest Green) ── */}
         <div style={{
-          background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
-          padding: isMobile ? '0.85rem 1rem 0.75rem' : '1rem 1.15rem 0.9rem',
+          background: 'linear-gradient(135deg, #113B22 0%, #14532D 100%)',
+          padding: isMobile ? '0.85rem 1.1rem 0.9rem' : '1.1rem 1.25rem 1rem',
           position: 'relative',
           flexShrink: 0,
         }}>
-          {/* Step badge row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* Mobile drag handle indicator */}
+          {isMobile && (
+            <div style={{
+              width: '38px', height: '4px', borderRadius: '999px',
+              backgroundColor: 'rgba(255,255,255,0.35)',
+              margin: '0 auto 0.65rem'
+            }} />
+          )}
+
+          {/* Step badge & Close */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
               <div style={{
-                width: '26px', height: '26px', borderRadius: '50%',
-                backgroundColor: '#DCFCE7',
+                width: '28px', height: '28px', borderRadius: '50%',
+                backgroundColor: '#FEF3C7',
+                border: '2px solid #F59E0B',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: '800', color: '#166534',
-                boxShadow: '0 0 0 3px rgba(220,252,231,0.3)',
+                fontSize: '13px', fontWeight: '800', color: '#92400E',
                 flexShrink: 0,
               }}>
                 {currentStep.stepNumber}
               </div>
-              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#DCFCE7', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                Step {currentStep.stepNumber} of {totalSteps}
+              <span style={{ fontSize: '12px', fontWeight: '800', color: '#FEF3C7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {isTl ? `Hakbang ${currentStep.stepNumber} sa ${totalSteps}` : `Step ${currentStep.stepNumber} of ${totalSteps}`}
               </span>
             </div>
             <button
+              type="button"
               onClick={handleClose}
-              aria-label="Close tour"
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', borderRadius: '4px' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#FFFFFF'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+              aria-label={isTl ? 'Isara ang gabay' : 'Close tour'}
+              style={{
+                background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.24)',
+                color: '#FFFFFF', cursor: 'pointer', padding: '5px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px'
+              }}
             >
-              <X size={15} />
+              <X size={16} />
             </button>
           </div>
 
-          <h3 style={{ margin: '0 0 2px', fontSize: isMobile ? '15px' : '16.5px', fontWeight: '800', color: '#FFFFFF', lineHeight: 1.25 }}>
-            {currentStep.title}
+          <h3 style={{ margin: '0 0 3px', fontSize: isMobile ? '17px' : '18.5px', fontWeight: '800', color: '#FFFFFF', lineHeight: 1.25 }}>
+            {displayTitle}
           </h3>
-          <div style={{ fontSize: isMobile ? '11.5px' : '12px', color: 'rgba(220,252,231,0.9)', fontWeight: '500' }}>
-            {currentStep.subtitle}
+          <div style={{ fontSize: isMobile ? '13px' : '13.5px', color: '#CFE3D6', fontWeight: '500' }}>
+            {displaySubtitle}
           </div>
         </div>
 
-        {/* ── Progress bar ── */}
-        <div style={{ height: '4px', backgroundColor: '#14532D', position: 'relative', flexShrink: 0 }}>
+        {/* ── Progress bar (Municipal Gold on Forest Track) ── */}
+        <div style={{ height: '5px', backgroundColor: '#0C2B18', position: 'relative', flexShrink: 0 }}>
           <div style={{
             height: '100%',
             width: `${progress}%`,
-            background: 'linear-gradient(90deg, #4ADE80, #22C55E)',
+            background: 'linear-gradient(90deg, #F59E0B, #FBBF24)',
             transition: `width ${TRANSITION}`,
-            boxShadow: '0 0 8px rgba(74,222,128,0.6)',
           }} />
         </div>
 
-        {/* ── Contents Body (Crisp Clean White) ── */}
+        {/* ── Body ── */}
         <div style={{
           backgroundColor: '#FFFFFF',
-          padding: isMobile ? '0.85rem 1rem 0.85rem' : '1.1rem 1.15rem 0.9rem',
+          padding: isMobile ? '1rem 1.1rem 1rem' : '1.15rem 1.25rem 1.1rem',
           overflowY: 'auto',
           flex: '1 1 auto',
           WebkitOverflowScrolling: 'touch'
         }}>
-          <p style={{ margin: isMobile ? '0 0 0.75rem' : '0 0 1.1rem', fontSize: isMobile ? '13px' : '13.5px', color: '#334155', lineHeight: 1.55, fontWeight: 400 }}>
-            {currentStep.description}
+          <p style={{ margin: '0 0 0.95rem', fontSize: isMobile ? '14.5px' : '15px', color: '#1E293B', lineHeight: 1.6, fontWeight: 500 }}>
+            {displayDesc}
           </p>
 
-          {/* Mobile hint — no sidebar on small screens */}
+          {/* Mobile navigation hint */}
           {isMobile && (
             <div style={{
-              backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0',
-              borderRadius: '8px', padding: '0.45rem 0.65rem',
-              marginBottom: '0.75rem', fontSize: '11.5px', color: '#166534',
-              display: 'flex', alignItems: 'flex-start', gap: '0.4rem', lineHeight: 1.45
+              backgroundColor: '#F4F8F5', border: '1.5px solid #C9D6CE',
+              borderRadius: '8px', padding: '0.6rem 0.75rem',
+              marginBottom: '0.95rem', fontSize: '13px', color: '#14532D',
+              display: 'flex', alignItems: 'center', gap: '0.5rem', lineHeight: 1.45, fontWeight: 600
             }}>
-              <span style={{ flexShrink: 0, marginTop: '1px' }}>📱</span>
+              <Menu size={16} style={{ flexShrink: 0 }} />
               <span>
-                Tap the <strong>☰ menu</strong> (top) to navigate to this section.
+                {isTl
+                  ? <>Pindutin ang <strong>Menu (☰)</strong> sa taas → <strong>{displayTitle}</strong></>
+                  : <>Tap <strong>Menu (☰)</strong> at top → <strong>{displayTitle}</strong></>}
               </span>
             </div>
           )}
 
-          {/* Step dots */}
-          <div style={{ display: 'flex', gap: '5px', marginBottom: isMobile ? '0.85rem' : '1.1rem' }} aria-hidden="true">
-            {steps.map((s, i) => {
-              const visited = onboardingState?.visitedSteps?.includes(s.id);
-              const isCur = s.id === currentStep.id;
-              return (
-                <div key={s.id} style={{
-                  height: '4px',
-                  width: isCur ? '22px' : '8px',
-                  borderRadius: '2px',
-                  backgroundColor: visited ? '#15803D' : isCur ? '#22C55E' : '#E2E8F0',
-                  transition: `width ${TRANSITION}, background-color ${TRANSITION}`,
-                  flexShrink: 0,
-                }} />
-              );
-            })}
-          </div>
-
-          {/* Action buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexShrink: 0, paddingTop: '0.2rem' }}>
+          {/* Action buttons (Senior-friendly 44px height) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.6rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
             <button
-              onClick={() => { dismiss(); setTourOpen(false); }}
+              type="button"
+              onClick={handleClose}
               style={{
                 background: 'none', border: 'none',
-                color: '#64748B',
-                fontSize: '12px', fontWeight: '500', cursor: 'pointer', padding: '0.25rem 0',
-                textDecoration: 'underline', textUnderlineOffset: '2px',
+                color: '#374151',
+                fontSize: '13.5px', fontWeight: '700', cursor: 'pointer',
+                padding: '0.5rem 0.25rem',
+                minHeight: '44px',
+                textDecoration: 'underline', textUnderlineOffset: '3px',
               }}
-              onMouseEnter={e => e.currentTarget.style.color = '#0F172A'}
-              onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
             >
-              Skip tour
+              {isTl ? 'Laktawan' : 'Skip tour'}
             </button>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flex: isMobile ? '1 1 auto' : '0 0 auto', justifyContent: 'flex-end' }}>
               {currentIdx > 0 && (
                 <button
+                  type="button"
                   onClick={handlePrev}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '3px',
-                    backgroundColor: '#F8FAFC',
-                    color: '#475569', border: '1px solid #E2E8F0',
-                    borderRadius: '8px', padding: isMobile ? '0.45rem 0.65rem' : '0.45rem 0.75rem',
-                    fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    backgroundColor: '#FFFFFF',
+                    color: '#14532D', border: '1.5px solid #8FA397',
+                    borderRadius: '8px', padding: '0.55rem 0.95rem',
+                    minHeight: '44px',
+                    fontSize: '14px', fontWeight: '700', cursor: 'pointer',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F1F5F9'; e.currentTarget.style.color = '#0F172A'; }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.color = '#475569'; }}
                 >
-                  <ChevronLeft size={13} /> Back
+                  <ChevronLeft size={16} /> {isTl ? 'Bumalik' : 'Back'}
                 </button>
               )}
 
               <button
+                type="button"
                 onClick={handleNext}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '4px',
-                  background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                  background: '#14532D',
                   color: '#FFFFFF',
-                  border: 'none', borderRadius: '8px',
-                  padding: isMobile ? '0.45rem 0.85rem' : '0.45rem 0.95rem',
-                  fontSize: '12px', fontWeight: '700', cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(21, 128, 61, 0.35)',
-                  transition: 'transform 0.1s, box-shadow 0.1s',
+                  border: '1.5px solid #14532D', borderRadius: '8px',
+                  padding: '0.55rem 1.1rem',
+                  minHeight: '44px',
+                  fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(17, 59, 34, 0.28)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(21, 128, 61, 0.5)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(21, 128, 61, 0.35)'; }}
               >
                 {isLast
-                  ? <><CheckCircle size={13} /> Finish</>
-                  : <>{currentStep.nextLabel ? currentStep.nextLabel.replace(' →', '') : 'Next'} <ChevronRight size={13} /></>
+                  ? <><CheckCircle size={16} /> {isTl ? 'Tapusin' : 'Finish'}</>
+                  : <>{displayNext} <ChevronRight size={16} /></>
                 }
               </button>
             </div>

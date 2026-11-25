@@ -312,7 +312,7 @@ export default function LGUApplicationReview() {
         )}
         {canAct && (
           <>
-            <button onClick={() => setModal('correction')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#D97706', color: 'white', border: 'none', padding: '0.7rem 1.4rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(217,119,6,0.3)' }}>
+            <button onClick={() => setModal('correction')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <RotateCcw size={16} /> Request Correction
             </button>
             <button onClick={() => setModal('approve')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#15803D', color: 'white', border: 'none', padding: '0.7rem 1.4rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(21,128,61,0.3)' }}>

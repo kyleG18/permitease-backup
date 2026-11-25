@@ -161,26 +161,28 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
       {/* Logo Area */}
       <div className="sidebar-logo">
-        <img 
-          src="/images/roxas-seal.png" 
-          alt="Municipality of Roxas Seal" 
-          style={{ 
-            width: '38px', 
-            height: '38px', 
-            objectFit: 'contain', 
-            flexShrink: 0 
-          }} 
-        />
+        <div className="sidebar-seal-crest">
+          <img
+            src="/images/roxas-seal.png"
+            alt="Municipality of Roxas Seal"
+            style={{
+              width: '38px',
+              height: '38px',
+              objectFit: 'contain',
+              flexShrink: 0
+            }}
+          />
+        </div>
         <div className="sidebar-logo-text">
           <h2>PermitEase</h2>
           <span>Municipality of Roxas</span>
           {user?.role === 'lgu_admin' && (
-            <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#15803D', backgroundColor: '#DCFCE7', border: '1px solid #BBF7D0', padding: '0.12rem 0.45rem', borderRadius: '4px', display: 'inline-block', marginTop: '3px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <div className="sidebar-role-badge">
               BPLO Licensing Portal
             </div>
           )}
           {user?.role === 'system_admin' && (
-            <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#166534', backgroundColor: '#DCFCE7', border: '1px solid #BBF7D0', padding: '0.12rem 0.45rem', borderRadius: '4px', display: 'inline-block', marginTop: '3px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <div className="sidebar-role-badge">
               Admin Command Center
             </div>
           )}
@@ -189,7 +191,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           className="sidebar-close-btn"
           onClick={closeSidebar}
           aria-label="Close navigation"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem', marginLeft: 'auto' }}
         >
           <X size={20} />
         </button>
@@ -198,9 +199,9 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       {/* Navigation Links */}
       <nav className="sidebar-nav" aria-label="Main navigation">
         {navSections.map((section, idx) => (
-          <div key={idx} style={{ marginBottom: '1.25rem' }}>
+          <div key={idx} className="sidebar-section">
             <div className="sidebar-section-label">{section.title}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div className="sidebar-section-list">
               {section.items.map((item) => {
                 const isActive = location.pathname === item.path ||
                   (item.path !== '/dashboard' && location.pathname.startsWith(item.path + '/'));
@@ -214,7 +215,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                     data-tour={item.tour || undefined}
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} style={{ color: isActive ? 'var(--primary-green)' : 'var(--text-muted)', flexShrink: 0 }} />
+                    <Icon size={19} strokeWidth={isActive ? 2.4 : 2} className="sidebar-item-icon" />
                     <span>{item.name}</span>
                   </Link>
                 );

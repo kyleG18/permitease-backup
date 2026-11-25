@@ -1,0 +1,542 @@
+/* ==========================================================================
+   PERMITEASE — PHILIPPINE LGU CIVIC GREEN & SENIOR-FRIENDLY THEME
+   Scoped strictly to .app-layout--civic (authenticated workspace)
+   Excludes Landing, Onboarding, and AI Assistant (/assistant & ChatWidget).
+   ========================================================================== */
+
+/* ── 1. CIVIC COLOR & ACCESSIBILITY TOKENS ───────────────────────────────── */
+.app-layout--civic {
+  --civic-forest-950: #0C2B18;
+  --civic-forest-900: #113B22;
+  --civic-forest-800: #14532D;
+  --civic-forest-700: #166534;
+  --civic-forest-600: #15803D;
+  --civic-sage-100:   #E7F0EA;
+  --civic-sage-50:    #F4F8F5;
+  --civic-paper:      #F2F5F1;
+  --civic-gold:       #CA8A04;
+  --civic-gold-bright:#F59E0B;
+  --civic-gold-soft:  #FEF3C7;
+  --civic-border:     #C9D6CE;
+  --civic-border-strong: #8FA397;
+  --civic-ink-900:    #111827;
+  --civic-ink-800:    #1E293B;
+  --civic-ink-600:    #374151;
+
+  /* Override inherited root tokens inside authenticated workspace */
+  --primary-green:       #14532D;
+  --primary-green-dark:  #0E3A20;
+  --primary-green-hover: #166534;
+  --primary-green-light: #E7F0EA;
+  --primary-green-soft:  #F4F8F5;
+  --background:          #F2F5F1;
+  --surface:             #FFFFFF;
+  --text-dark:           #111827;
+  --text-primary:        #111827;
+  --text-secondary:      #273649;
+  --text-muted:          #3F4F61;
+  --border-color:        #C9D6CE;
+  --border-light:        #DCE5DF;
+  --border-medium:       #9AAFA2;
+
+  font-family: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Arial, sans-serif;
+  background-color: var(--civic-paper);
+  color: var(--civic-ink-900);
+}
+
+/* ── 2. DEEP FOREST GREEN CIVIC SIDEBAR ──────────────────────────────────── */
+.app-layout--civic .sidebar {
+  background: linear-gradient(180deg, #113B22 0%, #0D2F1B 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 2px 0 12px rgba(12, 43, 24, 0.14);
+  color: #F8FAF8;
+}
+
+.app-layout--civic .sidebar-logo {
+  padding: 1.25rem 1.2rem 1.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.14);
+  gap: 0.85rem;
+}
+
+.app-layout--civic .sidebar-seal-crest {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid #EAB308;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.app-layout--civic .sidebar-logo-text h2 {
+  color: #FFFFFF;
+  font-size: 1.18rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.app-layout--civic .sidebar-logo-text span {
+  color: #CFE3D6;
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: block;
+  margin-top: 2px;
+}
+
+.app-layout--civic .sidebar-role-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #FEF3C7;
+  background: rgba(234, 179, 8, 0.18);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  padding: 0.16rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.app-layout--civic .sidebar-close-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #FFFFFF;
+  cursor: pointer;
+  padding: 0.35rem;
+  margin-left: auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-layout--civic .sidebar-nav {
+  padding: 1.1rem 0.75rem;
+}
+
+.app-layout--civic .sidebar-section {
+  margin-bottom: 1.35rem;
+}
+
+.app-layout--civic .sidebar-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-layout--civic .sidebar-section-label {
+  color: #9BC0A8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 0.75rem 0.4rem;
+}
+
+.app-layout--civic .sidebar-item {
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  color: #E7F2EB;
+  font-size: 0.94rem;
+  font-weight: 600;
+  gap: 0.75rem;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-layout--civic .sidebar-item .sidebar-item-icon {
+  color: #A7CEB5;
+  flex-shrink: 0;
+}
+
+.app-layout--civic .sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #FFFFFF;
+}
+
+.app-layout--civic .sidebar-item:hover .sidebar-item-icon {
+  color: #FFFFFF;
+}
+
+.app-layout--civic .sidebar-item.active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-left: 3px solid #F59E0B;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.app-layout--civic .sidebar-item.active .sidebar-item-icon {
+  color: #FCD34D;
+}
+
+.app-layout--civic .sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.12);
+  padding: 0.8rem 0.75rem;
+}
+
+/* Keep /assistant sidebar light fallback consistent if not civic */
+.sidebar-seal-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sidebar-role-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #15803D;
+  background-color: #DCFCE7;
+  border: 1px solid #BBF7D0;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 3px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sidebar-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0.25rem;
+  margin-left: auto;
+}
+.sidebar-section { margin-bottom: 1.25rem; }
+.sidebar-section-list { display: flex; flex-direction: column; gap: 2px; }
+.sidebar-item-icon { flex-shrink: 0; }
+
+/* ── 3. OFFICIAL MUNICIPAL TOP HEADER ────────────────────────────────────── */
+.app-layout--civic .main-content {
+  background-color: var(--civic-paper);
+}
+
+.app-layout--civic .header {
+  background: #FFFFFF;
+  border-top: 3px solid #14532D;
+  border-bottom: 1.5px solid #C9D6CE;
+  box-shadow: 0 2px 6px rgba(17, 59, 34, 0.04);
+  min-height: 68px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+
+.app-layout--civic .header::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: 0;
+  width: 28%;
+  height: 3px;
+  background: linear-gradient(90deg, #14532D 0%, #CA8A04 100%);
+  pointer-events: none;
+}
+
+.app-layout--civic .header-search input {
+  min-height: 42px;
+  font-size: 0.94rem !important;
+  border: 1.5px solid #B5C4BB !important;
+  background-color: #F8FAF8 !important;
+  color: #111827 !important;
+  border-radius: 8px !important;
+}
+
+.app-layout--civic .header-search input::placeholder {
+  color: #4B5B6B !important;
+}
+
+.app-layout--civic .header-search input:focus {
+  border-color: #14532D !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.18) !important;
+}
+
+/* ── 4. SENIOR-FRIENDLY PAGE CANVAS & TYPOGRAPHY ─────────────────────────── */
+.app-layout--civic .page-content {
+  padding: 1.75rem 2rem 2.75rem;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--civic-ink-800);
+}
+
+.app-layout--civic .page-content h1 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #0F2919;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.app-layout--civic .page-content h2 {
+  font-size: 1.32rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.015em;
+}
+
+.app-layout--civic .page-content h3 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #14532D;
+}
+
+.app-layout--civic .page-content p,
+.app-layout--civic .page-content li {
+  color: #273649;
+}
+
+.app-layout--civic .page-content .text-muted {
+  color: #3F4F61 !important;
+  font-size: 0.92rem;
+}
+
+/* ── 5. DOCUMENT-GRADE CIVIC CARDS ───────────────────────────────────────── */
+.app-layout--civic .page-content .card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--civic-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(17, 59, 34, 0.05);
+}
+
+.app-layout--civic .page-content .card:hover {
+  border-color: #B2C5B9;
+}
+
+/* ── 6. SENIOR-FRIENDLY BUTTONS (44px+ TARGETS, HIGH CONTRAST) ───────────── */
+.app-layout--civic .page-content .btn {
+  min-height: 44px;
+  padding: 0.6rem 1.15rem;
+  font-size: 0.94rem;
+  font-weight: 700;
+  border-radius: 8px;
+  letter-spacing: -0.005em;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.app-layout--civic .page-content .btn-sm {
+  min-height: 38px;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.86rem;
+}
+
+.app-layout--civic .page-content .btn-primary {
+  background: #14532D !important;
+  background-color: #14532D !important;
+  border: 1.5px solid #14532D !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(17, 59, 34, 0.18);
+}
+
+.app-layout--civic .page-content .btn-primary:hover:not(:disabled) {
+  background: #0F3E22 !important;
+  background-color: #0F3E22 !important;
+  border-color: #0F3E22 !important;
+  box-shadow: 0 3px 8px rgba(17, 59, 34, 0.24);
+}
+
+.app-layout--civic .page-content .btn-outline,
+.app-layout--civic .page-content .btn-secondary {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border: 1.5px solid #8FA397 !important;
+  color: #14532D !important;
+}
+
+.app-layout--civic .page-content .btn-outline:hover:not(:disabled),
+.app-layout--civic .page-content .btn-secondary:hover:not(:disabled) {
+  background: #EDF5F0 !important;
+  background-color: #EDF5F0 !important;
+  border-color: #14532D !important;
+  color: #0E3A20 !important;
+}
+
+/* Unify requirement checklist toggle buttons (no brown/amber buttons) */
+.app-layout--civic .page-content .req-toggle-btn {
+  min-height: 38px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border: 1.5px solid #9AAFA2;
+  background: #FFFFFF;
+  color: #1E293B;
+}
+
+.app-layout--civic .page-content .req-toggle-btn--have {
+  border-color: #14532D !important;
+  background: #14532D !important;
+  color: #FFFFFF !important;
+}
+
+.app-layout--civic .page-content .req-toggle-btn--need {
+  border-color: #64748B !important;
+  background: #F1F5F9 !important;
+  color: #1E293B !important;
+}
+
+.app-layout--civic .page-content .req-ask-ai-btn {
+  min-height: 38px;
+  font-size: 0.84rem;
+  border: 1.5px solid #8FA397;
+  background: #FFFFFF;
+  color: #14532D;
+}
+
+.app-layout--civic .page-content .req-ask-ai-btn--active {
+  background: #14532D !important;
+  border-color: #14532D !important;
+  color: #FFFFFF !important;
+}
+
+.app-layout--civic button:focus-visible,
+.app-layout--civic a:focus-visible,
+.app-layout--civic input:focus-visible,
+.app-layout--civic select:focus-visible,
+.app-layout--civic textarea:focus-visible {
+  outline: 3px solid rgba(20, 83, 45, 0.35);
+  outline-offset: 2px;
+}
+
+/* ── 7. SENIOR-FRIENDLY FORM CONTROLS ────────────────────────────────────── */
+.app-layout--civic .page-content label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.app-layout--civic .page-content .form-control,
+.app-layout--civic .page-content .form-input,
+.app-layout--civic .page-content input[type="text"],
+.app-layout--civic .page-content input[type="email"],
+.app-layout--civic .page-content input[type="password"],
+.app-layout--civic .page-content input[type="number"],
+.app-layout--civic .page-content input[type="date"],
+.app-layout--civic .page-content input[type="tel"],
+.app-layout--civic .page-content select,
+.app-layout--civic .page-content textarea {
+  min-height: 44px;
+  font-size: 0.96rem;
+  color: #111827;
+  background-color: #FFFFFF;
+  border: 1.5px solid var(--civic-border-strong);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-layout--civic .page-content textarea {
+  min-height: 92px;
+  line-height: 1.55;
+}
+
+.app-layout--civic .page-content input:focus,
+.app-layout--civic .page-content select:focus,
+.app-layout--civic .page-content textarea:focus {
+  border-color: #14532D !important;
+  box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.2) !important;
+  outline: none;
+}
+
+/* ── 8. OFFICIAL MUNICIPAL DATA TABLES ───────────────────────────────────── */
+.app-layout--civic .page-content table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-layout--civic .page-content table thead th {
+  background-color: #E7F0EA;
+  color: #14532D;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1rem;
+  border-bottom: 2px solid #B6C9BD;
+  text-align: left;
+}
+
+.app-layout--civic .page-content table tbody td {
+  padding: 0.9rem 1rem;
+  font-size: 0.94rem;
+  color: #1E293B;
+  border-bottom: 1px solid #DCE5DF;
+  vertical-align: middle;
+}
+
+.app-layout--civic .page-content table tbody tr:nth-child(even) {
+  background-color: #F8FBF9;
+}
+
+.app-layout--civic .page-content table tbody tr:hover {
+  background-color: #EDF6F0;
+}
+
+/* ── 9. READABLE BADGES & STATUS PILLS ───────────────────────────────────── */
+.app-layout--civic .page-content .badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.28rem 0.65rem;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+/* ── 10. MODALS ──────────────────────────────────────────────────────────── */
+.app-layout--civic .modal-backdrop,
+.app-layout--civic .modal-overlay {
+  backdrop-filter: blur(2px);
+}
+
+.app-layout--civic .modal-backdrop > .card,
+.app-layout--civic .modal-content {
+  border: 1.5px solid #B6C9BD;
+  border-top: 4px solid #14532D;
+  box-shadow: 0 20px 48px rgba(12, 43, 24, 0.22);
+}
+
+/* ── 11. MOBILE RESPONSIVE REFINEMENT ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-layout--civic .page-content {
+    padding: 1.15rem 1rem 2.25rem;
+    font-size: 15px;
+  }
+
+  .app-layout--civic .page-content h1 {
+    font-size: 1.38rem;
+  }
+
+  .app-layout--civic .page-content table thead th,
+  .app-layout--civic .page-content table tbody td {
+    padding: 0.7rem 0.75rem;
+    font-size: 0.88rem;
+  }
+}
+
+/* Preserve AI Assistant chat page inner controls untouched */
+.app-layout--civic .page-content--chat .chatbot-input {
+  min-height: unset;
+  border-color: var(--border-medium);
+}
+
+/* ── 12. PRINT CLEANUP ───────────────────────────────────────────────────── */
+@media print {
+  .app-layout--civic .sidebar,
+  .app-layout--civic .header {
+    display: none !important;
+  }
+  .app-layout--civic,
+  .app-layout--civic .main-content,
+  .app-layout--civic .page-content {
+    background: #FFFFFF !important;
+    padding: 0 !important;
+  }
+}

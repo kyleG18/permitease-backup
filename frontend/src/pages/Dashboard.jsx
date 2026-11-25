@@ -322,35 +322,42 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
       <div style={{
         backgroundColor: '#FFFFFF',
         borderRadius: '10px',
-        border: '1px solid #E2E8F0',
-        borderTop: '3px solid #15803D',
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+        border: '1.5px solid #C9D6CE',
+        borderTop: '4px solid #14532D',
+        boxShadow: '0 2px 6px rgba(17, 59, 34, 0.06)',
         overflow: 'hidden'
       }}>
         {/* Top Row: Official Greeting & Date */}
         <div style={{
-          padding: '1.15rem 1.5rem',
+          padding: '1.35rem 1.65rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1rem',
-          borderBottom: '1px solid #F1F5F9'
+          borderBottom: '1px solid #DCE5DF'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
-            <img
-              src="/images/roxas-seal.png"
-              alt="Municipality of Roxas Official Seal"
-              style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: '50px', height: '50px', borderRadius: '50%',
+              backgroundColor: '#FFFFFF', border: '2px solid #CA8A04',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '2px', flexShrink: 0, boxShadow: '0 2px 6px rgba(17, 59, 34, 0.1)'
+            }}>
+              <img
+                src="/images/roxas-seal.png"
+                alt="Municipality of Roxas Official Seal"
+                style={{ width: '42px', height: '42px', objectFit: 'contain' }}
+              />
+            </div>
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.15rem' }}>
+              <div style={{ fontSize: '12px', fontWeight: 800, color: '#14532D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
                 {isTl ? 'Munisipalidad ng Roxas, Oriental Mindoro · BPLO Portal' : 'Municipality of Roxas, Oriental Mindoro · BPLO Portal'}
               </div>
-              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+              <h1 style={{ margin: 0, fontSize: '23px', fontWeight: 800, color: '#0F2919', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {greeting}, {firstName}
               </h1>
-              <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '0.1rem' }}>
+              <div style={{ fontSize: '14px', color: '#374151', marginTop: '0.2rem', fontWeight: 500 }}>
                 {isTl
                   ? 'Gabay sa Paghahanda at Pagsusuri ng Kahandaan sa Business Permit'
                   : 'Guided Business Permit Preparation & Readiness Overview'}
@@ -361,33 +368,33 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.45rem',
-            padding: '0.4rem 0.85rem',
-            borderRadius: '6px',
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            color: '#334155',
-            fontSize: '12.5px',
-            fontWeight: 600
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '8px',
+            backgroundColor: '#F4F8F5',
+            border: '1.5px solid #C9D6CE',
+            color: '#14532D',
+            fontSize: '13.5px',
+            fontWeight: 700
           }}>
-            <Calendar size={14} color="#15803D" />
+            <Calendar size={16} color="#14532D" />
             <span>{currentDate}</span>
           </div>
         </div>
 
         {/* Bottom Row: Active Business Selector & Status */}
         <div style={{
-          backgroundColor: '#F8FAFC',
-          padding: '0.7rem 1.5rem',
+          backgroundColor: '#F4F8F5',
+          padding: '0.85rem 1.65rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.75rem'
+          gap: '0.85rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              <Building2 size={14} color="#15803D" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12.5px', fontWeight: 800, color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <Building2 size={16} color="#14532D" />
               {isTl ? 'Aktibong Negosyo:' : 'Active Business:'}
             </div>
 
@@ -399,13 +406,13 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
                   style={{
                     appearance: 'none',
                     WebkitAppearance: 'none',
-                    padding: '0.35rem 2rem 0.35rem 0.75rem',
-                    borderRadius: '6px',
-                    border: '1px solid #CBD5E1',
+                    padding: '0.45rem 2.2rem 0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1.5px solid #8FA397',
                     fontWeight: 700,
-                    color: '#0F172A',
+                    color: '#111827',
                     backgroundColor: '#FFFFFF',
-                    fontSize: '13px',
+                    fontSize: '14px',
                     cursor: 'pointer',
                     outline: 'none'
                   }}
@@ -560,18 +567,19 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.4rem',
-                  padding: '0.6rem 1.1rem',
-                  borderRadius: '7px',
-                  border: '1px solid #D1D5DB',
-                  backgroundColor: '#FAFAFA',
-                  color: '#374151',
-                  fontSize: '13px',
-                  fontWeight: 600,
+                  minHeight: '44px',
+                  padding: '0.6rem 1.15rem',
+                  borderRadius: '8px',
+                  border: '1.5px solid #8FA397',
+                  backgroundColor: '#FFFFFF',
+                  color: '#14532D',
+                  fontSize: '14px',
+                  fontWeight: 700,
                   textDecoration: 'none',
                   transition: 'border-color 0.15s ease, background-color 0.15s ease'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.borderColor = '#9CA3AF'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FAFAFA'; e.currentTarget.style.borderColor = '#D1D5DB'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EDF5F0'; e.currentTarget.style.borderColor = '#14532D'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.borderColor = '#8FA397'; }}
               >
                 {nextAction.secondaryBtnText}
               </Link>
@@ -583,22 +591,23 @@ const BusinessOwnerDashboard = ({ user, stats, loading }) => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.45rem',
-                padding: '0.6rem 1.25rem',
-                borderRadius: '7px',
-                backgroundColor: '#15803D',
+                minHeight: '44px',
+                padding: '0.6rem 1.3rem',
+                borderRadius: '8px',
+                backgroundColor: '#14532D',
                 color: '#FFFFFF',
-                fontSize: '13px',
+                fontSize: '14px',
                 fontWeight: 700,
                 textDecoration: 'none',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                transition: 'opacity 0.15s ease'
+                boxShadow: '0 1px 3px rgba(17, 59, 34, 0.2)',
+                transition: 'background-color 0.15s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.88'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0F3E22'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#14532D'}
             >
-              <nextAction.primaryBtnIcon size={15} />
+              <nextAction.primaryBtnIcon size={16} />
               {nextAction.primaryBtnText}
-              <ArrowRight size={13} />
+              <ArrowRight size={15} />
             </Link>
           </div>
         </div>
