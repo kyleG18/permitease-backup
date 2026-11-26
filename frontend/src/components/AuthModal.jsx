@@ -107,16 +107,16 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             );
             const businesses = await bizRes.json();
             if (businesses.length === 0) {
-              onClose();
-              navigate('/onboarding');
+              onClose({ skipNavigate: true });
+              navigate('/onboarding', { replace: true });
               return;
             }
           } catch (err) {
             console.error('Failed to check existing businesses:', err);
           }
         }
-        onClose();
-        navigate('/dashboard');
+        onClose({ skipNavigate: true });
+        navigate('/dashboard', { replace: true });
       } else {
         setError(result.message || 'Invalid email or password.');
       }
@@ -182,8 +182,8 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         if (registerData.business_name) {
           sessionStorage.setItem('pending_business_name', registerData.business_name);
         }
-        onClose();
-        navigate('/onboarding');
+        onClose({ skipNavigate: true });
+        navigate('/onboarding', { replace: true });
       } else {
         setError(result.message || 'Registration failed.');
       }

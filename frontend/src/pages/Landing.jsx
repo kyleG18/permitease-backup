@@ -25,9 +25,9 @@ const Landing = ({ initialAuthModal = null }) => {
     setAuthModalOpen(true);
   };
 
-  const handleCloseAuthModal = () => {
+  const handleCloseAuthModal = (options = {}) => {
     setAuthModalOpen(false);
-    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+    if (!options?.skipNavigate && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
       navigate('/', { replace: true });
     }
   };

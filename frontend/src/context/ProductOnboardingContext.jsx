@@ -110,7 +110,7 @@ function saveState(userId, state) {
 
 export function ProductOnboardingProvider({ children }) {
   const { user } = useContext(AuthContext);
-  const { isOnboarded } = useContext(BusinessContext);
+  const { isOnboarded, loadingBusinesses } = useContext(BusinessContext);
   const userId = user?.id || user?._id;
 
   // null = not yet loaded, object = loaded state
@@ -122,7 +122,7 @@ export function ProductOnboardingProvider({ children }) {
       setOnboardingState(null);
       return;
     }
-    if (!isOnboarded) {
+    if (loadingBusinesses || !isOnboarded) {
       setOnboardingState(null);
       return;
     }
@@ -159,7 +159,7 @@ export function ProductOnboardingProvider({ children }) {
       setOnboardingState(fresh);
       saveState(userId, fresh);
     }
-  }, [userId, isOnboarded, user?.role]);
+  }, [userId, isOnboarded, loadingBusinesses, user?.role]);
 
   const persist = useCallback((nextState) => {
     setOnboardingState(nextState);
@@ -271,6 +271,7 @@ export function ProductOnboardingProvider({ children }) {
     onboardingState.active &&
     !onboardingState.completed &&
     user?.role === 'business_owner' &&
+    !loadingBusinesses &&
     isOnboarded
   );
 

@@ -108,10 +108,10 @@ const Onboarding = () => {
   const text = t.onboarding;
 
   useEffect(() => {
-    if (!loadingBusinesses && isOnboarded) {
-      navigate('/dashboard');
+    if (!loading && !loadingBusinesses && isOnboarded) {
+      navigate('/dashboard', { replace: true });
     }
-  }, [isOnboarded, loadingBusinesses, navigate]);
+  }, [loading, isOnboarded, loadingBusinesses, navigate]);
 
   // Load Roxas Barangays on mount
   useEffect(() => {

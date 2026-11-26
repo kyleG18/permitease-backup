@@ -152,20 +152,30 @@ export default function AppTour() {
   const rafRef = useRef(null);
   const cardRef = useRef(null);
 
+  const isAuthOrOnboardingRoute =
+    location.pathname === '/' ||
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/onboarding';
+
   useEffect(() => {
+    if (isAuthOrOnboardingRoute) {
+      setTourOpen(false);
+      return;
+    }
     if (isVisible && !onboardingState?.completed) {
       setTourOpen(true);
     } else if (!isVisible) {
       setTourOpen(false);
     }
-  }, [isVisible, onboardingState?.completed]);
+  }, [isVisible, onboardingState?.completed, isAuthOrOnboardingRoute]);
 
   useEffect(() => {
-    if (!tourOpen || !currentStep) return;
+    if (!tourOpen || !currentStep || isAuthOrOnboardingRoute) return;
     if (location.pathname !== currentStep.path) {
       navigate(currentStep.path);
     }
-  }, [tourOpen, currentStep?.id]); // eslint-disable-line
+  }, [tourOpen, currentStep?.id, isAuthOrOnboardingRoute]); // eslint-disable-line
 
   useEffect(() => {
     if (!tourOpen || !currentStep) return;
