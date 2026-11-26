@@ -136,7 +136,9 @@ const sendMessage = async (req, res) => {
             userContext
         ] = await Promise.all([
             db.query('SELECT permit_name, description FROM permit_requirements'),
-            db.query('SELECT title, category, legal_basis, content FROM knowledge_base ORDER BY uploaded_at DESC LIMIT 20'),
+            db.query('SELECT title, category, legal_basis, content FROM knowledge_base ORDER BY uploaded_at DESC LIMIT 20')
+                .catch(() => db.query('SELECT title, document_path FROM knowledge_base ORDER BY uploaded_at DESC LIMIT 20'))
+                .catch(() => [[]]),
             db.query("SELECT source_name, title, summary, detected_version FROM regulatory_updates WHERE status = 'APPROVED' ORDER BY reviewed_at DESC LIMIT 10").catch(() => [[]]),
             db.query("SELECT code, title, industry_category FROM psic_codes WHERE status = 'ACTIVE' ORDER BY code ASC LIMIT 30").catch(() => [[]]),
             db.query(

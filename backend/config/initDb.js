@@ -352,12 +352,22 @@ async function ensureAdditiveFeatureSchema(targetDb) {
         }
     };
 
-    // 1. Additive columns on users & businesses
+    // 1. Additive columns on users, businesses & knowledge_base
     await safeAddColumn('users', 'terms_accepted_at', 'TIMESTAMP NULL DEFAULT NULL');
     await safeAddColumn('businesses', 'psic_code', 'VARCHAR(20) NULL');
     await safeAddColumn('businesses', 'registration_type', 'VARCHAR(50) NULL');
     await safeAddColumn('businesses', 'registration_number', 'VARCHAR(100) NULL');
     await safeAddColumn('businesses', 'registration_expiry_date', 'DATE NULL');
+    await safeAddColumn('knowledge_base', 'document_key', 'VARCHAR(120) NULL');
+    await safeAddColumn('knowledge_base', 'category', 'VARCHAR(100) NULL');
+    await safeAddColumn('knowledge_base', 'legal_basis', 'VARCHAR(255) NULL');
+    await safeAddColumn('knowledge_base', 'issuing_authority', 'VARCHAR(255) NULL');
+    await safeAddColumn('knowledge_base', 'source_url', 'VARCHAR(500) NULL');
+    await safeAddColumn('knowledge_base', 'content', 'LONGTEXT NULL');
+    await safeAddColumn('knowledge_base', 'status', "VARCHAR(50) DEFAULT 'PUBLISHED'");
+    await safeAddColumn('knowledge_base', 'verification_status', "VARCHAR(50) DEFAULT 'VERIFIED'");
+    await safeAddColumn('knowledge_base', 'verified_by', 'INT NULL');
+    await safeAddColumn('knowledge_base', 'last_verified_at', 'TIMESTAMP NULL DEFAULT NULL');
 
     // 2. Expand bplo_schedule.day_type enum for holiday/half-day work overrides
     try {
