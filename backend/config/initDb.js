@@ -321,12 +321,131 @@ const initDatabase = async (options = {}) => {
             await verifyRequiredMigrations(targetDb, { requireMigrationTable });
         });
 
+        // 4. Safe additive feature schema check on live server boot (idempotent, non-destructive)
+        if (!options.connection) {
+            await optionalStep('ensure additive feature schema', async () => {
+                await ensureAdditiveFeatureSchema(targetDb);
+            });
+        }
+
         console.log('[DB Init] Database health check & schema verification completed successfully.');
     } catch (err) {
         console.error('[DB Init FATAL] Bootstrap aborted:', err.message);
         throw err;
     }
 };
+
+/**
+ * Idempotent additive schema sync for new PermitEase modules on existing deployments
+ * (Render / Railway / Laragon). Never drops tables or modifies existing data.
+ */
+async function ensureAdditiveFeatureSchema(targetDb) {
+    const safeAddColumn = async (table, column, definition) => {
+        try {
+            const [cols] = await targetDb.query(`SHOW COLUMNS FROM \`${table}\` LIKE ?`, [column]);
+            if (cols.length === 0) {
+                await targetDb.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+                console.log(`[DB Init] Added column ${table}.${column}`);
+            }
+        } catch (err) {
+            console.warn(`[DB Init] safeAddColumn notice (${table}.${column}):`, err.message);
+        }
+    };
+
+    // 1. Additive columns on users & businesses
+    await safeAddColumn('users', 'terms_accepted_at', 'TIMESTAMP NULL DEFAULT NULL');
+    await safeAddColumn('businesses', 'psic_code', 'VARCHAR(20) NULL');
+    await safeAddColumn('businesses', 'registration_type', 'VARCHAR(50) NULL');
+    await safeAddColumn('businesses', 'registration_number', 'VARCHAR(100) NULL');
+    await safeAddColumn('businesses', 'registration_expiry_date', 'DATE NULL');
+
+    // 2. Expand bplo_schedule.day_type enum for holiday/half-day work overrides
+    try {
+        const [cols] = await targetDb.query(`SHOW COLUMNS FROM \`bplo_schedule\` LIKE 'day_type'`);
+        if (cols.length > 0 && !String(cols[0].Type || '').includes('workday_full')) {
+            await targetDb.query(
+                `ALTER TABLE \`bplo_schedule\` MODIFY COLUMN \`day_type\` ENUM('holiday', 'special_nonworking', 'bplo_closed', 'workday_full', 'workday_morning', 'workday_afternoon') NOT NULL`
+            );
+            console.log('[DB Init] Expanded bplo_schedule.day_type enum with workday overrides.');
+        }
+    } catch (err) {
+        console.warn('[DB Init] bplo_schedule enum notice:', err.message);
+    }
+
+    // 3. Create psic_codes & regulatory_updates tables if missing
+    await targetDb.query(`
+        CREATE TABLE IF NOT EXISTS psic_codes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(20) NOT NULL UNIQUE,
+            title VARCHAR(255) NOT NULL,
+            section VARCHAR(120) DEFAULT NULL,
+            division VARCHAR(180) DEFAULT NULL,
+            industry_category VARCHAR(100) NOT NULL,
+            mapped_requirement_keywords TEXT DEFAULT NULL,
+            source_version VARCHAR(50) DEFAULT 'PSA PSIC 2019',
+            status ENUM('ACTIVE', 'PENDING_APPROVAL', 'REJECTED') NOT NULL DEFAULT 'ACTIVE',
+            approved_by INT DEFAULT NULL,
+            approved_at TIMESTAMP NULL DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    `);
+
+    await targetDb.query(`
+        CREATE TABLE IF NOT EXISTS regulatory_updates (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            source_name VARCHAR(150) NOT NULL,
+            source_category ENUM('PSIC', 'ARTA_DILG', 'BIR', 'BFP_DOH', 'LOCAL_ORDINANCE') NOT NULL DEFAULT 'LOCAL_ORDINANCE',
+            source_url VARCHAR(500) DEFAULT NULL,
+            title VARCHAR(255) NOT NULL,
+            summary TEXT DEFAULT NULL,
+            ai_impact_notes TEXT DEFAULT NULL,
+            detected_version VARCHAR(100) DEFAULT NULL,
+            content_hash VARCHAR(64) DEFAULT NULL,
+            status ENUM('PENDING_REVIEW', 'APPROVED', 'DISMISSED') NOT NULL DEFAULT 'PENDING_REVIEW',
+            reviewed_by INT DEFAULT NULL,
+            reviewed_at TIMESTAMP NULL DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // 4. Seed baseline PSA PSIC codes if empty
+    const [existingPsic] = await targetDb.query('SELECT COUNT(*) as count FROM psic_codes');
+    if (existingPsic[0].count === 0) {
+        const baselinePsic = [
+            ['47111', 'Retail sale in nonspecialized stores with food, beverages or tobacco predominating (Sari-Sari Store / Mini-Mart)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'sari-sari,grocery,store,mini-mart,convenience,retail'],
+            ['47112', 'Retail sale in supermarkets / grocery stores', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'supermarket,grocery,retail,merchandise'],
+            ['47190', 'Other retail sale in nonspecialized stores (General Merchandise / Department Store)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'general merchandise,ukay,dry goods,department,retail'],
+            ['47411', 'Retail sale of computers, peripheral units, software and telecommunications equipment (Cellphone / Electronics Shop)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'electronics,cellphone,mobile,computer,gadgets,tech'],
+            ['47520', 'Retail sale of hardware, paints and glass in specialized stores', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'hardware,construction,paint,lumber'],
+            ['47721', 'Retail sale of pharmaceutical and medical goods (Pharmacy / Drugstore)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'pharmacy,drugstore,medicine,medical'],
+            ['47711', 'Retail sale of clothing, footwear and leather articles', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'clothing,apparel,boutique,shoes,ukay-ukay'],
+            ['56101', 'Restaurants and mobile food service activities (Full-Service Restaurant / Eatery / Carinderia)', 'I - Accommodation and Food Service', '56 - Food and beverage service', 'Food & Beverage', 'restaurant,eatery,carinderia,carenderia,dining,bbq'],
+            ['56102', 'Fast-food restaurants and take-out food stands (Snack Bar / Food Stall)', 'I - Accommodation and Food Service', '56 - Food and beverage service', 'Food & Beverage', 'fast food,snack,food stall,take-out,kiosk'],
+            ['56301', 'Cafes, coffee shops, milk tea shops and refreshment parlors', 'I - Accommodation and Food Service', '56 - Food and beverage service', 'Food & Beverage', 'cafe,coffee,milk tea,beverage,juice,refreshment'],
+            ['10711', 'Manufacture of bakery products (Bakery / Bakeshop / Pandesal)', 'C - Manufacturing', '10 - Manufacture of food products', 'Food & Beverage', 'bakery,bakeshop,bread,pastry,cake,pandesal'],
+            ['55101', 'Hotels, resorts, inns and lodging houses', 'I - Accommodation and Food Service', '55 - Accommodation', 'Services', 'hotel,resort,inn,lodge,hostel,accommodation,beach'],
+            ['96021', 'Hairdressing and other beauty treatment (Salon / Barbershop)', 'S - Other Service Activities', '96 - Other personal service', 'Services', 'salon,barber,beauty,parlor,spa,hair'],
+            ['96011', 'Washing and dry-cleaning of textile and fur products (Laundry Shop)', 'S - Other Service Activities', '96 - Other personal service', 'Services', 'laundry,wash,dry-clean'],
+            ['45201', 'Maintenance and repair of motor vehicles and motorcycles (Auto / Vulcanizing Shop)', 'G - Wholesale and Retail Trade', '45 - Motor vehicles repair', 'Services', 'repair,auto,motorcycle,vulcanizing,carwash'],
+            ['62010', 'Computer programming, consultancy and IT services', 'J - Information and Communication', '62 - Computer programming', 'Services', 'software,it,programming,web,tech,digital'],
+            ['82190', 'Photocopying, printing, document preparation and specialized office support (Computer / Printing Shop)', 'N - Administrative and Support', '82 - Office administrative', 'Services', 'printing,photocopy,computer shop,internet cafe'],
+            ['10790', 'Manufacture of other food products / small-scale food processing', 'C - Manufacturing', '10 - Manufacture of food products', 'Manufacturing', 'processing,manufacturing,packaged food,chips'],
+            ['14101', 'Manufacture of wearing apparel / tailoring and dressmaking', 'C - Manufacturing', '14 - Manufacture of wearing apparel', 'Manufacturing', 'tailoring,dressmaking,garments,sewing'],
+            ['01410', 'Raising of livestock and poultry', 'A - Agriculture, Forestry and Fishing', '01 - Crop and animal production', 'Agriculture', 'poultry,livestock,pig,hog,chicken,farm'],
+            ['03210', 'Aquaculture and fishery production (Fishpond / Marine)', 'A - Agriculture, Forestry and Fishing', '03 - Fishing and aquaculture', 'Agriculture', 'fish,aquaculture,fishpond,bangus,tilapia,crab'],
+            ['47739', 'Other retail sale of new goods in specialized stores (Water Refilling Station / LPG / Misc)', 'G - Wholesale and Retail Trade', '47 - Retail trade', 'Retail', 'water refilling,lpg,gas,station,refilling']
+        ];
+        for (const [code, title, section, division, cat, kw] of baselinePsic) {
+            await targetDb.query(
+                `INSERT IGNORE INTO psic_codes (code, title, section, division, industry_category, mapped_requirement_keywords, source_version, status)
+                 VALUES (?, ?, ?, ?, ?, ?, 'PSA PSIC 2019', 'ACTIVE')`,
+                [code, title, section, division, cat, kw]
+            );
+        }
+        console.log(`[DB Init] Seeded ${baselinePsic.length} baseline PSA PSIC codes.`);
+    }
+}
 
 /**
  * Isolated bootstrap function for initial blank database provisioning (development/tests only).

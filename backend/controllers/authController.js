@@ -53,12 +53,24 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // New user: insert (with RA 10173 consent timestamp)
+        // New user: insert (with RA 10173 consent timestamp, safe fallback if column not yet migrated)
         const termsAcceptedAt = accepted_terms ? new Date() : null;
-        const [result] = await db.query(
-            'INSERT INTO users (full_name, email, contact_number, password, role, terms_accepted_at) VALUES (?, ?, ?, ?, ?, ?)',
-            [full_name, email, contact_number, hashedPassword, 'business_owner', termsAcceptedAt]
-        );
+        let result;
+        try {
+            [result] = await db.query(
+                'INSERT INTO users (full_name, email, contact_number, password, role, terms_accepted_at) VALUES (?, ?, ?, ?, ?, ?)',
+                [full_name, email, contact_number, hashedPassword, 'business_owner', termsAcceptedAt]
+            );
+        } catch (insertErr) {
+            if (insertErr.code === 'ER_BAD_FIELD_ERROR') {
+                [result] = await db.query(
+                    'INSERT INTO users (full_name, email, contact_number, password, role) VALUES (?, ?, ?, ?, ?)',
+                    [full_name, email, contact_number, hashedPassword, 'business_owner']
+                );
+            } else {
+                throw insertErr;
+            }
+        }
 
         if (result.insertId) {
             const userId = result.insertId;
