@@ -31,12 +31,23 @@ import axios from 'axios';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}`;
 
-const php = (amount) =>
-  new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-    minimumFractionDigits: 2
-  }).format(amount);
+const formatPeso = (amount) =>
+  `₱${Math.max(0, Math.round(Number(amount) || 0)).toLocaleString('en-PH')}`;
+
+const phpRange = (min, max) => {
+  const lo = Math.max(0, Math.round(Number(min) || 0));
+  const hi = Math.max(lo, Math.round(Number(max) || 0));
+  return `${formatPeso(lo)}–${formatPeso(hi)}`;
+};
+
+const toFeeRange = (baseAmount) => {
+  const amt = Number(baseAmount) || 0;
+  if (amt <= 0) return { min: 0, max: 150 };
+  const min = Math.max(0, Math.floor((amt * 0.8) / 50) * 50);
+  let max = Math.ceil((amt * 1.25) / 50) * 50;
+  if (max <= min) max = min + 100;
+  return { min, max };
+};
 
 export default function FeeEstimation() {
   const { user, token } = useContext(AuthContext);
@@ -189,68 +200,80 @@ export default function FeeEstimation() {
   };
 
   // ═════════════════════════════════════════════════════════════════════
-  // CALCULATION ENGINE LOGIC
+  // CALCULATION ENGINE LOGIC (Indicative Ranges — Fees May Vary)
   // ═════════════════════════════════════════════════════════════════════
   const calculation = useMemo(() => {
     const isPhysical = operatingSetup === 'physical';
 
-    const barangayClearance = 500;
-    const mayorsPermit = businessScale === 'SME' ? 6000 : 3000;
-    const sanitaryFee = 500;
-    const fsicFee = isPhysical ? 1000 : 300;
-    const baseLBT = businessScale === 'SME' ? 5000 : 2500;
-
-    const totalLguFees = barangayClearance + mayorsPermit + sanitaryFee + fsicFee + baseLBT;
+    const barangayClearance = { min: 100, max: 500 };
+    const mayorsPermit = businessScale === 'SME'
+      ? { min: 4000, max: 7500 }
+      : { min: 1500, max: 3500 };
+    const sanitaryFee = { min: 200, max: 600 };
+    const fsicFee = isPhysical
+      ? { min: 500, max: 1500 }
+      : { min: 0, max: 500 };
+    const baseLBT = businessScale === 'SME'
+      ? { min: 3500, max: 6500 }
+      : { min: 1000, max: 3000 };
 
     const items = [
       {
         num: 1,
         name: 'Barangay Business Clearance',
         nameTl: 'Barangay Business Clearance',
-        condition: 'Prerequisite clearance benchmark (Subject to barangay ordinance)',
-        conditionTl: 'Pamantayang clearance (Alinsunod sa ordinansa ng barangay)',
+        condition: 'Prerequisite clearance range (Varies by barangay ordinance)',
+        conditionTl: 'Tinatayang hanay ng bayarin (Nag-iiba ayon sa ordinansa ng barangay)',
         category: 'Clearance',
-        amount: barangayClearance
+        min: barangayClearance.min,
+        max: barangayClearance.max
       },
       {
         num: 2,
         name: "Mayor's Permit & License Fee",
         nameTl: "Mayor's Permit at Lisensya",
-        condition: `Indicative tiered benchmark for ${businessScale} (Subject to municipal schedule)`,
-        conditionTl: `Tinatayang antas para sa ${businessScale} (Alinsunod sa iskedyul ng munisipyo)`,
+        condition: `Indicative tiered range for ${businessScale} (Varies by municipal schedule)`,
+        conditionTl: `Tinatayang hanay para sa ${businessScale} (Nag-iiba ayon sa iskedyul ng munisipyo)`,
         category: 'Permit',
-        amount: mayorsPermit
+        min: mayorsPermit.min,
+        max: mayorsPermit.max
       },
       {
         num: 3,
         name: 'Sanitary & Health Inspection',
         nameTl: 'Inspeksyon sa Kalinisan at Kalusugan (Sanitary)',
-        condition: 'Municipal health inspection planning benchmark',
-        conditionTl: 'Pamantayang pagpaplano para sa clearance sa kalusugan at sanitasyon',
+        condition: 'Municipal health inspection range (Varies by business type & size)',
+        conditionTl: 'Tinatayang singil sa kalusugan at sanitasyon (Nag-iiba ayon sa uri ng negosyo)',
         category: 'Inspection',
-        amount: sanitaryFee
+        min: sanitaryFee.min,
+        max: sanitaryFee.max
       },
       {
         num: 4,
         name: 'Fire Safety Inspection Certificate (FSIC)',
         nameTl: 'Sertipiko ng Inspeksyon sa Kaligtasan sa Sunog (FSIC)',
-        condition: `Indicative planning rate for ${isPhysical ? 'Physical Premises' : 'Online / Home-Based'}`,
-        conditionTl: `Tinatayang singil sa sunog para sa ${isPhysical ? 'Pisikal na Puwesto' : 'Online / Home-Based'}`,
+        condition: `Indicative range for ${isPhysical ? 'Physical Premises' : 'Online / Home-Based'} (Subject to BFP assessment)`,
+        conditionTl: `Tinatayang hanay sa sunog para sa ${isPhysical ? 'Pisikal na Puwesto' : 'Online / Home-Based'}`,
         category: 'Inspection',
-        amount: fsicFee
+        min: fsicFee.min,
+        max: fsicFee.max
       },
       {
         num: 5,
         name: 'Local Business Tax (Base Regulatory Fee)',
         nameTl: 'Lokal na Buwis sa Negosyo (Base Regulatory LBT)',
-        condition: `Indicative initial base LBT for ${businessScale} (New Application reference)`,
-        conditionTl: `Tinatayang panimulang base LBT para sa ${businessScale} (Gabay sa Bagong Aplikasyon)`,
+        condition: `Indicative initial LBT range for ${businessScale} (New Application reference)`,
+        conditionTl: `Tinatayang panimulang hanay ng LBT para sa ${businessScale} (Gabay sa Bagong Aplikasyon)`,
         category: 'Local Tax',
-        amount: baseLBT
+        min: baseLBT.min,
+        max: baseLBT.max
       }
     ];
 
-    return { items, totalLguFees };
+    const totalLguMin = items.reduce((sum, i) => sum + i.min, 0);
+    const totalLguMax = items.reduce((sum, i) => sum + i.max, 0);
+
+    return { items, totalLguMin, totalLguMax };
   }, [businessScale, operatingSetup]);
 
   const handleSaveToProfile = async () => {
@@ -290,10 +313,14 @@ export default function FeeEstimation() {
   };
 
   const isRenewal = businessStatus === 'Renewal';
-  const renewalTotal = calculation.items
+  const renewalTotalMin = calculation.items
     .filter(i => i.num !== 5)
-    .reduce((sum, i) => sum + i.amount, 0);
-  const displayTotal = isRenewal ? renewalTotal : calculation.totalLguFees;
+    .reduce((sum, i) => sum + i.min, 0);
+  const renewalTotalMax = calculation.items
+    .filter(i => i.num !== 5)
+    .reduce((sum, i) => sum + i.max, 0);
+  const displayTotalMin = isRenewal ? renewalTotalMin : calculation.totalLguMin;
+  const displayTotalMax = isRenewal ? renewalTotalMax : calculation.totalLguMax;
 
   // ═════════════════════════════════════════════════════════════════════
   // REQUIREMENT PROCESSING & ACQUISITION EXPENSES ENGINE
@@ -301,27 +328,36 @@ export default function FeeEstimation() {
   const requirementExpenses = useMemo(() => {
     // 1. If the business has an AI-assessed checklist, use those official tailored requirements!
     if (assessedChecklist && assessedChecklist.length > 0) {
-      const items = assessedChecklist.map((r, idx) => ({
-        id: r.requirement_id || r.id || idx,
-        name: r.permit_name,
-        nameTl: r.permit_name,
-        description: r.description,
-        issuingAgency: r.issuing_agency || 'Government Agency',
-        ordinanceRef: r.ordinance_reference,
-        amount: parseFloat(r.estimated_fee) || 0,
-        status: r.status || 'Missing',
-        isMandatory: r.is_mandatory !== 0
-      }));
+      const items = assessedChecklist.map((r, idx) => {
+        const range = toFeeRange(parseFloat(r.estimated_fee) || 0);
+        return {
+          id: r.requirement_id || r.id || idx,
+          name: r.permit_name,
+          nameTl: r.permit_name,
+          description: r.description,
+          issuingAgency: r.issuing_agency || 'Government Agency',
+          ordinanceRef: r.ordinance_reference,
+          min: range.min,
+          max: range.max,
+          status: r.status || 'Missing',
+          isMandatory: r.is_mandatory !== 0
+        };
+      });
 
-      const total = items.reduce((sum, item) => sum + item.amount, 0);
-      const stillNeeded = items
-        .filter(item => item.status !== 'Approved' && item.status !== 'Submitted' && item.status !== 'Have')
-        .reduce((sum, item) => sum + item.amount, 0);
+      const totalMin = items.reduce((sum, item) => sum + item.min, 0);
+      const totalMax = items.reduce((sum, item) => sum + item.max, 0);
+      const remainingItems = items.filter(
+        item => item.status !== 'Approved' && item.status !== 'Submitted' && item.status !== 'Have'
+      );
+      const stillNeededMin = remainingItems.reduce((sum, item) => sum + item.min, 0);
+      const stillNeededMax = remainingItems.reduce((sum, item) => sum + item.max, 0);
 
       return {
         items,
-        total,
-        stillNeeded,
+        totalMin,
+        totalMax,
+        stillNeededMin,
+        stillNeededMax,
         isSyncedWithAi: true
       };
     }
@@ -352,29 +388,38 @@ export default function FeeEstimation() {
       return false;
     });
 
-    const items = matched.map((r, idx) => ({
-      id: r.id || idx,
-      name: r.permit_name,
-      nameTl: r.permit_name,
-      description: r.description,
-      issuingAgency: r.issuing_agency || 'Municipal / Statutory Office',
-      ordinanceRef: r.ordinance_reference,
-      amount: parseFloat(r.estimated_fee) || 0,
-      status: 'Missing',
-      isMandatory: r.is_mandatory !== 0
-    }));
+    const items = matched.map((r, idx) => {
+      const range = toFeeRange(parseFloat(r.estimated_fee) || 0);
+      return {
+        id: r.id || idx,
+        name: r.permit_name,
+        nameTl: r.permit_name,
+        description: r.description,
+        issuingAgency: r.issuing_agency || 'Municipal / Statutory Office',
+        ordinanceRef: r.ordinance_reference,
+        min: range.min,
+        max: range.max,
+        status: 'Missing',
+        isMandatory: r.is_mandatory !== 0
+      };
+    });
 
-    const total = items.reduce((sum, item) => sum + item.amount, 0);
+    const totalMin = items.reduce((sum, item) => sum + item.min, 0);
+    const totalMax = items.reduce((sum, item) => sum + item.max, 0);
     return {
       items,
-      total,
-      stillNeeded: total,
+      totalMin,
+      totalMax,
+      stillNeededMin: totalMin,
+      stillNeededMax: totalMax,
       isSyncedWithAi: false
     };
   }, [assessedChecklist, allSystemRequirements, activeBiz?.industry_category, businessType, businessStatus]);
 
-  const grandTotal = displayTotal + requirementExpenses.total;
-  const grandTotalStillNeeded = displayTotal + requirementExpenses.stillNeeded;
+  const grandTotalMin = displayTotalMin + requirementExpenses.totalMin;
+  const grandTotalMax = displayTotalMax + requirementExpenses.totalMax;
+  const grandTotalStillNeededMin = displayTotalMin + requirementExpenses.stillNeededMin;
+  const grandTotalStillNeededMax = displayTotalMax + requirementExpenses.stillNeededMax;
 
   return (
     <div className="animate-fade-in page-container" style={{ maxWidth: '1200px', paddingBottom: '3rem' }}>
@@ -1031,7 +1076,10 @@ export default function FeeEstimation() {
                       fontWeight: '700',
                       color: isAcquired ? '#15803D' : 'var(--text-dark)'
                     }}>
-                      {req.amount > 0 ? php(req.amount) : (isTl ? 'Walang Bayad / Libre' : 'No Official Fee')}
+                      {phpRange(req.min, req.max)}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                      {isTl ? 'Tinatayang hanay' : 'Est. range (may vary)'}
                     </div>
                     {isAcquired && (
                       <div style={{ fontSize: '0.72rem', color: '#15803D', fontWeight: 600 }}>
@@ -1066,15 +1114,15 @@ export default function FeeEstimation() {
                   ? `Kabuuang bayarin sa mga kinauukulang ahensya (DTI, Barangay, BFP, MHO, atbp.)`
                   : `Total estimated processing costs across prerequisite issuing agencies for ${businessType}.`}
               </div>
-              {requirementExpenses.stillNeeded > 0 && requirementExpenses.stillNeeded < requirementExpenses.total && (
+              {requirementExpenses.stillNeededMax > 0 && requirementExpenses.stillNeededMax < requirementExpenses.totalMax && (
                 <div style={{ fontSize: '0.78rem', color: '#D97706', fontWeight: 600, marginTop: '0.2rem' }}>
-                  ⏳ {php(requirementExpenses.stillNeeded)} {isTl ? 'ang nalalabi para sa mga kailangan mo pa.' : 'remaining for items you still need to acquire.'}
+                  ⏳ {phpRange(requirementExpenses.stillNeededMin, requirementExpenses.stillNeededMax)} {isTl ? 'ang nalalabi para sa mga kailangan mo pa.' : 'remaining for items you still need to acquire.'}
                 </div>
               )}
             </div>
 
-            <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0F172A', letterSpacing: '-0.02em' }}>
-              {php(requirementExpenses.total)}
+            <div style={{ fontSize: '1.55rem', fontWeight: '900', color: '#0F172A', letterSpacing: '-0.02em' }}>
+              {phpRange(requirementExpenses.totalMin, requirementExpenses.totalMax)}
             </div>
           </div>
         </div>
@@ -1148,7 +1196,7 @@ export default function FeeEstimation() {
                     }}>
                       {isRenewalLbt
                         ? (isTl ? 'Susuriin' : 'To Be Assessed')
-                        : php(item.amount)}
+                        : phpRange(item.min, item.max)}
                     </div>
                   </div>
                 </div>
@@ -1177,13 +1225,13 @@ export default function FeeEstimation() {
               </div>
               <div style={{ fontSize: '0.78rem', color: isRenewal ? '#B45309' : '#15803D', marginTop: '0.2rem' }}>
                 {isRenewal
-                  ? (isTl ? 'Nakatakdang bayarin para sa renewal. Susuriin ang LBT sa BPLO.' : 'Fixed municipal clearances. LBT computed at BPLO.')
-                  : (isTl ? 'Mayor\'s Permit, Sanitary inspection, at base regulatory fees sa Munisipyo.' : 'Mayor\'s Permit, sanitary inspection, and initial local business fees.')}
+                  ? (isTl ? 'Tinatayang hanay ng bayarin para sa renewal. Susuriin ang LBT sa BPLO.' : 'Estimated municipal clearance range. LBT computed at BPLO.')
+                  : (isTl ? 'Tinatayang hanay ng Mayor\'s Permit, Sanitary inspection, at base fees (maaaring mag-iba).' : 'Estimated range for Mayor\'s Permit, sanitary inspection, and initial local fees (may vary).')}
               </div>
             </div>
 
-            <div style={{ fontSize: '1.75rem', fontWeight: '900', color: isRenewal ? '#92400E' : '#15803D', letterSpacing: '-0.02em' }}>
-              {php(displayTotal)}
+            <div style={{ fontSize: '1.55rem', fontWeight: '900', color: isRenewal ? '#92400E' : '#15803D', letterSpacing: '-0.02em' }}>
+              {phpRange(displayTotalMin, displayTotalMax)}
             </div>
           </div>
 
@@ -1208,22 +1256,22 @@ export default function FeeEstimation() {
               </div>
               <div style={{ fontSize: '0.85rem', color: '#334155', lineHeight: 1.5 }}>
                 {isTl
-                  ? `Pinagsamang bayarin para sa lahat ng Prerequisite Requirements (${php(requirementExpenses.total)}) at mga Permit sa Munisipyo (${php(displayTotal)}).`
-                  : `Combined total of all Prerequisite Requirements (${php(requirementExpenses.total)}) plus Municipal Hall Clearances (${php(displayTotal)}).`}
+                  ? `Pinagsamang tinatayang hanay para sa Prerequisite Requirements (${phpRange(requirementExpenses.totalMin, requirementExpenses.totalMax)}) at mga Permit sa Munisipyo (${phpRange(displayTotalMin, displayTotalMax)}).`
+                  : `Combined estimated range of Prerequisite Requirements (${phpRange(requirementExpenses.totalMin, requirementExpenses.totalMax)}) plus Municipal Hall Clearances (${phpRange(displayTotalMin, displayTotalMax)}).`}
               </div>
-              {requirementExpenses.stillNeeded > 0 && (
+              {requirementExpenses.stillNeededMax > 0 && (
                 <div style={{ fontSize: '0.8rem', color: '#92400E', fontWeight: 700, marginTop: '0.35rem' }}>
-                  Remaining preparation balance: {php(grandTotalStillNeeded)} {isTl ? 'para sa mga natitirang dokumento.' : 'needed to complete remaining requirements.'}
+                  Remaining preparation balance: {phpRange(grandTotalStillNeededMin, grandTotalStillNeededMax)} {isTl ? 'para sa mga natitirang dokumento.' : 'needed to complete remaining requirements.'}
                 </div>
               )}
             </div>
 
             <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-              <div className="tabular-nums" style={{ fontSize: '2.15rem', fontWeight: 800, color: '#14532D', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                {php(grandTotal)}
+              <div className="tabular-nums" style={{ fontSize: '1.9rem', fontWeight: 800, color: '#14532D', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {phpRange(grandTotalMin, grandTotalMax)}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#15803D', marginTop: '0.3rem', fontWeight: 600 }}>
-                {isTl ? 'Buong Badyet para sa Negosyo' : 'Comprehensive Business Compliance Budget'}
+                {isTl ? 'Tinatayang Hanay ng Badyet (Maaaring Mag-iba)' : 'Estimated Budget Range (Actual Fees May Vary)'}
               </div>
             </div>
           </div>

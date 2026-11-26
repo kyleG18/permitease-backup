@@ -24,7 +24,22 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const php = (n) =>
   isNaN(n) || n === null || n === undefined
     ? '—'
-    : new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(n));
+    : `₱${Math.round(Number(n)).toLocaleString('en-PH')}`;
+
+const phpRange = (min, max) => {
+  const lo = Math.max(0, Math.round(Number(min) || 0));
+  const hi = Math.max(lo, Math.round(Number(max) || 0));
+  return `₱${lo.toLocaleString('en-PH')}–₱${hi.toLocaleString('en-PH')}`;
+};
+
+const toTaxRange = (amount) => {
+  const amt = Number(amount) || 0;
+  if (amt <= 0) return { min: 0, max: 150 };
+  const min = Math.max(0, Math.floor((amt * 0.9) / 50) * 50);
+  let max = Math.ceil((amt * 1.1) / 50) * 50;
+  if (max <= min) max = min + 150;
+  return { min, max };
+};
 
 /* TRAIN Law graduated income tax brackets */
 const GRADUATED_BRACKETS = [
@@ -177,8 +192,8 @@ export default function TaxEstimation() {
         { label: isTl ? 'Kabuuang Taunang Kita' : 'Gross Annual Sales / Receipts', value: grossAnnual },
         { label: isTl ? 'Kabuuang Gastos (Deductions)' : 'Total Deductible Expenses', value: -expenses, note: '−' },
         { label: isTl ? 'Net Taxable Income' : 'Net Taxable Income', value: taxableBase },
-        { label: isTl ? 'Income Tax (Graduated TRAIN Law)' : 'Income Tax (Graduated TRAIN Law)', value: incomeTax },
-        { label: isTl ? 'Percentage Tax (3% ng Gross — 2551Q)' : 'Percentage Tax (3% of Gross — 2551Q)', value: percentageTax },
+        { label: isTl ? 'Income Tax (Graduated TRAIN Law)' : 'Income Tax (Graduated TRAIN Law)', value: incomeTax, isEstimate: true },
+        { label: isTl ? 'Percentage Tax (3% ng Gross — 2551Q)' : 'Percentage Tax (3% of Gross — 2551Q)', value: percentageTax, isEstimate: true },
         { label: isTl ? 'KABUUANG TINATAYANG BIR TAX' : 'TOTAL ESTIMATED BIR TAX', value: annualTax, total: true },
       ];
     } else if (taxElection === 'corporate') {
@@ -207,7 +222,9 @@ export default function TaxEstimation() {
     }
 
     const quarterlyTax = annualTax / 4;
-    return { grossAnnual, annualTax, quarterlyTax, lines, appliedRate, netIncome };
+    const annualRange = toTaxRange(annualTax);
+    const quarterlyRange = toTaxRange(quarterlyTax);
+    return { grossAnnual, annualTax, quarterlyTax, annualRange, quarterlyRange, lines, appliedRate, netIncome };
   }, [grossRevenue, revenueFrequency, taxElection, totalExpenses, isTl]);
 
   function handleBizChange(e) {
@@ -779,13 +796,15 @@ export default function TaxEstimation() {
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--primary-green)', marginTop: '0.2rem' }}>
                   {viewMode === 'annual'
-                    ? (isTl ? `Katumbas ng ${php(calc.quarterlyTax)} bawat quarter` : `Equivalent to ${php(calc.quarterlyTax)} per quarterly filing`)
-                    : (isTl ? `Batay sa taunang kabuuang ${php(calc.annualTax)}` : `Derived from annual liability of ${php(calc.annualTax)}`)}
+                    ? (isTl ? `Katumbas ng ${phpRange(calc.quarterlyRange.min, calc.quarterlyRange.max)} bawat quarter (maaaring mag-iba)` : `Equivalent to ${phpRange(calc.quarterlyRange.min, calc.quarterlyRange.max)} per quarterly filing (may vary)`)
+                    : (isTl ? `Batay sa taunang hanay na ${phpRange(calc.annualRange.min, calc.annualRange.max)} (maaaring mag-iba)` : `Derived from annual range of ${phpRange(calc.annualRange.min, calc.annualRange.max)} (may vary)`)}
                 </div>
               </div>
 
-              <div style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--primary-green-dark)', letterSpacing: '-0.02em' }}>
-                {php(viewMode === 'annual' ? calc.annualTax : calc.quarterlyTax)}
+              <div style={{ fontSize: '1.9rem', fontWeight: '900', color: 'var(--primary-green-dark)', letterSpacing: '-0.02em' }}>
+                {viewMode === 'annual'
+                  ? phpRange(calc.annualRange.min, calc.annualRange.max)
+                  : phpRange(calc.quarterlyRange.min, calc.quarterlyRange.max)}
               </div>
             </div>
 
@@ -795,14 +814,14 @@ export default function TaxEstimation() {
                 <tbody>
                   {calc.lines.map((line, i) => {
                     if (line.total) {
-                      const displayVal = viewMode === 'annual' ? line.value : line.value / 4;
+                      const range = viewMode === 'annual' ? calc.annualRange : calc.quarterlyRange;
                       return (
                         <tr key={i} style={{ backgroundColor: 'var(--primary-green-light)', borderTop: '2px solid var(--primary-green)' }}>
                           <td style={{ padding: '0.9rem 1.15rem', fontWeight: '800', color: 'var(--primary-green-dark)' }}>
                             {line.label} {viewMode === 'quarterly' && <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>({isTl ? 'bawat quarter' : 'per quarter'})</span>}
                           </td>
-                          <td style={{ padding: '0.9rem 1.15rem', textAlign: 'right', fontWeight: '900', fontSize: '1.15rem', color: 'var(--primary-green-dark)' }}>
-                            {php(displayVal)}
+                          <td style={{ padding: '0.9rem 1.15rem', textAlign: 'right', fontWeight: '900', fontSize: '1.1rem', color: 'var(--primary-green-dark)' }}>
+                            {phpRange(range.min, range.max)}
                           </td>
                         </tr>
                       );
@@ -815,11 +834,16 @@ export default function TaxEstimation() {
                         </tr>
                       );
                     }
+                    const estRange = line.isEstimate ? toTaxRange(line.value) : null;
                     return (
                       <tr key={i} style={{ borderBottom: '1px solid var(--border-light)', backgroundColor: i % 2 === 0 ? 'var(--surface)' : 'var(--background)' }}>
                         <td style={{ padding: '0.8rem 1.15rem', color: 'var(--text-dark)' }}>{line.label}</td>
                         <td style={{ padding: '0.8rem 1.15rem', textAlign: 'right', fontWeight: line.note === '−' ? 500 : 700, color: line.note === '−' ? '#991B1B' : 'var(--text-dark)' }}>
-                          {line.note === '−' && line.value < 0 ? `(${php(Math.abs(line.value))})` : php(line.value)}
+                          {estRange
+                            ? phpRange(estRange.min, estRange.max)
+                            : line.note === '−' && line.value < 0
+                              ? `(${php(Math.abs(line.value))})`
+                              : php(line.value)}
                         </td>
                       </tr>
                     );
