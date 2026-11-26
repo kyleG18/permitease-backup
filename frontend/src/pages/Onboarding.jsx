@@ -146,38 +146,67 @@ const Onboarding = () => {
     }));
   };
 
+  const getMissingSteps = () => {
+    const missing = [];
+    if (
+      !formData.business_name?.trim() ||
+      !formData.business_type ||
+      !formData.industry_category ||
+      !formData.ownership_type ||
+      !formData.primary_products?.trim() ||
+      !formData.owner_name?.trim() ||
+      !formData.contact_number?.trim()
+    ) {
+      missing.push({ step: 1, title: text.info });
+    }
+    if (!formData.barangay_id || !formData.address?.trim() || !formData.premises_type) {
+      missing.push({ step: 2, title: text.loc });
+    }
+    if (
+      !formData.capitalization ||
+      !formData.floor_area ||
+      !formData.employees ||
+      (formData.business_status === 'Renewal' && !formData.gross_sales)
+    ) {
+      missing.push({ step: 3, title: text.fin });
+    }
+    return missing;
+  };
+
+  const missingSteps = getMissingSteps();
+
+  const goToStep = (targetStep) => {
+    setError('');
+    setStep(targetStep);
+  };
+
   const nextStep = () => {
     setError('');
-    if (step === 1) {
-      if (!formData.business_name || !formData.business_type || !formData.industry_category || !formData.ownership_type || !formData.primary_products || !formData.owner_name || !formData.contact_number) {
-        setError(text.errorFillAll);
-        return;
-      }
-    } else if (step === 2) {
-      if (!formData.barangay_id || !formData.address || !formData.premises_type) {
-        setError(text.errorFillAll);
-        return;
-      }
-    } else if (step === 3) {
-      if (!formData.capitalization || !formData.floor_area || !formData.employees) {
-        setError(text.errorFillAll);
-        return;
-      }
-      if (formData.business_status === 'Renewal' && !formData.gross_sales) {
-        setError(text.errorRenewalSales);
-        return;
-      }
+    if (step < 4) {
+      setStep(step + 1);
     }
-    setStep(step + 1);
   };
 
   const prevStep = () => {
     setError('');
-    setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+    }
   };
 
   const handleSubmit = async () => {
     setError('');
+    const incomplete = getMissingSteps();
+    if (incomplete.length > 0) {
+      const names = incomplete.map(m => m.title).join(', ');
+      setError(
+        lang === 'tl'
+          ? `Pakikumpleto muna ang lahat ng kinakailangang field bago isumite. Kulang pa sa: ${names}.`
+          : `Please complete all required fields before submitting. Missing details in: ${names}.`
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
@@ -397,23 +426,55 @@ const Onboarding = () => {
           
           {steps.map(s => {
             const Icon = s.icon;
+            const isCurrent = step === s.num;
             const isActive = step >= s.num;
+            const isStepComplete = s.num < 4 && !missingSteps.some(m => m.step === s.num);
             return (
-              <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1 }}>
-                <div style={{ 
-                  width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: isActive ? 'var(--primary-green)' : 'var(--white)',
-                  color: isActive ? 'white' : 'var(--text-muted)',
-                  border: `2px solid ${isActive ? 'var(--primary-green)' : 'var(--border-light)'}`,
-                  transition: 'all 0.3s ease'
+              <button
+                key={s.num}
+                type="button"
+                onClick={() => goToStep(s.num)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  zIndex: 1,
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+                aria-current={isCurrent ? 'step' : undefined}
+              >
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isActive || isStepComplete ? 'var(--primary-green)' : 'var(--white)',
+                  color: isActive || isStepComplete ? 'white' : 'var(--text-muted)',
+                  border: `2px solid ${isActive || isStepComplete ? 'var(--primary-green)' : 'var(--border-light)'}`,
+                  boxShadow: isCurrent ? '0 0 0 4px rgba(21, 128, 61, 0.18)' : 'none',
+                  transition: 'all 0.25s ease'
                 }}>
-                  <Icon size={18} />
+                  {isStepComplete && !isCurrent ? <Check size={18} /> : <Icon size={18} />}
                 </div>
-                <span className={`onboarding-stepper-title ${isActive ? 'active' : ''}`} style={{ fontSize: '0.75rem', marginTop: '0.5rem', fontWeight: isActive ? '600' : '400', color: isActive ? 'var(--text-dark)' : 'var(--text-muted)' }}>
+                <span
+                  className={`onboarding-stepper-title ${isActive ? 'active' : ''}`}
+                  style={{
+                    fontSize: '0.75rem',
+                    marginTop: '0.5rem',
+                    fontWeight: isCurrent || isActive ? '600' : '400',
+                    color: isCurrent ? 'var(--primary-green)' : isActive ? 'var(--text-dark)' : 'var(--text-muted)'
+                  }}
+                >
                   {s.title}
                 </span>
-              </div>
-            )
+              </button>
+            );
           })}
         </div>
 
@@ -667,21 +728,62 @@ const Onboarding = () => {
             <div className="animate-fade-in">
               <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-dark)' }}>{text.s4title}</h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{text.s4desc}</p>
+
+              {missingSteps.length > 0 && (
+                <div style={{
+                  padding: '1rem 1.25rem',
+                  backgroundColor: '#FEF2F2',
+                  border: '1px solid #FECACA',
+                  borderRadius: 'var(--radius-md)',
+                  marginBottom: '1.5rem',
+                  color: '#991B1B'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                    <AlertCircle size={18} />
+                    <span>
+                      {lang === 'tl'
+                        ? 'May mga kulang pang kinakailangang impormasyon bago maisumite:'
+                        : 'Some required fields are still incomplete before you can submit:'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    {missingSteps.map(m => (
+                      <button
+                        key={m.step}
+                        type="button"
+                        onClick={() => goToStep(m.step)}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '6px',
+                          border: '1px solid #FCA5A5',
+                          backgroundColor: '#FFFFFF',
+                          color: '#B91C1C',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {lang === 'tl' ? `Kumpletuhin ang ${m.title} →` : `Complete ${m.title} →`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {/* Information Section */}
                 <div style={{ padding: '1.5rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem' }}>
                     <h4 style={{ margin: 0, color: 'var(--primary-dark)' }}>{text.s1title}</h4>
-                    <button onClick={() => setStep(1)} style={{ color: 'var(--primary-green)', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>{t.edit}</button>
+                    <button type="button" onClick={() => goToStep(1)} style={{ color: 'var(--primary-green)', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>{t.edit}</button>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.875rem' }}>
-                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bName}</span><strong>{formData.business_name}</strong></div>
-                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bOwnType}</span><strong>{formData.ownership_type}</strong></div>
-                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bType} / {text.bCat}</span><strong>{formData.business_type} - {formData.industry_category}</strong></div>
+                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bName}</span><strong>{formData.business_name || '—'}</strong></div>
+                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bOwnType}</span><strong>{formData.ownership_type || '—'}</strong></div>
+                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bType} / {text.bCat}</span><strong>{formData.business_type || '—'}{formData.industry_category ? ` - ${formData.industry_category}` : ''}</strong></div>
                     <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bAppType}</span><strong>{formData.business_status}</strong></div>
-                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bProd}</span><strong>{formData.primary_products}</strong></div>
-                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.owner}</span><strong>{formData.owner_name} ({formData.contact_number})</strong></div>
+                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bProd}</span><strong>{formData.primary_products || '—'}</strong></div>
+                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.owner}</span><strong>{formData.owner_name || '—'}{formData.contact_number ? ` (${formData.contact_number})` : ''}</strong></div>
                   </div>
                 </div>
 
@@ -689,20 +791,20 @@ const Onboarding = () => {
                 <div style={{ padding: '1.5rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem' }}>
                     <h4 style={{ margin: 0, color: 'var(--primary-dark)' }}>{text.s2title}</h4>
-                    <button onClick={() => setStep(2)} style={{ color: 'var(--primary-green)', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>{t.edit}</button>
+                    <button type="button" onClick={() => goToStep(2)} style={{ color: 'var(--primary-green)', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>{t.edit}</button>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', fontSize: '0.875rem' }}>
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.geoLoc}</span>
                       <strong>
-                        Barangay {selectedBrgyName}, {ROXAS_LOCATION.cityName}<br/>
+                        {selectedBrgyName ? `Barangay ${selectedBrgyName}, ` : ''}{ROXAS_LOCATION.cityName}<br/>
                         {ROXAS_LOCATION.provinceName}, {ROXAS_LOCATION.regionName}<br/>
                         Philippines
                       </strong>
                     </div>
-                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bAddress}</span><strong>{formData.address}</strong></div>
+                    <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.bAddress}</span><strong>{formData.address || '—'}</strong></div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                      <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.premises}</span><strong>{formData.premises_type}</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.premises}</span><strong>{formData.premises_type || '—'}</strong></div>
                       <div><span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.dateEst}</span><strong>{formData.date_established || 'Not provided'}</strong></div>
                     </div>
                   </div>
@@ -712,12 +814,12 @@ const Onboarding = () => {
                 <div style={{ padding: '1.5rem', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem' }}>
                     <h4 style={{ margin: 0, color: 'var(--primary-dark)' }}>{text.s3title}</h4>
-                    <button onClick={() => setStep(3)} style={{ color: 'var(--primary-green)', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>{t.edit}</button>
+                    <button type="button" onClick={() => goToStep(3)} style={{ color: 'var(--primary-green)', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>{t.edit}</button>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.875rem' }}>
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.cap}</span>
-                      <strong>{CAPITALIZATION_RANGES.find(r => r.value === String(formData.capitalization))?.[lang === 'tl' ? 'labelTl' : 'labelEn'] || `₱${formData.capitalization}`}</strong>
+                      <strong>{CAPITALIZATION_RANGES.find(r => r.value === String(formData.capitalization))?.[lang === 'tl' ? 'labelTl' : 'labelEn'] || (formData.capitalization ? `₱${formData.capitalization}` : '—')}</strong>
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.grossNew}</span>
@@ -725,11 +827,11 @@ const Onboarding = () => {
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.floor}</span>
-                      <strong>{FLOOR_AREA_RANGES.find(r => r.value === String(formData.floor_area))?.[lang === 'tl' ? 'labelTl' : 'labelEn'] || `${formData.floor_area} sqm`}</strong>
+                      <strong>{FLOOR_AREA_RANGES.find(r => r.value === String(formData.floor_area))?.[lang === 'tl' ? 'labelTl' : 'labelEn'] || (formData.floor_area ? `${formData.floor_area} sqm` : '—')}</strong>
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block' }}>{text.emp}</span>
-                      <strong>{EMPLOYEE_RANGES.find(r => r.value === String(formData.employees))?.[lang === 'tl' ? 'labelTl' : 'labelEn'] || formData.employees}</strong>
+                      <strong>{EMPLOYEE_RANGES.find(r => r.value === String(formData.employees))?.[lang === 'tl' ? 'labelTl' : 'labelEn'] || (formData.employees || '—')}</strong>
                     </div>
                     
                     {Object.keys(formData.business_characteristics).length > 0 && (
